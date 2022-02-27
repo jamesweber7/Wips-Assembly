@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="W-Logo-Light-Green.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:zoom="0.5952403"
+     inkscape:cx="36.119866"
+     inkscape:cy="279.71897"
+     inkscape:window-width="1920"
+     inkscape:window-height="1051"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+      <style>
+         :root {
+            --favicon-color: #04e300;
+         }
+         @media (prefers-color-scheme: light) {
+            :root {
+               --favicon-color: #290050;
+            }
+         }
+      </style>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="opacity:1;fill:var(--favicon-color);fill-opacity:1;stroke:#000000;stroke-width:1.22456px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:0"
+       d="m 84.520276,168.55168 c 0,0 83.644954,-19.63839 180.382184,-150.56093 0,0 -90.1911,-7.273469 -180.382184,150.56093 z"
+       id="path951" />
+    <path
+       style="opacity:1;fill:var(--favicon-color);fill-opacity:1;stroke:#000000;stroke-width:1.20265px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:0"
+       d="M 409.3571,174.66156 C 297.20721,79.655609 310.77948,13.937207 310.77948,13.937207 c 0,0 50.00313,18.572587 98.57762,160.724353 z"
+       id="path1085" />
+    <path
+       style="opacity:1;fill:var(--favicon-color);fill-opacity:1;stroke:#000000;stroke-width:1.20265px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:0"
+       d="m 272.91998,171.80425 c 0,0 107.14957,-37.85953 167.15334,-147.152088 0,0 -112.86423,27.858888 -167.15334,147.152088 z"
+       id="path1087" />
+    <path
+       style="opacity:1;fill:var(--favicon-color);fill-opacity:1;stroke:#000000;stroke-width:1.22456px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:0"
+       d="m 100.52192,26.71892 c 0,0 21.82042,71.280046 117.83028,121.46702 0,0 -18.18368,-103.28333 -117.83028,-121.46702 z"
+       id="path1021" />
+    <g
+       id="g13884"
+       style="opacity:1;stroke:var(--favicon-color);stroke-width:20;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(1.4457483,0,0,1.4457483,-106.33822,-224.39138)">
+      <path
+         style="fill:none;stroke:var(--favicon-color);stroke-width:20;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+         d="m 100.46706,277.55529 c 0,0 -28.936431,52.809 75.95814,195.32094"
+         id="path1202" />
+      <path
+         style="fill:none;stroke:var(--favicon-color);stroke-width:20;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+         d="m 176.4252,472.87623 58.59629,-143.23536 c 0,0 17.84518,-58.3515 34.72372,0.72342 18.80867,65.83038 51.36218,143.23535 51.36218,143.23535 0,0 101.27752,-112.12869 72.34108,-195.32093"
+         id="path1204"
+         sodipodi:nodetypes="ccscc" />
+    </g>
+  </g>
+</svg>

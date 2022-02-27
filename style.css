@@ -1,0 +1,18 @@
+
+input, textarea {
+    outline: none;
+    text-decoration: none;
+}
+
+textarea {
+    resize: none;
+}
+
+
+button:hover {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
