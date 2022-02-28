@@ -202,7 +202,23 @@ class LogicGate {
     
     /*----------  derived logic gates  ----------*/
     
-    
+    // each bit in bitstring AND bit
+    static bitstringAndBit(bitstring, bit) {
+        let result = '';
+        for (let i = 0; i < bitstring.length; i++) {
+            result += this.bitAnd(bitstring[i], bit);
+        }
+        return result;
+    }
+
+    // each bit in bitstring OR bit
+    static bitstringOrBit(bitstring, bit) {
+        let result = '';
+        for (let i = 0; i < bitstring.length; i++) {
+            result += this.bitOr(bitstring[i], bit);
+        }
+        return result;
+    }
 
     static halfAdder(bit1, bit2) {
         return {
@@ -455,7 +471,7 @@ class LogicGate {
         return inputs[index];
     }
 
-    static demux(enable, selector) {
+    static demux(selector, enable='1') {
         const length = 2**selector.length;
         const selected = this.bitstringToDecimal(selector);
         let output = this.bitstringToPrecision('', length);
@@ -495,6 +511,11 @@ class LogicGate {
             bitstring += bitstrings[i];
         }
         return bitstring;
+    }
+
+    // duplicate bit, used for a 1-bit signal entering an array of gates 
+    static duplicate(bit, length) {
+        return StringReader.mult(bit, length);
     }
 
     static sll(bitstring, positions) {
@@ -733,12 +754,66 @@ class LogicGate {
         );
     }
 
+    static shiftOne(bitstring, direction) {
+
+    }
+
+    static barrelShift(bitstring, shamt, left) {
+        return this.mux(
+            this.barrelShiftRight(bitstring, shamt),
+            this.barrelShiftLeft(bitstring, shamt),
+            left
+        );
+    }
+
+    static barrelShiftLeft(bitstring, shamt) {
+        let columnOutput = this.split(bitstring);
+        for (let i = shamt.length - 1; i >= 0; i--) {
+            let columnInput = columnOutput;
+            columnOutput = new Array(bitstring.length)
+            const shiftBit = shamt[i];
+            const currentShamt = 2**(shamt.length - 1 - i);
+            for (let j = bitstring.length - 1; j >= 0; j--) {
+                const muxLow = columnInput[j];
+                const muxHigh = (j >= bitstring.length - currentShamt) ? '0' : columnInput[j + currentShamt];
+                columnOutput[j] = this.mux(muxLow, muxHigh, shiftBit);
+            }
+        }
+        return this.merge(columnOutput);
+    }
+
+    static barrelShiftRight(bitstring, shamt) {
+        let columnOutput = this.split(bitstring);
+        for (let i = shamt.length - 1; i >= 0; i--) {
+            let columnInput = columnOutput;
+            columnOutput = new Array(bitstring.length)
+            const shiftBit = shamt[i];
+            const currentShamt = 2**(shamt.length - 1 - i);
+            for (let j = 0; j < bitstring.length; j++) {
+                const muxLow = columnInput[j];
+                const muxHigh = (j < currentShamt) ? '0' : columnInput[j - currentShamt];
+                columnOutput[j] = this.mux(muxLow, muxHigh, shiftBit);
+            }
+        }
+        return this.merge(columnOutput);
+    }
+
     static overflowDetect(cin, cout) {
         return this.xor(cin, cout);
     }
 
-    static twosComplement(bitstring) {
-        return this.add(this.not(bitstring), '1');
+    static twosComplement(bitstring, enable='1') {
+        return this.add(
+            this.mux(
+                bitstring,
+                this.not(bitstring),
+                enable
+            ),
+            this.merge(
+                this.empty(bitstring.length - 1),
+                enable
+            )
+        )
     }
 
     static bitstringToPrecision(bitstring, precision) {
@@ -830,6 +905,27 @@ class LogicGate {
             }
         }
         console.log(inputs);
+    }
+
+    static simplifyInput(inputs, outputs) {
+        const length = inputs.length;
+        if (outputs.length !== length) {
+            throw 'number of inputs does not match number of outputs';
+        }
+        let set = [];
+        let not = [];
+        for (let i = 0; i < length; i++) {
+            if (this.bitToBool(outputs[i])) {
+                set.push(inputs[i]);
+            } else {
+                not.push(inputs[i]);
+            }
+        }
+        for (let i = 0; i < set.length; i++) {
+            if (this.bitToBool(set[i])) {
+                set.push(inputs[i]);
+            }
+        }
     }
 
 }

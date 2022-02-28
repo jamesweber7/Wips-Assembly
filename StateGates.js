@@ -813,8 +813,8 @@ class Mips {
 
         // R-format
         if (opcode === '000000') {
-            regDst = '1'
-            branch = '0'
+            regDst = '1';
+            branch = '0';
             memRead = '0';
             memToReg = '0';
             aluOp = '10';
@@ -824,8 +824,8 @@ class Mips {
         }
         // lw
         else if (opcode === '100011') {
-            regDst = '0'
-            branch = '0'
+            regDst = '0';
+            branch = '0';
             memRead = '1';
             memToReg = '1';
             aluOp = '00';
