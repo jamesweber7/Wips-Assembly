@@ -285,17 +285,25 @@ class BrainlessCPU {
 
 }
 
-class Ram extends ClockTriggeredGate {
+class ParentRam extends ClockTriggeredGate {
+
+    setData(data) {
+        this._data = data;
+    }
+
+    getData() {
+        return this._data;
+    }
+
+}
+
+class Ram extends ParentRam {
 
     constructor(data) {
         super();
         this._data = data;
         this._size = data.length;
         this._regSize = data[0].length;
-    }
-
-    setData(data) {
-        this._data = data;
     }
 
     dataAt(addr) {
@@ -337,8 +345,8 @@ class Ram extends ClockTriggeredGate {
 }
 
 // since js doesn't like arrays holding 16GiB
-// creates data on access 
-class BigRam extends ClockTriggeredGate {
+// creates data on access
+class BigRam extends ParentRam {
     constructor(regLength) {
         super();
         this._data = [];
@@ -611,7 +619,8 @@ class Mips {
         this._pcStartWb = LogicGate.empty(1);
 
         // sll $zero, $zero, 00000
-        this.NOP_ADDRESS = 'err';
+        this.NOP_ADDRESS = '10000000000000000000000000000000';
+        this.RA_ADDRESS = '11111';
 
         // exceptions
         this.trap = new MipsTrap();
@@ -658,6 +667,7 @@ class Mips {
             pipeline.aluResult,
             pipeline.readData,
             pipeline.shifted,
+            pipeline.jAddr,
             memToReg
         );
 
@@ -728,16 +738,23 @@ class Mips {
                 LogicGate.not(pipeline.zero)
             )
         );
+        console.log('pc wb stuff:');
+        console.log(pcSrcBranch);
+
         let pc = LogicGate.mux(
             pipeline.pc,
             pipeline.branchPc,
             pcSrcBranch
         );
+        console.log(pc);
+
         // jump mux
         const pcSrcJump = LogicGate.merge(
             pipeline.jr,
             pipeline.jump
         );
+        console.log(pipeline.jr);
+
         pc = LogicGate.mux(
             pc,
             pipeline.jAddr,
@@ -746,6 +763,8 @@ class Mips {
         );
         // Update PC WB Wire
         this._pcWb = pc;
+
+        console.log(pc);
 
         // data mem
         this._dataMemory.write(
@@ -765,6 +784,9 @@ class Mips {
 
         // update MEM → WB pipeline
         this._memToWb.write({
+
+            jAddr: pipeline.jAddr,
+
             regWrite: pipeline.regWrite,
             memToReg: pipeline.memToReg,
 
@@ -818,10 +840,11 @@ class Mips {
         );
 
         // writeReg (pipelining to wb)
-        // regDst mux (rt or rd)
+        // regDst mux
         const writeReg = LogicGate.mux(
-            pipeline.rt,
-            pipeline.rd,
+            pipeline.rt,    // 00
+            pipeline.rd,    // 01
+            this.RA_ADDRESS,   // 10
             pipeline.regDst
         );
 
@@ -906,7 +929,7 @@ class Mips {
         // 28 bits
         const jAddrTail = LogicGate.shiftLeftExtendTwo(jAddrRaw);
         // 4 bits
-        const jAddrHead = LogicGate.split(pipeline.pc, 4);
+        const jAddrHead = LogicGate.split(pipeline.pc, 4)[0];
         // 32 bits
         const jAddr = LogicGate.merge(
             jAddrHead,
@@ -1016,6 +1039,8 @@ class Mips {
             this._pcStartWb,
             this._pcStopWb
         )
+        console.log('pc block : ');
+        console.log(this._pcBlock.q);
         const pcBlock = this._pcBlock.q;
         // GET PC Input
         const nextPc = LogicGate.mux(
@@ -1023,6 +1048,9 @@ class Mips {
             this.NOP_ADDRESS,
             pcBlock
         );
+        console.log(this._pcWb,
+            this.NOP_ADDRESS,
+            nextPc);
         // UPDATE PC
         this._pc.write(
             nextPc,
@@ -1031,6 +1059,8 @@ class Mips {
 
         // increment pc
         const pcIncrement = '00000000000000000000000000000100';     // 4
+        console.log('pc : ', pc);
+
         const pcIncremented = LogicGate.addALU32(pc, pcIncrement);  // pc + 4
 
         // read instruction at current pc
@@ -1247,7 +1277,28 @@ class Mips {
             opcode[5]
         );
 
-        let regDst = rType;
+        // opcode = 00001x (j or jal)
+        let someJump = LogicGate.and(
+            LogicGate.not(opcode[0]),
+            LogicGate.not(opcode[1]),
+            LogicGate.not(opcode[2]),
+            LogicGate.not(opcode[3]),
+            opcode[4]
+        );
+        // write $ra
+        let jal = LogicGate.and(
+            someJump,
+            opcode[5]
+        );
+        
+        // regDst:
+        // 00 → write rt
+        // 01 → write rd
+        // 10 → write $ra
+        let regDst = LogicGate.merge(
+            jal,
+            rType
+        );
         // opcode = 00010x
         let someBranch = LogicGate.and(
             LogicGate.not(opcode[0]),
@@ -1266,17 +1317,10 @@ class Mips {
             someBranch,
             opcode[5]
         );
-        // opcode = 00001x (j or jal)
-        let someJump = LogicGate.and(
-            LogicGate.not(opcode[0]),
-            LogicGate.not(opcode[1]),
-            LogicGate.not(opcode[2]),
-            LogicGate.not(opcode[3]),
-            opcode[4]
-        );
         let jump = someJump;
         // funct = 0x8 = 001000
         let jr = LogicGate.and(
+            rType,
             LogicGate.not(funct[0]),
             LogicGate.not(funct[1]),
             funct[2],
@@ -1330,12 +1374,17 @@ class Mips {
         // 00 alu result
         // 01 read result (lw or syscall)
         // 10 sl
+        // 11 jal
         let memToReg = LogicGate.merge(
             LogicGate.or(
                 sl0,
-                lui
+                lui,
+                jal
             ),
-            memRead
+            LogicGate.or(
+                memRead,
+                jal
+            )
         );
 
         let aluSrc = iType;
@@ -1360,11 +1409,6 @@ class Mips {
         let aluOp0 = branch;
 
         let aluOp = LogicGate.merge(aluOp1, aluOp0);
-
-        let jal = LogicGate.and(
-            someJump,
-            opcode[5]
-        );
 
         // (jal OR ~pcStop) AND ~sw
         let regWrite = LogicGate.nor(
@@ -1394,111 +1438,6 @@ class Mips {
             syscall: syscall,
 
             aluOp: aluOp,
-            regWrite: regWrite
-        };
-    }
-
-    // opcode control
-    controlOld(opcode) {
-        // control wires missing:
-        // bne
-        // jump
-        let regDst = LogicGate.empty(1);
-        let branch = LogicGate.empty(1);
-        let memRead = LogicGate.empty(1);
-        let memToReg = LogicGate.empty(1);
-        let aluOp = LogicGate.empty(2);    // 2 bits
-        let memWrite = LogicGate.empty(1);
-        let aluSrc = LogicGate.empty(1);
-        let regWrite = LogicGate.empty(1);
-
-        // R-format
-        if (opcode === '000000') {
-            regDst = '1';
-            branch = '0';
-            memRead = '0';
-            memToReg = '0';
-            aluOp = '10';
-            memWrite = '0';
-            aluSrc = '0';
-            regWrite = '1';
-        }
-        // lw
-        else if (opcode === '100011') {
-            regDst = '0';
-            branch = '0';
-            memRead = '1';
-            memToReg = '1';
-            aluOp = '00';
-            memWrite = '0';
-            aluSrc = '1';
-            regWrite = '1';
-        }
-        // sw
-        else if (opcode === '101011') {
-            regDst = '1'
-            branch = '0'
-            memRead = '0';
-            memToReg = '0';
-            aluOp = '00';
-            memWrite = '1';
-            aluSrc = '1';
-            regWrite = '0';
-        }
-        // addi 0x8
-        else if (opcode === '001000') {
-            regDst = '0'
-            branch = '0'
-            memRead = '0';
-            memToReg = '0';
-            aluOp = '00';
-            memWrite = '0';
-            aluSrc = '1';
-            regWrite = '1';
-        }
-        // beq
-        else if (opcode === '000100') {
-            regDst = '0'
-            branch = '1'
-            memRead = '0';
-            memToReg = '0';
-            aluOp = '01';
-            memWrite = '0';
-            aluSrc = '0';
-            regWrite = '0';
-        }
-        // ori
-        else if (opcode === '001101') {
-            regDst = '0'
-            branch = '0'
-            memRead = '0';
-            memToReg = '0';
-            aluOp = '00';
-            memWrite = '0';
-            aluSrc = '1';
-            regWrite = '1';
-        }
-        // lui
-        else if (opcode === '001111') {
-            regDst = '0'
-            branch = '0'
-            memRead = '0';
-            memToReg = '0';
-            aluOp = '00';
-            memWrite = '0';
-            aluSrc = '1';
-            regWrite = '1';
-        }
-
-
-        return {
-            regDst: regDst,
-            branch: branch,
-            memRead: memRead,
-            memToReg: memToReg,
-            aluOp: aluOp,
-            memWrite: memWrite,
-            aluSrc: aluSrc,
             regWrite: regWrite
         };
     }
@@ -1546,6 +1485,10 @@ class Mips {
         this._instructionMemory.setData(instructions);
     }
 
+    registers() {
+        return this._registerMemory.getData();
+    }
+
 }
 
 class PipelineRegister extends ClockTriggeredGate {
@@ -1581,7 +1524,7 @@ class InstrDecodeToAluExPipeline extends PipelineRegister {
         this.jAddr = LogicGate.empty(32);
         // start at pc=2
         this.pc = '00000000000000000000000000000010';
-        this.regDst = LogicGate.empty(1);
+        this.regDst = LogicGate.empty(2);   // 2 bits
 
         this.branch = LogicGate.empty(1);
         this.bne = LogicGate.empty(1);
@@ -1705,6 +1648,8 @@ class AluExToMemPipeline extends PipelineRegister {
 class MemToWriteBackPipeline extends PipelineRegister {
     constructor() {
         super();
+        this.jAddr = LogicGate.empty(32);
+
         this.regWrite = LogicGate.empty(1);
         this.memToReg = LogicGate.empty(2);
 
@@ -1718,6 +1663,8 @@ class MemToWriteBackPipeline extends PipelineRegister {
         this.writeReg = LogicGate.empty(5);
     }
     updateWires(wires) {
+        this.jAddr = wires.jAddr;
+
         this.regWrite = wires.regWrite;
         this.memToReg = wires.memToReg;
 
