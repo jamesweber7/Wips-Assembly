@@ -538,7 +538,18 @@ class LogicGate {
         );
     }
 
-    static incrementer(a, inc) {
+    static incrementer16(a) {
+        let cry = '1';
+        let incremented = '';
+        for (let i = 15; i >= 0; i--) {
+            const halfAdder = this.halfAdder(a[i], cry);
+            cry = halfAdder.cout;
+            incremented = halfAdder.sum + incremented;
+        }
+        return incremented;
+    }
+
+    static incrementer4(a, inc) {
         let cry = inc;
         let y = '';
         for (let i = 3; i >= 0; i--) {
@@ -558,7 +569,7 @@ class LogicGate {
             xor += this.xor(a[i], invert);
         }
         const inc = this.bitAnd(invert, neg);
-        return this.incrementer(xor, inc);
+        return this.incrementer4(xor, inc);
     }
 
     // a, b 16 bits
@@ -754,15 +765,28 @@ class LogicGate {
         );
     }
 
-    static shiftOne(bitstring, direction) {
-
+    static shiftLeftExtend(bitstring) {
+        // lsb
+        let shifted = '0';
+        for (let i = bitstring.length - 1; i >= 0; i--) {
+            shifted = bitstring[i] + shifted;
+        }
+        return shifted;
     }
 
-    static barrelShift(bitstring, shamt, left) {
+    static shiftLeftExtendTwo(bitstring) {
+        return this.shiftLeftExtend(
+            this.shiftLeftExtend(
+                bitstring
+            )
+        );
+    }
+
+    static barrelShift(bitstring, shamt, right) {
         return this.mux(
-            this.barrelShiftRight(bitstring, shamt),
             this.barrelShiftLeft(bitstring, shamt),
-            left
+            this.barrelShiftRight(bitstring, shamt),
+            right
         );
     }
 

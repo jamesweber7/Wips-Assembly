@@ -10,7 +10,7 @@ const mips = new Mips();
 // R-type add, sub, and, or, nor, slt
 // I-type lw, sw
 function blankInstruction() {
-    return '11111100000000000000000000000000';
+    return '00000000000000000000000000000000';
 }
 function typeRInstruction(rs, rt, rd, funct) {
     let opcode = '000000';                  
@@ -101,10 +101,11 @@ let instruction;
 
 
 // funct 0x8
-instructions[0] = luiInstruction(
+instructions[0] = addInstruction(
     '00000',
-    '1010101010101010'
-)
+    '00001',
+    '00001'
+);
 
 mips.setInstructions(instructions);
 

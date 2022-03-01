@@ -110,6 +110,27 @@ class S_R_FlipFlop extends ClockTriggeredGate {
     }
 }
 
+class S_R_FlipFlopAsync extends S_R_FlipFlop {
+    write(s, r) {
+        if (LogicGate.bitToBool(
+            LogicGate.and(s, r)
+        )) {
+            throw "s and r can't both be high";
+        }
+
+        // Q⁺ = S+QR'
+        this.q = LogicGate.mux(
+            this.q, // no input
+            '0',    // r
+            '1',    // s
+            LogicGate.merge(
+                r, s
+            )
+        );
+        this.notq = LogicGate.not(this.q);
+    }
+}
+
 class J_K_FlipFlop extends ClockTriggeredGate {
     constructor() {
         super();
@@ -156,187 +177,6 @@ class FourBitRegister {
             qPlus += dFlipFlop.q;
         }
         this.q = qPlus;
-    }
-}
-
-class Ram extends ClockTriggeredGate {
-
-    constructor(data) {
-        super();
-        this._data = data;
-        this._size = data.length;
-        this._regSize = data[0].length;
-    }
-
-    setData(data) {
-        this._data = data;
-    }
-
-    dataAt(addr) {
-        return LogicGate.mux(this._data, addr);
-    }
-
-    static randomized(regLength, numRegisters) {
-        const data = new Array(numRegisters);
-        for (let i = 0; i < data.length; i++) {
-            data[i] = LogicGate.bitstringToPrecision(
-                LogicGate.toBitString(
-                    Wath.randomInt(0, 2**regLength - 1)
-                ),
-                regLength
-            );
-        }
-        return new this(data);
-    }
-
-    static empty(regLength, numRegisters) {
-        const data = new Array(numRegisters);
-        for (let i = 0; i < data.length; i++) {
-            data[i] = LogicGate.empty(regLength);
-        }
-        return new this(data);
-    }
-
-    // fills each register with the value of its index
-    static indexValues(regLength, numRegisters) {
-        const data = new Array(numRegisters);
-        for (let i = 0; i < data.length; i++) {
-            data[i] = LogicGate.bitstringToPrecision(
-                LogicGate.toBitString(i),
-                regLength
-            );
-        }
-        return new this(data);
-    }
-}
-
-// RAM with only one read address
-class SingleReadRam extends Ram {
-    constructor(data) {
-        super(data);
-        this._addr = LogicGate.empty(this._regSize);
-        this.dataOut = this._data[this._addr];
-    }
-
-    write(addr, dataIn, write, clk) {
-        // addr updated async
-        this._addr = addr;
-        if (this.isClockPulse(clk)) {
-            if (LogicGate.bitToBool(write)) {
-                this._data[
-                    LogicGate.bitstringToDecimal(this._addr)
-                ] = dataIn;
-            }
-        }
-        this.dataOut = this.dataAt(this._addr);
-        this.updateClockPulse(clk);
-    }
-
-    read(addr) {
-        this._addr = addr;
-        this.dataOut = this.dataAt(this._addr);
-    }
-
-    static setData(data) {
-        this._data = data;
-        this._addr = LogicGate.empty(this._regSize);
-        this.dataOut = this.dataAt(this._addr);
-    }
-
-}
-
-class LatentRam extends SingleReadRam {
-    write(addr, dataIn, write, clk) {
-        if (this.isClockPulse(clk)) {
-            this.dataOut = this.dataAt(this._addr);
-            // addr updated sync after read
-            this._addr = addr;
-            if (LogicGate.bitToBool(write)) {
-                this._data[
-                    LogicGate.bitstringToDecimal(this._addr)
-                ] = dataIn;
-            }
-        }
-        this.updateClockPulse(clk);
-    }
-}
-class MipsDataRam extends SingleReadRam {
-    write(addr, dataIn, read, write, clk) {
-        this._addr = addr;
-        if (this.isClockPulse(clk)) {
-            if (LogicGate.bitToBool(write)) {
-                this._data[
-                    LogicGate.bitstringToDecimal(this._addr)
-                ] = dataIn;
-            }
-        }
-        if (LogicGate.bitToBool(read)) {
-            this.dataOut = this.dataAt(this._addr);
-        }
-        this.updateClockPulse(clk);
-    }
-}
-
-class MipsRegisterRam extends Ram {
-    constructor(data) {
-        super(data);
-        this._addr1 = LogicGate.empty(5);
-        this.readData1 = this.dataAt(this._addr1)
-        this._addr2 = LogicGate.empty(5);
-        this.readData2 = this.dataAt(this._addr2)
-    }
-
-    write(readReg1, readReg2, writeReg, writeData, regWrite, clk) {
-        // write updated first, then read
-        if (this.isClockPulse(clk)) {
-            if (LogicGate.bitToBool(regWrite)) {
-                this._data[
-                    LogicGate.bitstringToDecimal(writeReg)
-                ] = writeData;
-            }
-        }
-        // read data updated async
-        this._addr1 = readReg1;
-        this.readData1 = this.dataAt(this._addr1);
-        this._addr2 = readReg2;
-        this.readData2 = this.dataAt(this._addr2);
-        this.updateClockPulse(clk);
-    }
-
-    read(readReg1, readReg2) {
-        this._addr1 = readReg1;
-        this.readData1 = this.dataAt(this._addr1);
-        this._addr2 = readReg2;
-        this.readData2 = this.dataAt(this._addr2);
-    }
-
-    static setData(data) {
-        super.setData(data);
-        this._addr1 = LogicGate.empty(5);
-        this.readData1 = this.dataAt(this._addr1);
-        this._addr2 = LogicGate.empty(5);
-        this.readData2 = this.dataAt(this._addr2);
-    }
-
-    static randomized(regLength, numRegisters) {
-        const data = new Array(numRegisters);
-        for (let i = 0; i < data.length; i++) {
-            data[i] = LogicGate.bitstringToPrecision(
-                LogicGate.toBitString(
-                    Wath.randomInt(0, 2**regLength - 1)
-                ),
-                regLength
-            );
-        }
-        return new this(data);
-    }
-
-    static empty(regLength, numRegisters) {
-        const data = new Array(numRegisters);
-        for (let i = 0; i < data.length; i++) {
-            data[i] = LogicGate.empty(regLength);
-        }
-        return new this(data);
     }
 }
 
@@ -445,21 +285,338 @@ class BrainlessCPU {
 
 }
 
+class Ram extends ClockTriggeredGate {
+
+    constructor(data) {
+        super();
+        this._data = data;
+        this._size = data.length;
+        this._regSize = data[0].length;
+    }
+
+    setData(data) {
+        this._data = data;
+    }
+
+    dataAt(addr) {
+        return LogicGate.mux(this._data, addr);
+    }
+
+    static randomized(regLength, numRegisters) {
+        const data = new Array(numRegisters);
+        for (let i = 0; i < data.length; i++) {
+            data[i] = LogicGate.bitstringToPrecision(
+                LogicGate.toBitString(
+                    Wath.randomInt(0, 2**regLength - 1)
+                ),
+                regLength
+            );
+        }
+        return new this(data);
+    }
+
+    static empty(regLength, numRegisters) {
+        const data = new Array(numRegisters);
+        for (let i = 0; i < data.length; i++) {
+            data[i] = LogicGate.empty(regLength);
+        }
+        return new this(data);
+    }
+
+    // fills each register with the value of its index
+    static indexValues(regLength, numRegisters) {
+        const data = new Array(numRegisters);
+        for (let i = 0; i < data.length; i++) {
+            data[i] = LogicGate.bitstringToPrecision(
+                LogicGate.toBitString(i),
+                regLength
+            );
+        }
+        return new this(data);
+    }
+}
+
+// since js doesn't like arrays holding 16GiB
+// creates data on access 
+class BigRam extends ClockTriggeredGate {
+    constructor(regLength) {
+        super();
+        this._data = [];
+        this._regSize = regLength;
+    }
+
+    dataAt(addr) {
+        if (this._data[addr] === undefined) {
+            this._data[addr] = LogicGate.empty(this._regSize);
+        }
+        return this._data[addr];
+    }
+
+    setData(data) {
+        this._data = data;
+    }
+    
+}
+
+// RAM with only one read address
+class SingleReadRam extends Ram {
+    constructor(data) {
+        super(data);
+        this._addr = LogicGate.empty(this._regSize);
+        this.dataOut = this._data[this._addr];
+    }
+
+    write(addr, dataIn, write, clk) {
+        // addr updated async
+        this._addr = addr;
+        if (this.isClockPulse(clk)) {
+            if (LogicGate.bitToBool(write)) {
+                this._data[
+                    LogicGate.bitstringToDecimal(this._addr)
+                ] = dataIn;
+            }
+        }
+        this.dataOut = this.dataAt(this._addr);
+        this.updateClockPulse(clk);
+    }
+
+    read(addr) {
+        this._addr = addr;
+        this.dataOut = this.dataAt(this._addr);
+    }
+
+    setData(data) {
+        this._data = data;
+        this._addr = LogicGate.empty(this._regSize);
+        this.dataOut = this.dataAt(this._addr);
+    }
+
+}
+
+class SingleReadBigRam extends BigRam {
+    constructor(data) {
+        super(data);
+        this._addr = LogicGate.empty(this._regSize);
+        this.dataOut = this._data[this._addr];
+    }
+
+    write(addr, dataIn, write, clk) {
+        // addr updated async
+        this._addr = addr;
+        if (this.isClockPulse(clk)) {
+            if (LogicGate.bitToBool(write)) {
+                this._data[this._addr] = dataIn;
+            }
+        }
+        this.dataOut = this.dataAt(this._addr);
+        this.updateClockPulse(clk);
+    }
+
+    read(addr) {
+        this._addr = addr;
+        this.dataOut = this.dataAt(this._addr);
+    }
+
+    setData(data) {
+        super.setData(data);
+        this._addr = LogicGate.empty(this._regSize);
+        this.dataOut = this.dataAt(this._addr);
+    }
+}
+
+class LatentRam extends SingleReadRam {
+    write(addr, dataIn, write, clk) {
+        if (this.isClockPulse(clk)) {
+            this.dataOut = this.dataAt(this._addr);
+            // addr updated sync after read
+            this._addr = addr;
+            if (LogicGate.bitToBool(write)) {
+                this._data[
+                    LogicGate.bitstringToDecimal(this._addr)
+                ] = dataIn;
+            }
+        }
+        this.updateClockPulse(clk);
+    }
+}
+class MipsDataRam extends BigRam {
+    constructor() {
+        super(8);
+        this._addr = LogicGate.empty(16);
+        this.readData();
+    }
+
+    write(addr, dataIn, read, write, clk) {
+
+        this._addr = addr;
+        if (this.isClockPulse(clk)) {
+            if (LogicGate.bitToBool(write)) {
+                this._data[this._addr] = dataIn;
+            }
+        }
+        if (LogicGate.bitToBool(read)) {
+            this.dataOut = this.dataAt(this._addr);
+        }
+        this.updateClockPulse(clk);
+    }
+
+    readData() {
+        let addr = this._addr;
+        this.dataOut1 = this.dataAt(addr);
+        addr = LogicGate.incrementer16(addr);
+        this.dataOut2 = this.dataAt(addr);
+        addr = LogicGate.incrementer16(addr);
+        this.dataOut3 = this.dataAt(addr);
+        addr = LogicGate.incrementer16(addr);
+        this.dataOut4 = this.dataAt(addr);
+    }
+}
+
+class MipsRegisterRam extends Ram {
+    constructor(data) {
+        super(data);
+        this._addr1 = LogicGate.empty(5);
+        this.readData1 = this.dataAt(this._addr1)
+        this._addr2 = LogicGate.empty(5);
+        this.readData2 = this.dataAt(this._addr2)
+    }
+
+    write(readReg1, readReg2, writeReg, writeData, regWrite, clk) {
+        // write updated first, then read
+        if (this.isClockPulse(clk)) {
+            if (LogicGate.bitToBool(regWrite)) {
+                this._data[
+                    LogicGate.bitstringToDecimal(writeReg)
+                ] = writeData;
+            }
+        }
+        // read data updated async
+        this._addr1 = readReg1;
+        this.readData1 = this.dataAt(this._addr1);
+        this._addr2 = readReg2;
+        this.readData2 = this.dataAt(this._addr2);
+        this.updateClockPulse(clk);
+    }
+
+    read(readReg1, readReg2) {
+        this._addr1 = readReg1;
+        this.readData1 = this.dataAt(this._addr1);
+        this._addr2 = readReg2;
+        this.readData2 = this.dataAt(this._addr2);
+    }
+
+    setData(data) {
+        super.setData(data);
+        this._addr1 = LogicGate.empty(5);
+        this.readData1 = this.dataAt(this._addr1);
+        this._addr2 = LogicGate.empty(5);
+        this.readData2 = this.dataAt(this._addr2);
+    }
+
+    static randomized(regLength, numRegisters) {
+        const data = new Array(numRegisters);
+        for (let i = 0; i < data.length; i++) {
+            data[i] = LogicGate.bitstringToPrecision(
+                LogicGate.toBitString(
+                    Wath.randomInt(0, 2**regLength - 1)
+                ),
+                regLength
+            );
+        }
+        return new this(data);
+    }
+
+    static empty(regLength, numRegisters) {
+        const data = new Array(numRegisters);
+        for (let i = 0; i < data.length; i++) {
+            data[i] = LogicGate.empty(regLength);
+        }
+        return new this(data);
+    }
+}
+
+
+class MipsTrap extends ClockExclusiveGate {
+    constructor() {
+        super();
+        this.OF = '0';
+        this.exit = '0';
+        this.sysin = '0';
+        this.trap = LogicGate.or(
+            this.OF,
+            this.exit,
+            this.sysin
+        );
+    }
+
+    updateWires(wires) {
+        this.OF = wires[0];
+        this.exit = wires[1];
+        this.sysin = wires[2];
+        this.trap = LogicGate.or(
+            this.OF,
+            this.exit,
+            this.sysin
+        );
+    }
+}
+
+class MipsSyscall extends ClockExclusiveGate {
+    constructor() {
+        super();
+        this.syscall = '0';
+        this.int = '0';
+        this.exit = '0';
+        this.sysout = LogicGate.empty(32);
+        this.sysread = LogicGate.empty(32);
+    }
+
+    updateWires(writeData, opcode) {
+        const sysout = opcode[0];
+        const sysin = opcode[1];
+        const int = opcode[2];
+        this.syscall = LogicGate.or(
+            sysout,
+            sysin
+        );
+        this.exit = LogicGate.and(
+            sysout,
+            sysin
+        );
+        this.sysout = LogicGate.mux(
+            writeData,
+            LogicGate.empty(32),
+            this.exit
+        );
+        this.int = LogicGate.mux(
+            int,
+            '0',
+            this.exit
+        );
+    }
+}
+
+
 class Mips {
     constructor() {
         // RAM
-        // just 64 instructions for now, def gonna do a lot of work on this later
-        const numInstructions = 64;
-        const dataMemorySize = 64;
-        this._instructionMemory = SingleReadRam.empty(32, numInstructions);
-        // this._dataMemory = SingleReadRam.empty(32, dataMemorySize);
-        this._dataMemory = SingleReadRam.randomized(32, dataMemorySize);
+        this._instructionMemory = new SingleReadBigRam(32);
+        this._dataMemory = new MipsDataRam();
         this._registerMemory = MipsRegisterRam.indexValues(32, 32);
-        // this._registerMemory = MipsRegisterRam.empty(32, 32);
         // PC
         this._pc = new D_FlipFlop(32);
         // Wires:
         this._pcWb = LogicGate.empty(32);
+        this._pcStopWb = LogicGate.empty(1);
+        this._pcStartWb = LogicGate.empty(1);
+        
+        // sll $zero, $zero, 00000
+        this.NOP = '00000000000000000000000000000000';
+
+        // exceptions
+        this.trap = new MipsTrap();
+        this.syscall = new MipsSyscall();
+        this._pcBlock = new S_R_FlipFlopAsync();
 
         // pipelines
         this._ifToId = new InstrFetchToInstrDecodePipeline();
@@ -483,18 +640,61 @@ class Mips {
     writeBack(clk) {
         const pipeline = this._memToWb;
 
-        const writeData = LogicGate.mux(
+        const syscallOp = pipeline.syscallOp;
+        const sysout = syscallOp[0];
+        const sysin = syscallOp[1];
+
+        // memToReg
+        const memToReg = LogicGate.merge(
+            pipeline.memToReg[0],
+            LogicGate.and(
+                pipeline.memToReg[1],
+                LogicGate.not(sysin)
+            )
+        );
+
+        // writeData mux
+        let writeData = LogicGate.mux(
             pipeline.aluResult, 
-            pipeline.readData, 
-            pipeline.memToReg
+            pipeline.readData,
+            pipeline.shifted,
+            memToReg
+        );
+
+        // regWrite
+        const regWriteSrc = LogicGate.or(
+            sysin,
+            sysout
+        );
+        const regWrite = LogicGate.mux(
+            pipeline.regWrite,
+            sysin,
+            regWriteSrc
+        );
+
+        // syscall
+        this.syscall.write(writeData, pipeline.syscallOp, clk);
+
+        // trap
+        const trap = LogicGate.merge(
+            pipeline.OFTrap,
+            this.syscall.exit,
+            sysin
+        );
+        this.trap.write(trap, clk);
+
+        // sysin writeData
+        writeData = LogicGate.mux(
+            writeData,
+            this.syscall.sysread,
+            sysin
         );
 
         // Update WB Wires
         this._wb.write({
-                regDst: pipeline.regDst,
-                regWrite: pipeline.regWrite,
+                regWrite: regWrite,
                 writeData: writeData,
-                writeReg:pipeline.writeReg
+                writeReg: pipeline.writeReg
             },
             clk
         );
@@ -503,15 +703,41 @@ class Mips {
     mem(clk) {
         const pipeline = this._exToMem;
         
-        // pc wb
-        const pcSrc = LogicGate.and(
+        // writebacks
+        // pc start wb
+        this._pcStartWb = LogicGate.or(
+            pipeline.jump,
+            pipeline.jr,
             pipeline.branch,
-            pipeline.zero
+            pipeline.bne
         );
-        const pc = LogicGate.mux(
+        // pc wb
+        // branch mux
+        const pcSrcBranch = LogicGate.or(
+            LogicGate.and(
+                pipeline.branch,
+                pipeline.zero
+            ),
+            LogicGate.and(
+                pipeline.bne,
+                LogicGate.not(pipeline.zero)
+            )
+        );
+        let pc = LogicGate.mux(
             pipeline.pc,
             pipeline.branchPc,
-            pcSrc
+            pcSrcBranch
+        );
+        // jump mux
+        const pcSrcJump = LogicGate.merge(
+            pipeline.jr,
+            pipeline.jump
+        );
+        pc = LogicGate.mux(
+            pc,
+            pipeline.jAddr,
+            pipeline.aluResult,   // jrAddr
+            pcSrcJump
         );
         // Update PC WB Wire
         this._pcWb = pc;
@@ -519,19 +745,31 @@ class Mips {
         // data mem
         this._dataMemory.write(
             pipeline.aluResult, 
-            pipeline.writeData, 
+            pipeline.writeData,
+            pipeline.memRead,
             pipeline.memWrite, 
             clk
         );
-        const readData = this._dataMemory.dataOut;
+
+        const readData = LogicGate.merge(
+            this._dataMemory.dataOut4,
+            this._dataMemory.dataOut3,
+            this._dataMemory.dataOut2,
+            this._dataMemory.dataOut1
+        );
 
         // update MEM → WB pipeline
         this._memToWb.write({
                 regWrite: pipeline.regWrite,
                 memToReg: pipeline.memToReg,
-                regDst: pipeline.regDst,
-                readData: readData,
+
                 aluResult: pipeline.aluResult,
+                readData: readData,
+
+                OFTrap: pipeline.OFTrap,
+                shifted: pipeline.shifted,
+                syscallOp: pipeline.syscallOp,
+
                 writeReg: pipeline.writeReg
             },
             clk
@@ -548,7 +786,8 @@ class Mips {
         // alu
         const funct = pipeline.funct;
         const aluOp = pipeline.aluOp;
-        const opcode = this.aluControl(funct, aluOp);
+        const aluControl = this.aluControl(funct, aluOp);
+        const opcode = aluControl.opcode;
 
         const a = pipeline.readData1;
         const b = LogicGate.mux(
@@ -558,26 +797,62 @@ class Mips {
         );
         const alu = this.alu(a, b, opcode);
 
+        // OF Trap
+        const OFTrap = LogicGate.and(
+            alu.overflow,
+            LogicGate.not(
+                aluControl.unsigned
+            )
+        );
+
         // writeReg (pipelining to wb)
+        // regDst mux (rt or rd)
         const writeReg = LogicGate.mux(
             pipeline.rt,
             pipeline.rd,
             pipeline.regDst
         );
 
+        // shifter
+        const shiftSrc = b;
+        const shamt = LogicGate.mux(
+            pipeline.rs,     // lui
+            pipeline.shamt,  // shift logical
+            pipeline.sl[1]   // shift logical?
+        )
+
+        const shifted = LogicGate.barrelShift(
+            shiftSrc,
+            shamt,
+            pipeline.sl[0]  // shift right (srl)
+        )
+
         // update EX → MEM pipeline
         this._exToMem.write({
+                jAddr: pipeline.jAddr,
+
                 pc: pipeline.pc,
                 branchPc: branchPc,
+
                 branch: pipeline.branch,
-                regDst: pipeline.regDst,
+                bne: pipeline.bne,
+                jump: pipeline.jump,
+                jr: pipeline.jr,
+
                 regWrite: pipeline.regWrite,
                 zero: alu.zero,
+
                 memRead: pipeline.memRead,
                 memToReg: pipeline.memToReg,
                 memWrite: pipeline.memWrite,
+
                 aluResult: alu.result,
                 writeData: pipeline.readData2,
+
+                OFTrap: OFTrap,
+                shifted: shifted,
+                syscallOp: pipeline.syscallOp,
+
                 writeReg: writeReg
             },
             clk
@@ -598,7 +873,27 @@ class Mips {
         );
         // Control
         const opcode = instruction[0];
-        const control = this.control(opcode);
+        const funct = instruction[5];
+        const control = this.control(opcode, funct);
+
+        // PC STOP WB
+        this._pcStopWb = control.pcStop;
+
+        // jump address
+        // 26 bits
+        const jAddrRaw = LogicGate.split(pipeline.instruction,
+            6, // ignore
+            26 // jumpAddrRaw
+        )[1];
+        // 28 bits
+        const jAddrTail = LogicGate.shiftLeftExtendTwo(jAddrRaw);
+        // 4 bits
+        const jAddrHead = LogicGate.split(pipeline.pc, 4);
+        // 32 bits
+        const jAddr = LogicGate.merge(
+            jAddrHead,
+            jAddrTail
+        );
 
         // Registers
 
@@ -623,25 +918,50 @@ class Mips {
         const immediate16 = LogicGate.split(pipeline.instruction, 16, 16)[1];
         const immediate32 = this.signalExtend(immediate16);
 
-        // not doing anything with shamt yet
-        const shiftAmt = instruction[4];
-        const funct = instruction[5];
+        const readData1 = this._registerMemory.readData1;
+        const readData2 = this._registerMemory.readData1;
+        // syscall decode
+        const syscallOp = this.syscallDecode(
+            control.syscall, 
+            LogicGate.split(
+                readData2,  // $v0
+                28,         // ignore
+                4           // syscall funct
+            )[1]
+        );
+
+        const shamt = instruction[4];
 
         // update ID → EX pipeline
         this._idToEx.write({
+            jAddr: jAddr,
             pc: pipeline.pc, 
             regDst: control.regDst,
+
             branch: control.branch,
+            bne: control.bne,
+            jump: control.jump,
+            jr: control.jr,
+
             memRead: control.memRead,
             memToReg: control.memToReg,
             memWrite: control.memWrite,
+
             aluSrc: control.aluSrc,
-            regWrite: control.regWrite,
-            readData1: this._registerMemory.readData1, 
-            readData2: this._registerMemory.readData2,
-            immediate: immediate32,
-            funct: funct,
             aluOp: control.aluOp,
+
+            regWrite: control.regWrite,
+
+            readData1: readData1, 
+            readData2: readData2,
+            immediate: immediate32,
+
+            sl: control.sl,
+            rs: rs,
+            shamt: shamt,
+            syscallOp: syscallOp,
+
+            funct: funct,
             rt: rt,
             rd: rd
         },
@@ -650,16 +970,25 @@ class Mips {
 
     instructionFetch(clk) {
 
-        
         // READ PC
         const pc = this._pc.q;
+        // PC block
+        this._pcBlock.write(
+            this._pcStartWb,
+            this._pcStopWb
+        )
+        const pcBlock = this._pcBlock.q;
+        // GET PC Input
+        const nextPc = LogicGate.mux(
+            this._pcWb,
+            this.NOP,
+            pcBlock
+        );
         // UPDATE PC
         this._pc.write(
-            this._pcWb,
+            nextPc,
             clk
         );
-
-        console.log(pc);
 
         // increment pc
         const pcIncrement = '00000000000000000000000000000100';     // 4
@@ -769,36 +1098,185 @@ class Mips {
             )
         );
 
+        const unsigned = LogicGate.and(
+            LogicGate.not(instruction[3]),
+            instruction[5]
+        );
 
-        // const op3 = '0';
-        // const op2 = 
-        // LogicGate.or(
-        //     aluOp0,
-        //     LogicGate.and(
-        //         LogicGate.not(f2),
-        //         f1,
-        //         LogicGate.not(f0)
-        //     )
-        // );
-        // const op1 = 
-        // LogicGate.nand(
-        //     aluOp1,
-        //     LogicGate.not(f3), 
-        //     f2,
-        //     LogicGate.not(f1)
-        // );
-        // const op0 = 
-        // LogicGate.and(
-        //     aluOp1,
-        //     LogicGate.xor(f3,f2),
-        //     LogicGate.xor(f1,f0),
-        //     LogicGate.xnor(f3,f1)
-        // );
-        return LogicGate.merge(op3, op2, op1, op0);
+        return {
+            opcode: LogicGate.merge(op3, op2, op1, op0),
+            unsigned: unsigned
+        }
+    }
+
+
+    control(opcode, funct) {
+
+        let rType = LogicGate.nor(
+            opcode[0],
+            opcode[1],
+            opcode[2],
+            opcode[3],
+            opcode[4],
+            opcode[5]
+        );
+
+        let iType = LogicGate.or(
+            opcode[0],
+            opcode[1],
+            opcode[2],
+            opcode[3]
+        );
+
+        let jType = LogicGate.and(
+            LogicGate.not(iType),
+            opcode[5]
+        );
+
+        let regDst = iType;
+        // opcode = 00010x
+        let someBranch = LogicGate.and(
+            LogicGate.not(opcode[0]),
+            LogicGate.not(opcode[1]),
+            LogicGate.not(opcode[2]),
+            opcode[3],
+            LogicGate.not(opcode[4])
+        );
+        // opcode = 0x4 = 000100
+        let branch = LogicGate.and(
+            someBranch,
+            LogicGate.not(opcode[5])
+        );
+        // opcode = 0x5 = 000101
+        let bne = LogicGate.and(
+            someBranch,
+            opcode[5]
+        );
+        // opcode = 00001x (j or jal)
+        let someJump = LogicGate.and(
+            LogicGate.not(opcode[0]),
+            LogicGate.not(opcode[1]),
+            LogicGate.not(opcode[2]),
+            LogicGate.not(opcode[3]),
+            opcode[4]
+        );
+        let jump = someJump;
+        // funct = 0x8 = 001000
+        let jr = LogicGate.and(
+            LogicGate.not(funct[0]),
+            LogicGate.not(funct[1]),
+            funct[2],
+            LogicGate.not(funct[3]),
+            LogicGate.not(funct[4]),
+            LogicGate.not(funct[5])
+        );
+        // any branch or jump instruction
+        let pcStop = LogicGate.or(
+            branch,
+            bne,
+            jump,
+            jr
+        )
+        // opcode = 0x2b = 101011
+        let memWrite = LogicGate.and(
+            opcode[0],
+            LogicGate.not(opcode[1]),
+            opcode[2],
+            LogicGate.not(opcode[3]),
+            opcode[4],
+            opcode[5],
+        );
+        let memRead = LogicGate.and(
+            opcode[0],
+            LogicGate.not(opcode[2]),
+            LogicGate.not(opcode[3]),
+            opcode[4],
+            opcode[5],
+        );
+        // funct = 0000x0
+        let sl0 = LogicGate.nor(
+            LogicGate.not(rType),
+            funct[0],
+            funct[1],
+            funct[2],
+            funct[3],
+            funct[5]
+        );
+        // Right: funct = 000010
+        let sl1 = LogicGate.and(sl0, opcode[4]);
+        let sl = LogicGate.merge(sl1, sl0);
+
+        let lui = LogicGate.and(
+            opcode[2],
+            opcode[3],
+            opcode[4],
+            opcode[5]
+        )
+
+        // 00 alu result
+        // 01 read result (lw or syscall)
+        // 10 sl
+        let memToReg = LogicGate.merge(
+            LogicGate.or(
+                sl0,
+                lui
+            ),
+            memRead
+        );
+
+        let aluSrc = iType;
+
+        // opcode = 0x33 = 110011
+        let syscall = LogicGate.and(
+            memRead,
+            opcode[1]
+        );
+
+        let aluOp1 = rType;
+        // may need to be high for other conditions too, not sure
+        let aluOp0 = branch;
+
+        let aluOp = LogicGate.merge(aluOp1, aluOp0);
+
+        let jal = LogicGate.and(
+            someJump,
+            opcode[5]
+        );
+
+        // (jal OR ~pcStop) AND ~sw
+        let regWrite = LogicGate.nor(
+            LogicGate.nand(
+                LogicGate.not(jal),   
+                pcStop
+            ),
+            memWrite
+        );
+
+        return {
+            regDst:     regDst,
+
+            branch :    branch,
+            bne :       bne,
+            jump :      jump,
+            jr :        jr,
+            pcStop :    pcStop,
+
+            memWrite :  memWrite,
+            memRead :   memRead,
+            memToReg :  memToReg,
+
+            aluSrc :    aluSrc,
+
+            sl :        sl,
+            syscall :   syscall,
+
+            aluOp :     aluOp,
+            regWrite :  regWrite
+        };
     }
 
     // opcode control
-    control(opcode) {
+    controlOld(opcode) {
         // control wires missing:
         // bne
         // jump
@@ -909,6 +1387,35 @@ class Mips {
         );
     }
 
+    syscallDecode(syscall, funct) {
+        const sysout = LogicGate.and(
+            syscall,
+            LogicGate.or(
+                funct[2],
+                LogicGate.xor(
+                    funct[1],
+                    funct[3]
+                )
+            )
+        );
+        const sysin = LogicGate.and(
+            syscall,
+            LogicGate.or(
+                funct[0],
+                LogicGate.and(
+                    funct[1],
+                    funct[3]
+                )
+            )
+        );
+        // int/~string
+        const int = funct[3];
+        return LogicGate.merge(
+            sysout,
+            sysin,
+            int
+        );
+    }
     
     /*----------  Helpers  ----------*/
     
@@ -935,7 +1442,7 @@ class PipelineRegister extends ClockTriggeredGate {
 class InstrFetchToInstrDecodePipeline extends PipelineRegister {
     constructor() {
         super();
-        // starts at 3
+        // start at pc=3
         this.pc = '00000000000000000000000000000011';
         this.instruction = LogicGate.empty(32);
     }
@@ -948,37 +1455,67 @@ class InstrFetchToInstrDecodePipeline extends PipelineRegister {
 class InstrDecodeToAluExPipeline extends PipelineRegister {
     constructor() {
         super();
-        // starts at 2
+        this.jAddr = LogicGate.empty(32);
+        // start at pc=2
         this.pc = '00000000000000000000000000000010';
         this.regDst = LogicGate.empty(1);
+
         this.branch = LogicGate.empty(1);
+        this.bne = LogicGate.empty(1);
+        this.jump = LogicGate.empty(1);
+        this.jr = LogicGate.empty(1);
+
         this.memRead = LogicGate.empty(1);
-        this.memToReg = LogicGate.empty(1);
+        this.memToReg = LogicGate.empty(2); // 2 bits
         this.memWrite = LogicGate.empty(1);
+
         this.aluSrc = LogicGate.empty(1);
+        this.aluOp = LogicGate.empty(2);    // 2 bits
+
         this.regWrite = LogicGate.empty(1);
+
         this.readData1 = LogicGate.empty(32);
         this.readData2 = LogicGate.empty(32);
         this.immediate = LogicGate.empty(32);
+
+        this.sl = LogicGate.empty(2);
+        this.rs = LogicGate.empty(1);
+        this.shamt = LogicGate.empty(5);
+        this.syscallOp = LogicGate.empty(3);
+
         this.funct = LogicGate.empty(6);
-        this.aluOp = LogicGate.empty(2);
         this.rt = LogicGate.empty(5);
         this.rd = LogicGate.empty(5);
     }
     updateWires(wires) {
+        this.jAddr = wires.jAddr,
         this.pc = wires.pc;
         this.regDst = wires.regDst;
+
         this.branch = wires.branch;
+        this.bne = wires.bne;
+        this.jump = wires.jump;
+        this.jr = wires.jr;
+        
         this.memRead = wires.memRead;
         this.memToReg = wires.memToReg;
         this.memWrite = wires.memWrite;
+
         this.aluSrc = wires.aluSrc;
+        this.aluOp = wires.aluOp;
+
         this.regWrite = wires.regWrite;
+
         this.readData1 = wires.readData1;
         this.readData2 = wires.readData2;
         this.immediate = wires.immediate;
+
+        this.sl = wires.sl;
+        this.rs = wires.rs;
+        this.shamt = wires.shamt;
+        this.syscallOp = wires.syscallOp; 
+               
         this.funct = wires.funct;
-        this.aluOp = wires.aluOp;
         this.rt = wires.rt;
         this.rd = wires.rd;
     }
@@ -987,32 +1524,57 @@ class InstrDecodeToAluExPipeline extends PipelineRegister {
 class AluExToMemPipeline extends PipelineRegister {
     constructor() {
         super();
+        this.jAddr = LogicGate.empty(32);
         // starts at 1
         this.pc = '00000000000000000000000000000001';
         this.branchPc = LogicGate.empty(32);
-        this.regDst = LogicGate.empty(1);
+
         this.branch = LogicGate.empty(1);
+        this.bne = LogicGate.empty(1);
+        this.jump = LogicGate.empty(1);
+        this.jr = LogicGate.empty(1);
+
         this.regWrite = LogicGate.empty(1);
         this.zero = LogicGate.empty(1);
+
         this.memRead = LogicGate.empty(1);
-        this.memToReg = LogicGate.empty(1);
+        this.memToReg = LogicGate.empty(2);
         this.memWrite = LogicGate.empty(1);
+
         this.aluResult = LogicGate.empty(32);
         this.writeData = LogicGate.empty(32);
+
+        this.OFTrap = LogicGate.empty(1);
+        this.shifted = LogicGate.empty(32);
+        this.syscallOp = LogicGate.empty(3);
+
         this.writeReg = LogicGate.empty(5);
     }
     updateWires(wires) {
+        this.jAddr = wires.jAddr;
+
         this.pc = wires.pc;
         this.branchPc = wires.branchPc;
-        this.regDst = wires.regDst;
+
         this.branch = wires.branch;
+        this.bne = wires.bne;
+        this.jump = wires.jump;
+        this.jr = wires.jr;
+
         this.regWrite = wires.regWrite;
         this.zero = wires.zero;
+
         this.memRead = wires.memRead;
         this.memToReg = wires.memToReg;
         this.memWrite = wires.memWrite;
+
         this.aluResult = wires.aluResult;
         this.writeData = wires.writeData;
+
+        this.OFTrap = wires.OFTrap;
+        this.shifted = wires.shifted;
+        this.syscallOp = wires.syscallOp;
+
         this.writeReg = wires.writeReg;
     }
 }
@@ -1021,18 +1583,28 @@ class MemToWriteBackPipeline extends PipelineRegister {
     constructor() {
         super();
         this.regWrite = LogicGate.empty(1);
-        this.memToReg = LogicGate.empty(1);
-        this.regDst = LogicGate.empty(1);
-        this.readData = LogicGate.empty(32);
+        this.memToReg = LogicGate.empty(2);
+
         this.aluResult = LogicGate.empty(32);
+        this.readData = LogicGate.empty(32);
+
+        this.OFTrap = LogicGate.empty(1);
+        this.shifted = LogicGate.empty(32);
+        this.syscallOp = LogicGate.empty(3);
+
         this.writeReg = LogicGate.empty(5);
     }
     updateWires(wires) {
         this.regWrite = wires.regWrite;
         this.memToReg = wires.memToReg;
-        this.regDst = wires.regDst;
-        this.readData = wires.readData;
+
         this.aluResult = wires.aluResult;
+        this.readData = wires.readData;
+
+        this.OFTrap = wires.OFTrap;
+        this.shifted = wires.shifted;
+        this.syscallOp = wires.syscallOp;
+
         this.writeReg = wires.writeReg;
     }
 }
@@ -1040,13 +1612,11 @@ class MemToWriteBackPipeline extends PipelineRegister {
 class WriteBack extends PipelineRegister {
     constructor() {
         super();
-        this.regDst = LogicGate.empty(1);
         this.regWrite = LogicGate.empty(1);
         this.writeData = LogicGate.empty(32);
         this.writeReg = LogicGate.empty(5);
     }
     updateWires(wires) {
-        this.regDst = wires.regDst;
         this.regWrite = wires.regWrite;
         this.writeData = wires.writeData;
         this.writeReg = wires.writeReg;
