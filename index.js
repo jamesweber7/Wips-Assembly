@@ -72,13 +72,17 @@ function beqInstruction(rs, rt, imm) {
     return typeIInstruction('000100', rs, rt,  imm);
 }
 // op 0xd
-// NOT working
 function oriInstruction(rs, rt, imm) {
     return typeIInstruction('001101', rs, rt,  imm);
 }
 // op 0xf
 function luiInstruction(rt, imm) {
-    return typeIInstruction('001111', LogicGate.empty(5), rt,  imm);
+    return typeIInstruction(
+        '001111',   
+        '10000',    // shift 16
+        rt,  
+        imm
+    );
 }
 
 
@@ -90,26 +94,39 @@ function mipsClockPulse() {
 
 
 // give instructions
-const instructions = new Array(64);
-// 64 empty instructions
-for (let i = 0; i < instructions.length; i++) {
-    instructions[i] = blankInstruction();
-}
+let instructions = [];
 
 let opcode, rs, rt, rd, shamt, funct;
 let instruction;
 
 
-// funct 0x8
-instructions[0] = addInstruction(
-    '00000',
-    '00001',
-    '00001'
+// instructions['00000000000000000000000000000000'] = luiInstruction(
+//     '00010',
+//     '0000000000000111'
+// );
+instructions['00000000000000000000000000000011'] = oriInstruction(
+    '00010',
+    '00010',
+    '0000000001000111'
 );
 
+console.log(instructions);
+
+const WATCH_INSTRUCTIONS = Object.keys(instructions);
+for (let i = 0; i < WATCH_INSTRUCTIONS.length; i++) {
+    WATCH_INSTRUCTIONS[i] = LogicGate.add(
+        WATCH_INSTRUCTIONS[i],
+        '100'
+    );
+}
 mips.setInstructions(instructions);
 
-const lastInstruction = 0;
+instructions.forEach((a, b) => {
+    console.log(a, b);
+});
+
+
+const lastInstruction = 4;
 const numCycles = lastInstruction + 4 + 1;
 for (let i = 0; i < numCycles; i++) {
     mipsClockPulse();
