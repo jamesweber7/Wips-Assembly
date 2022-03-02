@@ -667,7 +667,7 @@ class Mips {
             pipeline.aluResult,
             pipeline.readData,
             pipeline.shifted,
-            pipeline.jAddr,
+            pipeline.pc,
             memToReg
         );
 
@@ -785,7 +785,7 @@ class Mips {
         // update MEM → WB pipeline
         this._memToWb.write({
 
-            jAddr: pipeline.jAddr,
+            pc: pipeline.pc,
 
             regWrite: pipeline.regWrite,
             memToReg: pipeline.memToReg,
@@ -1648,7 +1648,7 @@ class AluExToMemPipeline extends PipelineRegister {
 class MemToWriteBackPipeline extends PipelineRegister {
     constructor() {
         super();
-        this.jAddr = LogicGate.empty(32);
+        this.pc = LogicGate.empty(32);
 
         this.regWrite = LogicGate.empty(1);
         this.memToReg = LogicGate.empty(2);
@@ -1663,7 +1663,7 @@ class MemToWriteBackPipeline extends PipelineRegister {
         this.writeReg = LogicGate.empty(5);
     }
     updateWires(wires) {
-        this.jAddr = wires.jAddr;
+        this.pc = wires.pc;
 
         this.regWrite = wires.regWrite;
         this.memToReg = wires.memToReg;
