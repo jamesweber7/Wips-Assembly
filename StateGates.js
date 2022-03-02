@@ -459,13 +459,25 @@ class MipsDataRam extends BigRam {
         this._addr = addr;
         if (this.isClockPulse(clk)) {
             if (LogicGate.bitToBool(write)) {
-                this._data[this._addr] = dataIn;
+                this.writeData(dataIn);
             }
         }
         if (LogicGate.bitToBool(read)) {
             this.dataOut = this.dataAt(this._addr);
         }
         this.updateClockPulse(clk);
+    }
+
+    writeData(dataIn) {
+        const bytes = LogicGate.split(dataIn, 8, 8, 8, 8);
+        let addr = this._addr;
+        this._data[addr] = bytes[3];
+        addr = LogicGate.incrementer16(addr);
+        this._data[addr] = bytes[2];
+        addr = LogicGate.incrementer16(addr);
+        this._data[addr] = bytes[1];
+        addr = LogicGate.incrementer16(addr);
+        this._data[addr] = bytes[0];
     }
 
     readData() {
