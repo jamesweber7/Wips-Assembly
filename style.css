@@ -103,7 +103,7 @@ table tr td, table tr th {
 
 #register-table {
     height: 650px;
-    width: 362px;
+    width: fit-content;
     margin: 20px;
     display: block;
     overflow-y: scroll;

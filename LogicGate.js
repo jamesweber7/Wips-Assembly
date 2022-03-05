@@ -426,14 +426,7 @@ class LogicGate {
         if (!Array.isArray(bitstrings)) {
             bitstrings = [...arguments];
         }
-        bitstrings = this.standardizeBitStringLengths(bitstrings);
-        let bitstring = bitstrings[0];
-        for (let i = 1; i < bitstrings.length; i++) {
-            if (this.bitToBool(this.not(this.twoInputEq(bitstring, bitstrings[i])))) {
-                return '0';
-            }
-        }
-        return '1';
+        return this.set(this.xnor(bitstrings));
     }
 
     static neq(bitstrings) {
@@ -446,7 +439,7 @@ class LogicGate {
     // returns '1' if all bits in bitstring are low
     static zero(bitstring) {
         const bits = this.split(bitstring);
-        return this.not(this.or(bits));
+        return this.nor(bits);
     }
 
     // returns '1' all bits in bitstring are high

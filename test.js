@@ -116,31 +116,50 @@ let instructions = [];
 let opcode, rs, rt, rd, shamt, funct;
 let instruction;
 
-instructions['00000000000000000000000000000000'] = typeJInstruction(
-    '000011',
-    '00000000000000000000001000'
-);
+// jal
+// instructions['00000000010000000000000000000000'] = typeJInstruction(
+//     '000011',
+//     '00000000000000000000001000'
+// );
 
-instructions['00000000000000000000000000100100'] = addInstruction(
-    '00010',
-    '00010',
-    '00010'
-);
+// add $3 = $3 + $3
+// instructions['00000000010000000000000000000000'] = addInstruction(
+//     '00010',
+//     '00010',
+//     '00010'
+// );
+
+// jr $ra
+// instructions['00000000010000000000000000000001'] = typeRInstruction(
+//     '11111',
+//     '00000',
+//     '00000',
+//     '001000'
+// );
+
+// let newStructions = liInstruction('11111', '11111111111111111111111111111111');
+// instructions['00000000010000000000000000000000'] = newStructions[0];
+// instructions['00000000010000000000000000000001'] = newStructions[1];
+// console.log(newStructions);
+// // jr   $ra
+// instructions['00000000010000000000000000000010'] = typeRInstruction('11111', '00000', '00000', '001000');
+
 
 
 console.log(instructions);
+console.log(mips.registers());
 
 // watch instructions (debugging)
 const WATCH_INSTRUCTIONS = Object.keys(instructions);
 for (let i = 0; i < WATCH_INSTRUCTIONS.length; i++) {
     WATCH_INSTRUCTIONS[i] = LogicGate.add(
         WATCH_INSTRUCTIONS[i],
-        '100'
+        '100'   // 4
     );
 }
 mips.setInstructions(instructions);
 
-const lastInstruction = 10;
+const lastInstruction = 5;
 const numCycles = lastInstruction + 4 + 1;
 for (let i = 0; i < numCycles; i++) {
     mipsClockPulse();
