@@ -54,44 +54,12 @@ button {
 button.wand {
     padding: 6px;
     font-size: 18px;
-    color: var(--hacker-green);
-    background-color: var(--hacker-gray);
-    border: 2px solid;
     border-radius: 2px;
     display: block;
     margin: 5px;
 }
 
-std-inout, std-inout * {
-    font-family: 'consolas';
-    font-size: 22px;
-    color: var(--hacker-green);
-    display: block;
-    margin: auto;
-}
-
-std-inout {
-    border: var(--hacker-green) 2px solid;
-    border-radius: 5px;
-    background-color: var(--hacker-gray);
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 16px;
-}
-
-std-inout * {
-    padding: 12px;
-    width: -webkit-fill-available;
-    border: none;
-    min-height: 22px;
-}
-
-std-inout input, std-inout textarea {
-    border-top: var(--hacker-green) 2px solid;
-    background: none;
-}
-
-std-inout output {
+output {
     white-space: pre;
 }
 
@@ -102,10 +70,7 @@ output err {
 input, textarea {
     outline: none;
     text-decoration: none;
-    border: 2px solid var(--hacker-green);
-    color: var(--hacker-green);
     font-family: 'consolas';
-    background-color: var(--hacker-gray-dark);
 }
 
 textarea {
@@ -114,10 +79,7 @@ textarea {
 
 table {
     list-style: none;
-    border: 2px solid var(--hacker-green);
     border-radius: 4px;
-    color: var(--hacker-green);
-    width: fit-content;
     padding: 8px;
     font-size: 14px;
 }
@@ -128,7 +90,6 @@ table tr td, table tr th {
 
 #register-table {
     height: 650px;
-    width: fit-content;
     margin: 10px;
     margin-top: 0;
     display: block;
@@ -188,30 +149,29 @@ button:hover {
 
 /* scrollbar */
 
-/* width */
 ::-webkit-scrollbar {
     width: 5px;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
     background: var(--hacker-green-gray-dark);
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
     background: var(--hacker-green-dark);
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
     background: var(--hacker-green);
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--hacker-green-gray-dark);
 }
 
 #code-input {
     color: var(--hacker-green-gray-light);
     display: block;
-    /* width: max(900px, 60%); */
     height: 50%;
     min-height: 600px;
     overflow-y: scroll;
