@@ -314,7 +314,7 @@ class Ram extends ParentRam {
         const data = new Array(numRegisters);
         for (let i = 0; i < data.length; i++) {
             data[i] = LogicGate.bitstringToPrecision(
-                LogicGate.toBitString(
+                LogicGate.toBitstring(
                     Wath.randomInt(0, 2 ** regLength - 1)
                 ),
                 regLength
@@ -336,7 +336,7 @@ class Ram extends ParentRam {
         const data = new Array(numRegisters);
         for (let i = 0; i < data.length; i++) {
             data[i] = LogicGate.bitstringToPrecision(
-                LogicGate.toBitString(i),
+                LogicGate.toBitstring(i),
                 regLength
             );
         }
@@ -362,6 +362,10 @@ class BigRam extends ParentRam {
 
     setData(data) {
         this._data = data;
+    }
+
+    push(address, data) {
+        this._data[address] = data;
     }
 
 }
@@ -537,7 +541,7 @@ class MipsRegisterRam extends Ram {
         const data = new Array(numRegisters);
         for (let i = 0; i < data.length; i++) {
             data[i] = LogicGate.bitstringToPrecision(
-                LogicGate.toBitString(
+                LogicGate.toBitstring(
                     Wath.randomInt(0, 2 ** regLength - 1)
                 ),
                 regLength
@@ -646,7 +650,7 @@ class Mips {
 
 
         // sll $zero, $zero, 00000
-        this.NOP_ADDRESS = '10000000000000000000000000000000';
+        this.NOP_ADDRESS = '0000000000000000000000000000000';
         this.RA_ADDRESS = '11111';
 
         // exceptions
@@ -741,14 +745,7 @@ class Mips {
         },
             clk
         );
-        if (LogicGate.bitToBool(clk)) {
-            console.log(JSON.stringify(this._wb, (key,  value) => {
-                if (key !== 'computer') {
-                    return value;
-                }
-            }, 2));
-        }
-
+    
     }
 
     mem(clk) {
@@ -839,13 +836,7 @@ class Mips {
         },
             clk
         );
-        if (LogicGate.bitToBool(clk)) {
-            console.log(JSON.stringify(this._memToWb, (key,  value) => {
-                if (key !== 'computer') {
-                    return value;
-                }
-            }, 2));
-        }
+
     }
 
     execAlu(clk) {
@@ -914,6 +905,7 @@ class Mips {
             pipeline.immediate,
             pipeline.aluSrc
         );
+
         const alu = this.alu(a, b, opcode);
 
         // Overflow
@@ -969,13 +961,6 @@ class Mips {
             clk
         );
 
-        if (LogicGate.bitToBool(clk)) {
-            console.log(JSON.stringify(this._exToMem, (key,  value) => {
-                if (key !== 'computer') {
-                    return value;
-                }
-            }, 2));
-        }
     }
 
     instructionDecodeRegRead(clk) {
@@ -1098,13 +1083,7 @@ class Mips {
             },
             clk
         );
-        if (LogicGate.bitToBool(clk)) {
-            console.log(JSON.stringify(this._idToEx, (key,  value) => {
-                if (key !== 'computer') {
-                    return value;
-                }
-            }, 2));
-        }
+
     }
 
     instructionFetch(clk) {
@@ -1146,14 +1125,6 @@ class Mips {
             },
             clk
         );
-
-        if (LogicGate.bitToBool(clk)) {
-            console.log(JSON.stringify(this._ifToId, (key,  value) => {
-                if (key !== 'computer') {
-                    return value;
-                }
-            }, 2));
-        }
 
     }
 
@@ -1590,6 +1561,10 @@ class Mips {
 
     setInstructions(instructions) {
         this._instructionMemory.setData(instructions);
+    }
+
+    setInstruction(address, instruction) {
+        this._instructionMemory.push(address, instruction);
     }
 
     registers() {

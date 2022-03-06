@@ -4,7 +4,9 @@
     --bg-gray: #444;
     --hacker-green: #080;
     --hacker-gray: #333;
+    --hacker-gray-dark: #222;
     --hacker-green-dark: rgb(0, 73, 0);
+    --hacker-green-gray-light: #c6eec6;
     --hacker-green-gray-dark: rgb(26, 48, 26);
     --error-red: #ff0048;
 }
@@ -21,12 +23,32 @@ body * {
     font-family: "Verdana";
 }
 
-button {
+.tiltbutton {
     transition: transform 0.1s ease-in-out;
 }
 
-button:hover {
+.tiltbutton:hover {
     transform: rotate(3deg);
+}
+
+.style1 {
+    background-color: var(--hacker-gray-dark);
+    color: var(--hacker-green);
+    border: 2px var(--hacker-green) solid;
+    border-radius: 4px;
+}
+
+button {
+    background-color: var(--hacker-gray-dark);
+    color: var(--hacker-green);
+    border: 2px var(--hacker-green) solid;
+    border-radius: 4px;
+}
+
+#compile-btn {
+    width: fit-content;
+    font-family: Verdana;
+    font-size: 20px;
 }
 
 button.wand {
@@ -80,12 +102,15 @@ output err {
 input, textarea {
     outline: none;
     text-decoration: none;
+    border: 2px solid var(--hacker-green);
+    color: var(--hacker-green);
+    font-family: 'consolas';
+    background-color: var(--hacker-gray-dark);
 }
 
 textarea {
     resize: none;
 }
-
 
 table {
     list-style: none;
@@ -104,9 +129,53 @@ table tr td, table tr th {
 #register-table {
     height: 650px;
     width: fit-content;
-    margin: 20px;
+    margin: 10px;
+    margin-top: 0;
     display: block;
     overflow-y: scroll;
+}
+
+grid {
+    display: grid;
+    gap: 0;
+    grid-template-columns: 28% auto 28%;
+}
+
+griditem {
+    display: inline-grid;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+}
+
+.head {
+    width: 100%;
+    height: 80px;
+    grid-row-start: 1;
+    grid-column-start: 1;
+    grid-column-end: 4;
+    color: var(--hacker-green);
+    font-size: 30px;
+    font-family: Verdana;
+}
+
+titletext {
+    margin: auto;
+}
+
+.left-column {
+    grid-column-start: 1;
+    grid-row-start: 2;
+}
+
+.center-column {
+    grid-column-start: 2;
+    grid-row-start: 2;
+}
+
+.right-column {
+    grid-column-start: 3;
+    grid-row-start: 2;
 }
 
 button:hover {
@@ -137,4 +206,19 @@ button:hover {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
     background: var(--hacker-green);
+}
+
+#code-input {
+    color: var(--hacker-green-gray-light);
+    display: block;
+    /* width: max(900px, 60%); */
+    height: 50%;
+    min-height: 600px;
+    overflow-y: scroll;
+    font-size: 18px;
+}
+
+#console {
+    margin: 10px;
+    margin-top: 0;
 }

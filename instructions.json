@@ -1,0 +1,163 @@
+[
+    {
+        "name" : "add",
+        "type" : "r",
+        "funct" : "0x20",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "addi",
+        "type" : "i",
+        "opcode" : "0x08",
+        "iFormat": "value"
+    },
+    {
+        "name" : "addu",
+        "type" : "r",
+        "funct" : "0x21",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "and",
+        "type" : "r",
+        "funct" : "0x24",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "andi",
+        "type" : "i",
+        "opcode" : "0x0c",
+        "iFormat": "value"
+    },
+    {
+        "name" : "beq",
+        "type" : "i",
+        "opcode" : "0x04",
+        "iFormat": "value",
+        "special": true
+    },
+    {
+        "name" : "b",
+        "type" : "i",
+        "opcode" : "0x04",
+        "rs": "0x00",
+        "rt": "0x00",
+        "iFormat": "value",
+        "special": true
+    },
+    {
+        "name" : "bne",
+        "type" : "i",
+        "opcode" : "0x05",
+        "iFormat": "value",
+        "special": true
+    },
+    {
+        "name" : "j",
+        "type" : "j",
+        "opcode" : "0x02"
+    },
+    {
+        "name" : "jal",
+        "type" : "j",
+        "opcode" : "0x03"
+    },
+    {
+        "name" : "jr",
+        "type" : "r",
+        "funct" : "0x08",
+        "rt": "0x00",
+        "rd": "0x00",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "lui",
+        "type" : "i",
+        "opcode" : "0x0f",
+        "rs": "0x00",
+        "iFormat": "value"
+    },
+    {
+        "name" : "lw",
+        "type" : "i",
+        "opcode" : "0x23",
+        "iFormat": "offset"
+    },
+    {
+        "name" : "syscall",
+        "type" : "i",
+        "opcode" : "0x33",
+        "rs": "0x04",
+        "rt": "0x02",
+        "immediate": "0x0000",
+        "iFormat": "offset"
+    },
+    {
+        "name" : "nor",
+        "type" : "r",
+        "funct" : "0x27",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "or",
+        "type" : "r",
+        "funct" : "0x25",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "ori",
+        "type" : "i",
+        "opcode" : "0x0d",
+        "iFormat": "value"
+    },
+    {
+        "name" : "slt",
+        "type" : "r",
+        "funct" : "0x2a",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "slti",
+        "type" : "i",
+        "opcode" : "0x0a",
+        "shamt" :  "0x00",
+        "iFormat": "value"
+    },
+    {
+        "name" : "sll",
+        "type" : "r",
+        "funct" : "0x00"
+    },
+    {
+        "name" : "srl",
+        "type" : "r",
+        "funct" : "0x02"
+    },
+    {
+        "name" : "sw",
+        "type" : "i",
+        "opcode" : "0x2b",
+        "iFormat": "offset"
+    },
+    {
+        "name" : "sub",
+        "type" : "r",
+        "funct" : "0x22",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "subu",
+        "type" : "r",
+        "funct" : "0x23",
+        "shamt" :  "0x00"
+    },
+    {
+        "name" : "nop",
+        "type" : "r",
+        "funct" : "0x00",
+        "rs":     "0x00",
+        "rt":     "0x00",
+        "rd":     "0x00",
+        "shamt":  "0x00"
+    }
+]

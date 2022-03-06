@@ -13,18 +13,34 @@
     <script defer src="LogicGate.js"></script>
     <script defer src="StateGates.js"></script>
 
-    <script defer src="C:\Users\james\OneDrive\Documents\Coding\JavaScript\Toolkit\Wath.js"></script>
-    <script defer src="C:\Users\james\OneDrive\Documents\Coding\JavaScript\Toolkit\Wom.js"></script>
-    <script defer src="C:\Users\james\OneDrive\Documents\Coding\JavaScript\Toolkit\Wunctions.js"></script>
-    <script defer src="C:\Users\james\OneDrive\Documents\Coding\JavaScript\Toolkit\RangedVariable.js"></script>
-    <script defer src="C:\Users\james\OneDrive\Documents\Coding\JavaScript\Toolkit\StringReader.js"></script>
+    <script defer src="Toolkit/Wath.js"></script>
+    <script defer src="Toolkit/Wunctions.js"></script>
+    <script defer src="Toolkit/StringReader.js"></script>
+    <script defer src="Toolkit/Wom.js"></script>
+    <script defer src="Toolkit/RangedVariable.js"></script>
 
     <script defer src="control.js"></script>
     <script defer src="test.js"></script>
+    <script defer src="compiler.js"></script>
     <script defer src="ui.js"></script>
 
 </head>
 <body>
-    <table id="register-table"></table>
+    <grid class="grid-container">
+        <griditem class="head">
+            <titletext>Wips Assembly</titletext>
+        </griditem>
+        <griditem class="left-column">
+            <table class="style1" id="register-table"></table>
+        </griditem>
+        <griditem class="center-column">
+            <textarea class="style1" spellcheck="false" id="code-input"></textarea>
+            <button id='compile-btn'>Compile</button>
+        </griditem>
+        <griditem class="right-column">
+            <output class="style1" id="console"></output>
+        </griditem>
+      </grid>
+    
 </body>
 </html>

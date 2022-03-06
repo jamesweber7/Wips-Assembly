@@ -8,7 +8,7 @@ class LogicGate {
         const iterations = 2**numInputs;
         for (let i = 0; i < iterations; i++) {
             const bitstring = this.bitstringToPrecision(
-                this.toBitString(i),
+                this.toBitstring(i),
                 numInputs
             );
             const bits = this.split(bitstring)
@@ -20,7 +20,7 @@ class LogicGate {
         return Wath.parseFloat(bitstring, 2);
     }
     
-    static toBitString(num) {
+    static toBitstring(num) {
         return num.toString(2);
     }
 
@@ -520,12 +520,12 @@ class LogicGate {
     static srl(bitstring, positions) {
         const length = bitstring.length;
         const shifted = this.div(bitstring,
-            this.toBitString(2**positions));
+            this.toBitstring(2**positions));
         return this.bitstringToPrecision(shifted, length);
     }
 
     static div(bitstring1, bitstring2) {
-        return this.toBitString(
+        return this.toBitstring(
             this.bitstringToDecimal(bitstring1) /
             this.bitstringToDecimal(bitstring2)
         );
@@ -848,7 +848,7 @@ class LogicGate {
     }
 
     static toIEEE754Float(num) {
-        let bitstring = this.toBitString(num);
+        let bitstring = this.toBitstring(num);
         throw 'nah havent made this lolz';
     }
 

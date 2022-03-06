@@ -4,7 +4,6 @@
 =                 MIPS                        =
 =============================================*/
 
-const mips = new Mips();
 
 // working instructions: 
 // R-type add, sub, and, or, nor, slt
@@ -104,13 +103,6 @@ function liInstruction(rt, imm) {
 }
 
 
-function mipsClockPulse() {
-    mips.write('0');
-    mips.write('1');
-    mips.write('0');
-}
-
-
 // give instructions
 let instructions = [];
 let opcode, rs, rt, rd, shamt, funct;
@@ -146,26 +138,27 @@ let instruction;
 
 
 
-console.log(instructions);
-console.log(mips.registers());
+// console.log(instructions);
+// console.log(mips.registers());
 
-// watch instructions (debugging)
-const WATCH_INSTRUCTIONS = Object.keys(instructions);
-for (let i = 0; i < WATCH_INSTRUCTIONS.length; i++) {
-    WATCH_INSTRUCTIONS[i] = LogicGate.add(
-        WATCH_INSTRUCTIONS[i],
-        '100'   // 4
-    );
-}
-mips.setInstructions(instructions);
+// // watch instructions (debugging)
+// const WATCH_INSTRUCTIONS = Object.keys(instructions);
+// for (let i = 0; i < WATCH_INSTRUCTIONS.length; i++) {
+//     WATCH_INSTRUCTIONS[i] = LogicGate.add(
+//         WATCH_INSTRUCTIONS[i],
+//         '100'   // 4
+//     );
+// }
+// mips.setInstructions(instructions);
 
-const lastInstruction = 5;
-const numCycles = lastInstruction + 4 + 1;
-for (let i = 0; i < numCycles; i++) {
-    mipsClockPulse();
-    console.log('_______CYCLE_'+i+'_OVER_______');
-}
-console.log(mips._registerMemory._data);
+// const lastInstruction = 5;
+// const numCycles = lastInstruction + 4 + 1;
+// for (let i = 0; i < numCycles; i++) {
+//     mipsClockPulse();
+// console.log(mips.registers());
+//     console.log('_______CYCLE_'+i+'_OVER_______');
+// }
+// console.log(mips._registerMemory._data);
 
 /*=====  End of MIPS  ======*/
 
