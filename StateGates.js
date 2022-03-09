@@ -667,6 +667,8 @@ class Mips {
 
         this.writeBootupInstructions();
         this.bootup();
+
+        this._registerMemory._data[2] = '00000000000000000000000000000001'
     }
 
     write(clk) {
@@ -686,6 +688,7 @@ class Mips {
         const syscallOp = pipeline.syscallOp;
         const sysout = syscallOp[0];
         const sysin = syscallOp[1];
+        const int = syscallOp[2];
 
         // regWrite
         const regWriteSrc = LogicGate.or(
@@ -705,7 +708,7 @@ class Mips {
             memToReg1,
             LogicGate.and(
                 memToReg0,
-                LogicGate.not(sysin)
+                LogicGate.not(int)
             )
         );
 
@@ -1345,6 +1348,7 @@ class Mips {
             opcode[4],
             opcode[5],
         );
+        // 1x0011
         let memRead = LogicGate.and(
             opcode[0],
             LogicGate.not(opcode[2]),
@@ -1387,6 +1391,8 @@ class Mips {
                 jal
             )
         );
+        console.log('MEME');
+        console.log(memToReg);
 
         let aluSrc = iType;
 
@@ -1395,6 +1401,7 @@ class Mips {
             memRead,
             opcode[1]
         );
+        console.log(memRead, opcode);
 
         // xx110x
         let aluImmediate = LogicGate.and(
@@ -1527,6 +1534,9 @@ class Mips {
         );
         // int/~string
         const int = funct[3];
+
+        console.log(syscall, funct, sysout, sysin, int);
+
         return LogicGate.merge(
             sysout,
             sysin,

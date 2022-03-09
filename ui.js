@@ -11,6 +11,8 @@ const programTitle = document.getElementById('program-title');
 const compileBtn = document.getElementById('compile-btn');
 const codeInput = document.getElementById('code-input');
 
+const output = document.getElementById('console-output');
+
 // setup
 createUi();
 updateUi();
@@ -32,6 +34,22 @@ function updateUi() {
     updateTrapTable();
 }
 
+
+/*----------  console IO  ----------*/
+
+function outputInt(int) {
+    outputToConsole(
+        LogicGate.bitstringToDecimal(int)
+    );
+}
+
+function outputString(string) {
+    outputToConsole(string + ' BUT AS ASCII');
+}
+
+function outputToConsole(out) {
+    output.innerText += out;
+}
 
 /*----------  Tables  ----------*/
 

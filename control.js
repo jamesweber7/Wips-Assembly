@@ -33,11 +33,7 @@ function compileAndRun() {
     for (let i = 0; i < numCycles; i++) {
         pulseMipsClock();
         console.log(mips._ifToId.pc);
-        printObject(mips._ifToId);
-        printObject(mips._idToEx);
-        printObject(mips._exToMem);
-        printObject(mips._memToWb);
-        printObject(mips._wb);
+        printPipelines();
     }
 
     updateUi();
@@ -49,11 +45,24 @@ function printObject(obj) {
             return value;
         }
     }, 2));
+}
 
+function printPipelines() {
+    printObject(mips._ifToId);
+    printObject(mips._idToEx);
+    printObject(mips._exToMem);
+    printObject(mips._memToWb);
+    printObject(mips._wb);
 }
 
 function pulseMipsClock() {
     mips.write('0');
     mips.write('1');
     mips.write('0');
+    console.log('HELLO!');
+    if (LogicGate.bitToBool(mips.io.syscall)) {
+        if (!LogicGate.bitToBool(mips.io.sysin)) {
+            outputInt(mips.io.sysout);
+        }
+    }
 }

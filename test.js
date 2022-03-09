@@ -102,46 +102,42 @@ function liInstruction(rt, imm) {
     ];
 }
 
+function syscallInstruction() {
+    return typeIInstruction(
+        '110011',
+        '00100',
+        '00010',
+        '0000000000000000'
+    );
+}
+
 
 // give instructions
 let instructions = [];
 let opcode, rs, rt, rd, shamt, funct;
-let instruction;
+let instruction, instructionCache;
 
-// jal
-// instructions['00000000010000000000000000000000'] = typeJInstruction(
-//     '000011',
-//     '00000000000000000000001000'
-// );
-
-// add $3 = $3 + $3
-// instructions['00000000010000000000000000000000'] = addInstruction(
+// li $v0, 8
+// instructionCache = liInstruction(
 //     '00010',
+//     '00000000000000000000000000001010'
+// );
+// console.log(instructionCache);
+
+// instructions['00000000010000000000000000000000'] = instructionCache[0];
+// instructions['00000000010000000000000000000100'] = instructionCache[1];
+
+// instructions['00000000010000000000000000000000'] = oriInstruction(
+//     '00000',
 //     '00010',
-//     '00010'
+//     '0000000000000001'
 // );
 
-// jr $ra
-// instructions['00000000010000000000000000000001'] = typeRInstruction(
-//     '11111',
-//     '00000',
-//     '00000',
-//     '001000'
-// );
-
-// let newStructions = liInstruction('11111', '11111111111111111111111111111111');
-// instructions['00000000010000000000000000000000'] = newStructions[0];
-// instructions['00000000010000000000000000000001'] = newStructions[1];
-// console.log(newStructions);
-// // jr   $ra
-// instructions['00000000010000000000000000000010'] = typeRInstruction('11111', '00000', '00000', '001000');
+instructions['00000000010000000000000000000000'] = syscallInstruction();
 
 
 
-// console.log(instructions);
-// console.log(mips.registers());
-
-// // watch instructions (debugging)
+// watch instructions (debugging)
 // const WATCH_INSTRUCTIONS = Object.keys(instructions);
 // for (let i = 0; i < WATCH_INSTRUCTIONS.length; i++) {
 //     WATCH_INSTRUCTIONS[i] = LogicGate.add(
@@ -149,16 +145,32 @@ let instruction;
 //         '100'   // 4
 //     );
 // }
-// mips.setInstructions(instructions);
 
-// const lastInstruction = 5;
-// const numCycles = lastInstruction + 4 + 1;
-// for (let i = 0; i < numCycles; i++) {
-//     mipsClockPulse();
+console.log(mips.registers());
+mips.setInstructions(instructions);
+
+const lastInstruction = 0;
+const numCycles = lastInstruction + 4 + 1;
+console.log('DOING STUFF');
+for (let i = 0; i < numCycles; i++) {
+    pulseMipsClock();
 // console.log(mips.registers());
-//     console.log('_______CYCLE_'+i+'_OVER_______');
-// }
-// console.log(mips._registerMemory._data);
+    console.log('_______CYCLE_'+i+'_OVER_______');
+    if (LogicGate.bitToBool(mips.io.syscall)) {
+        console.log('SYSCALL');
+        printObject(mips.io);
+    }
+    if (LogicGate.bitToBool(mips.io.exit)) {
+        console.log('SYSEXIT');
+        printObject(mips.io);
+    }
+    printPipelines();
+    printObject(mips.io);
+    printObject(mips.trap);
+}
+console.log('DONE DOING STUFF');
+console.log(mips.registers());
+updateUi();
 
 /*=====  End of MIPS  ======*/
 

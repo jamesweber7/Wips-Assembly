@@ -19,9 +19,10 @@
         <script defer src="/Toolkit/RangedVariable.js"></script>
 
         <script defer src="/control.js"></script>
-        <script defer src="/test.js"></script>
         <script defer src="/compiler.js"></script>
         <script defer src="/ui.js"></script>
+
+        <script defer src="/test.js"></script>
     </head>
 
     <body>
@@ -68,8 +69,8 @@
                     <sectionhead>Console</sectionhead>
                     <sectionbody>
                         <span id="console">
-                            <output></output>
-                            <currentinput></currentinput>
+                            <output id="console-output"></output>
+                            <currentinput id="console-input"></currentinput>
                             <caret class="hidden"></caret>
                         </span>
                         <input id='hidden-console-input' class="hidden">
