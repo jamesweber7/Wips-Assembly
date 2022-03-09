@@ -33,8 +33,7 @@
         "name" : "beq",
         "type" : "i",
         "opcode" : "0x04",
-        "iFormat": "value",
-        "special": true
+        "iFormat": "value"
     },
     {
         "name" : "b",
@@ -42,15 +41,13 @@
         "opcode" : "0x04",
         "rs": "0x00",
         "rt": "0x00",
-        "iFormat": "value",
-        "special": true
+        "iFormat": "value"
     },
     {
         "name" : "bne",
         "type" : "i",
         "opcode" : "0x05",
-        "iFormat": "value",
-        "special": true
+        "iFormat": "value"
     },
     {
         "name" : "j",
@@ -159,5 +156,29 @@
         "rt":     "0x00",
         "rd":     "0x00",
         "shamt":  "0x00"
+    },
+    {
+        "name" : "move",
+        "pseudo" : true
+    },
+    {
+        "name" : "blt",
+        "pseudo" : true
+    },
+    {
+        "name" : "ble",
+        "pseudo" : true
+    },
+    {
+        "name" : "bgt",
+        "pseudo" : true
+    },
+    {
+        "name" : "bge",
+        "pseudo" : true
+    },
+    {
+        "name" : "li",
+        "pseudo" : true
     }
 ]

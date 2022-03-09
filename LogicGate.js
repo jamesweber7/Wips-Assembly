@@ -531,6 +531,17 @@ class LogicGate {
         );
     }
 
+    static incrementer32(a) {
+        let cry = '1';
+        let incremented = '';
+        for (let i = 31; i >= 0; i--) {
+            const halfAdder = this.halfAdder(a[i], cry);
+            cry = halfAdder.cout;
+            incremented = halfAdder.sum + incremented;
+        }
+        return incremented;
+    }
+
     static incrementer16(a) {
         let cry = '1';
         let incremented = '';

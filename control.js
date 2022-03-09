@@ -15,24 +15,41 @@ loadInstructions();
 
 
 function compileAndRun() {
-    const instructions = compile(codeInput.value);
+    const instructions = Compiler.createInstructions(codeInput.value);
+    console.log(instructions);
     mips = new Mips();
     for (let i = 0; i < instructions.length; i++) {
         mips.setInstruction(
             LogicGate.add(
-                '00000000010000000000000000000000', 
+                '00000000010000000000000000000000',
                 LogicGate.toBitstring(i)
             ),
             instructions[i]
         );
     }
-    const lastInstruction = 5;
+    console.log('RUNNING INSTRUCTIONS');
+    const lastInstruction = 10;
     const numCycles = lastInstruction + 4 + 1;
     for (let i = 0; i < numCycles; i++) {
         pulseMipsClock();
+        console.log(mips._ifToId.pc);
+        printObject(mips._ifToId);
+        printObject(mips._idToEx);
+        printObject(mips._exToMem);
+        printObject(mips._memToWb);
+        printObject(mips._wb);
     }
 
     updateUi();
+}
+
+function printObject(obj) {
+    console.log(JSON.stringify(obj, (key, value) => {
+        if (key !== 'computer') {
+            return value;
+        }
+    }, 2));
+
 }
 
 function pulseMipsClock() {

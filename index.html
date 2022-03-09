@@ -1,46 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weber Assembly</title>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Wips Assembly</title>
 
-    <link rel="stylesheet" href="/style.css">
-    <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="stylesheet" href="/style.css">
+        <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+        <script defer src="/LogicGate.js"></script>
+        <script defer src="/StateGates.js"></script>
 
-    <script defer src="/LogicGate.js"></script>
-    <script defer src="/StateGates.js"></script>
+        <script defer src="/Toolkit/Wath.js"></script>
+        <script defer src="/Toolkit/Wunctions.js"></script>
+        <script defer src="/Toolkit/StringReader.js"></script>
+        <script defer src="/Toolkit/Wom.js"></script>
+        <script defer src="/Toolkit/RangedVariable.js"></script>
 
-    <script defer src="/Toolkit/Wath.js"></script>
-    <script defer src="/Toolkit/Wunctions.js"></script>
-    <script defer src="/Toolkit/StringReader.js"></script>
-    <script defer src="/Toolkit/Wom.js"></script>
-    <script defer src="/Toolkit/RangedVariable.js"></script>
+        <script defer src="/control.js"></script>
+        <script defer src="/test.js"></script>
+        <script defer src="/compiler.js"></script>
+        <script defer src="/ui.js"></script>
+    </head>
 
-    <script defer src="/control.js"></script>
-    <script defer src="/test.js"></script>
-    <script defer src="/compiler.js"></script>
-    <script defer src="/ui.js"></script>
+    <body>
+        <grid class="grid-container">
+            <griditem class="head">
+                <titletext>Wips Assembly</titletext>
+            </griditem>
+            <griditem id='register-box' class="left-column-top">
+                <contentbox>
+                    <sectionhead>Registers</sectionhead>
+                    <sectionbody>
+                        <table id="register-table"></table>
+                    </sectionbody>
+                </contentbox>
+            </griditem>
+            <griditem class="left-column-bottom">
+                <contentbox id="main-memory-box">
+                    <sectionhead>
+                        Main Memory
+                    </sectionhead>
+                    <sectionbody>
+                        <table id="main-mem-table"></table>
+                    </sectionbody>
+                </contentbox>
 
-</head>
-<body>
-    <grid class="grid-container">
-        <griditem class="head">
-            <titletext>Wips Assembly</titletext>
-        </griditem>
-        <griditem class="left-column">
-            <table class="style1" id="register-table"></table>
-        </griditem>
-        <griditem class="center-column">
-            <textarea class="style1" spellcheck="false" id="code-input"></textarea>
-            <button id='compile-btn'>Compile</button>
-        </griditem>
-        <griditem class="right-column">
-            <output class="style1" id="console"></output>
-        </griditem>
-      </grid>
-    
-</body>
+            </griditem>
+            <griditem class="center-column">
+                <contentbox>
+                    <sectionhead>
+                        <input id="program-title" spellcheck=false value="HelloWorld.s">
+                    </sectionhead>
+                    <sectionbody>
+                        <textarea spellcheck="false" id="code-input"></textarea>
+                    </sectionbody>
+                </contentbox>
+                <buttonrow>
+                    <button id='compile-btn'>Compile</button>
+                    <button id='step-btn'>Step</button>
+                    <button id='stop-btn'>Stop</button>
+                </buttonrow>
+            </griditem>
+            <griditem class="right-column-top">
+                <contentbox class="style1">
+                    <sectionhead>Console</sectionhead>
+                    <sectionbody>
+                        <span id="console">
+                            <output></output>
+                            <currentinput></currentinput>
+                            <caret class="hidden"></caret>
+                        </span>
+                        <input id='hidden-console-input' class="hidden">
+                    </sectionbody>
+                </contentbox>
+            </griditem>
+            <griditem class="right-column-bottom">
+                <contentbox>
+                    <sectionhead>
+                        Trap
+                    </sectionhead>
+                    <sectionbody>
+                        <table id="trap-table"></table>
+                    </sectionbody>
+                </contentbox>
+            </griditem>
+        </grid>
+    </body>
 </html>

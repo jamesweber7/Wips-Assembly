@@ -454,7 +454,7 @@ class LatentRam extends SingleReadRam {
 class MipsDataRam extends BigRam {
     constructor() {
         super(8);
-        this._addr = LogicGate.empty(16);
+        this._addr = LogicGate.empty(32);
         this.readData();
     }
 
@@ -476,22 +476,22 @@ class MipsDataRam extends BigRam {
         const bytes = LogicGate.split(dataIn, 8, 8, 8, 8);
         let addr = this._addr;
         this._data[addr] = bytes[3];
-        addr = LogicGate.incrementer16(addr);
+        addr = LogicGate.incrementer32(addr);
         this._data[addr] = bytes[2];
-        addr = LogicGate.incrementer16(addr);
+        addr = LogicGate.incrementer32(addr);
         this._data[addr] = bytes[1];
-        addr = LogicGate.incrementer16(addr);
+        addr = LogicGate.incrementer32(addr);
         this._data[addr] = bytes[0];
     }
 
     readData() {
         let addr = this._addr;
         this.dataOut1 = this.dataAt(addr);
-        addr = LogicGate.incrementer16(addr);
+        addr = LogicGate.incrementer32(addr);
         this.dataOut2 = this.dataAt(addr);
-        addr = LogicGate.incrementer16(addr);
+        addr = LogicGate.incrementer32(addr);
         this.dataOut3 = this.dataAt(addr);
-        addr = LogicGate.incrementer16(addr);
+        addr = LogicGate.incrementer32(addr);
         this.dataOut4 = this.dataAt(addr);
     }
 }
@@ -650,7 +650,7 @@ class Mips {
 
 
         // sll $zero, $zero, 00000
-        this.NOP_ADDRESS = '0000000000000000000000000000000';
+        this.NOP_ADDRESS = '00000000000000000000000000000000';
         this.RA_ADDRESS = '11111';
 
         // exceptions
@@ -689,7 +689,8 @@ class Mips {
 
         // regWrite
         const regWriteSrc = LogicGate.or(
-            LogicGate.split(syscallOp)
+            sysout,
+            sysin
         );
         const regWrite = LogicGate.mux(
             pipeline.regWrite,
@@ -782,7 +783,7 @@ class Mips {
         pc = LogicGate.mux(
             pc,
             pipeline.jAddr,
-            pipeline.aluResult,   // jrAddr
+            pipeline.aluResult,   // jr
             pcJumpSrc
         );
 
@@ -847,15 +848,14 @@ class Mips {
             this._pcWb, 
             '00000000000000000000000000000001'
         );
-        // pc = 4 (nop)
-        const pcEqualsFour = LogicGate.eq(
-            pipeline.pc,
-            '00000000000000000000000000000100'
+        // pc ≤ 4 (pc = 0 or pc = 0 + 4)
+        const pcLeqFour = LogicGate.zero(
+            LogicGate.split(pipeline.pc, 29)[0]
         );
         const pc = LogicGate.mux(
-            pcWbIncremented,
             pipeline.pc,
-            pcEqualsFour
+            pcWbIncremented,
+            pcLeqFour
         )
 
         // branch pc
@@ -1036,7 +1036,7 @@ class Mips {
             )[1]
         );
 
-        // if opcode ≠ 0 (nor opcode = 0)
+        // if opcode ≠ 0 (nor opcode = 0)  funct = opcode
         // if opcode = 0, (nor opcode = 1) funct = funct
         const nextFunct = LogicGate.mux(
             opcode,     // opcode
@@ -1097,6 +1097,7 @@ class Mips {
             this._pcStopWb
         )
         const pcBlock = this._pcBlock.q;
+
         // GET PC Input
         const nextPc = LogicGate.mux(
             this._pcWb,
@@ -1232,7 +1233,7 @@ class Mips {
         );
 
         const rOpcode = LogicGate.merge(op3, op2, op1, op0);
-        const addOpcode = '0000';
+        const addOpcode = '0010';
         const subOpcode = '0110';
 
         const opcode = LogicGate.mux(
@@ -1536,25 +1537,36 @@ class Mips {
     /*----------  Boot up  ----------*/
     writeBootupInstructions() {
         // pc = 0x00040000
-        this._pc.write('00000000010000000000000000000000', '0');
-        this._pc.write('00000000010000000000000000000000', '1');
-        this._pc.write('00000000010000000000000000000000', '0');
+        // this._pc.write('00000000010000000000000000000000', '0');
+        // this._pc.write('00000000010000000000000000000000', '1');
+        // this._pc.write('00000000010000000000000000000000', '0');
 
-        this._pcWb = '00000000010000000000000000000001';
-        this._exToMem._pc = '00000000010000000000000000000001';
-        this._idToEx._pc = '00000000010000000000000000000010';
-        this._ifToId._pc = '00000000010000000000000000000011';
+        // this._pcWb = '00000000010000000000000000000001';
+        // this._exToMem._pc = '00000000010000000000000000000001';
+        // this._idToEx._pc = '00000000010000000000000000000010';
+        // this._ifToId._pc = '00000000010000000000000000000011';
+
+        // jump to program start
+        // this._instructionMemory._data['00000000000000000000000000000001'] = '00001000000001111111111111111111';
+        this._instructionMemory._data['00000000000000000000000000000001'] = '00001000000100000000000000000000';
 
     }
 
     bootup() {
-        // const numBootupInstructions = 0;
-        // const numCycles = numBootupInstructions + 4 + 1;
-        // for (let i = 0; i < numCycles; i++) {
-        //     this.write('0');
-        //     this.write('1');
-        //     this.write('0');
-        // }
+        const numBootupInstructions = 1;
+        const numCycles = numBootupInstructions + 4 + 1 + 0;
+        for (let i = 0; i < numCycles; i++) {
+            console.log('cycle ', i);
+            this.write('0');
+            this.write('1');
+            this.write('0');
+            console.log(this._pcBlock.q);
+            console.log(this._ifToId.pc);
+            // console.log(this._pcWb, this._memToWb.pc, this._exToMem.pc, this._idToEx.pc, this._ifToId.pc);
+        // console.log(this._memToWb, this._exToMem, this._idToEx, this._ifToId);
+        }
+        // console.log(this._pc);
+        // console.log(this._memToWb, this._exToMem, this._idToEx, this._ifToId);
     }
 
     /*----------  Helpers  ----------*/
@@ -1569,6 +1581,26 @@ class Mips {
 
     registers() {
         return this._registerMemory.getData();
+    }
+
+    stackAtPointer() {
+        const stackPointerAddr = '11101'; // 31
+        const stackPointer = this._registerMemory.dataAt(stackPointerAddr);
+        let pointer = stackPointer;
+        const dataOut1 = this._dataMemory.dataAt(pointer);
+        pointer = LogicGate.incrementer32(pointer);
+        const dataOut2 = this._dataMemory.dataAt(pointer);
+        pointer = LogicGate.incrementer32(pointer);
+        const dataOut3 = this._dataMemory.dataAt(pointer);
+        pointer = LogicGate.incrementer32(pointer);
+        const dataOut4 = this._dataMemory.dataAt(pointer);
+        return {
+            stackPointer: stackPointer,
+            dataOut4: dataOut4,
+            dataOut3: dataOut3,
+            dataOut2: dataOut2,
+            dataOut1: dataOut1
+        };
     }
 
 }
@@ -1595,8 +1627,7 @@ class PipelineRegister extends ClockTriggeredGate {
 class InstrFetchToInstrDecodePipeline extends PipelineRegister {
     constructor(computer) {
         super(computer);
-        // start at pc=0x40 0000 + 3
-        this.pc = '00000000010000000000000000000011';
+        this.pc = LogicGate.empty(32);
         this.instruction = LogicGate.empty(32);
     }
     updateWires(wires) {
@@ -1609,8 +1640,7 @@ class InstrDecodeToAluExPipeline extends PipelineRegister {
     constructor(computer) {
         super(computer);
         this.jAddr = LogicGate.empty(32);
-        // start at pc=9x4 0000 + 2
-        this.pc = '00000000010000000000000000000010';
+        this.pc = LogicGate.empty(32);
         this.regDst = LogicGate.empty(2);   // 2 bits
 
         this.branch = LogicGate.empty(1);
@@ -1678,8 +1708,7 @@ class AluExToMemPipeline extends PipelineRegister {
     constructor(computer) {
         super(computer);
         this.jAddr = LogicGate.empty(32);
-        // starts at 0x0004 0000 + 1
-        this.pc = '00000000010000000000000000000001';
+        this.pc = LogicGate.empty(32);
         this.branchPc = LogicGate.empty(32);
 
         this.branch = LogicGate.empty(1);
@@ -1735,9 +1764,7 @@ class AluExToMemPipeline extends PipelineRegister {
 class MemToWriteBackPipeline extends PipelineRegister {
     constructor(computer) {
         super(computer);
-        // this.pc = LogicGate.empty(32);
-        // 0x0040 0000
-        this.pc = '00000000010000000000000000000000'
+        this.pc = LogicGate.empty(32);
 
         this.regWrite = LogicGate.empty(1);
         this.memToReg = LogicGate.empty(2);

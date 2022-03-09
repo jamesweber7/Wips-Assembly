@@ -192,7 +192,7 @@ class Wom {
         if (!id.includes('-data')) {
             id += '-data';
         }
-        const el = createElement('data', id);
+        const el = this.create('data', id);
         el.setAttribute('data', data);
         return el;
     }
