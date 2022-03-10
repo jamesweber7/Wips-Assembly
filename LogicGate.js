@@ -28,6 +28,12 @@ class LogicGate {
         return num.toString(16);
     }
 
+    static toAscii(bitstring) {
+        return String.fromCharCode(
+            this.bitstringToDecimal(bitstring)
+        );
+    }
+
     static bitToBool(bit) {
         if (bit === '1') {
             return true;
@@ -324,6 +330,37 @@ class LogicGate {
             difference = difference.substring(1);
         }
         return difference;
+    }
+
+    static twoInputAddNoResize(bitstring1, bitstring2) {
+        // make sure bitstrings are same length
+        const lengthNormalizedBitStrings = this.standardizeBitStringLengths(bitstring1, bitstring2);
+        bitstring1 = lengthNormalizedBitStrings[0];
+        bitstring2 = lengthNormalizedBitStrings[1];
+
+        const length = bitstring1.length;
+
+        let result = '';
+        let cry = '0';
+        for (let i = length - 1; i >= 0; i--) {
+            const bit1 = bitstring1[i];
+            const bit2 = bitstring2[i];
+            const adder = this.fullAdder(bit1, bit2, cry);
+            result = adder.sum + result;
+            cry = adder.cout;
+        }
+        return result;
+    }
+
+    static addNoResize(bitstrings) {
+        if (!Array.isArray(bitstrings)) {
+            bitstrings = [...arguments];
+        }
+        let sum = bitstrings[0];
+        for (let i = 1; i < bitstrings.length; i++) {
+            sum = this.twoInputAddNoResize(sum, bitstrings[i]);
+        }
+        return sum;
     }
 
     static bitGt(bit1, bit2) {

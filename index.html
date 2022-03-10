@@ -55,7 +55,7 @@
                         <input id="program-title" spellcheck=false value="HelloWorld.s">
                     </sectionhead>
                     <sectionbody>
-                        <textarea spellcheck="false" id="code-input"></textarea>
+                        <textarea spellcheck="false" class="programmer-input" id="code-input"></textarea>
                     </sectionbody>
                 </contentbox>
                 <buttonrow>
@@ -68,12 +68,7 @@
                 <contentbox class="style1">
                     <sectionhead>Console</sectionhead>
                     <sectionbody>
-                        <span id="console">
-                            <output id="console-output"></output>
-                            <currentinput id="console-input"></currentinput>
-                            <caret class="hidden"></caret>
-                        </span>
-                        <input id='hidden-console-input' class="hidden">
+                        <textarea id="console" class="programmer-input" spellcheck=false data=""></textarea>
                     </sectionbody>
                 </contentbox>
             </griditem>

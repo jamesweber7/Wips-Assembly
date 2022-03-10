@@ -9,10 +9,11 @@ const trapTable = document.getElementById('trap-table');
 const programTitle = document.getElementById('program-title');
 
 const compileBtn = document.getElementById('compile-btn');
+const stopBtn = document.getElementById('stop-btn');
+const stepBtn = document.getElementById('step-btn');
 const codeInput = document.getElementById('code-input');
 
-const output = document.getElementById('console-output');
-
+const consoleIO = document.getElementById('console');
 // setup
 createUi();
 updateUi();
@@ -21,11 +22,21 @@ function createUi() {
     createTables();
 
     programTitle.onfocus = programTitle.select;
+    // code input
     Wom.addTabFunctionality(codeInput);
-    // compile button
-    compileBtn.onclick = () => {
-        compileAndRun();
+    codeInput.onchange = () => {
+        compiled = false;
+        saved = false;
     }
+
+    // console
+    consoleIO.addEventListener('input', inputConsole);
+    consoleIO.addEventListener('keypress', submitConsoleInput);
+
+    // compile button
+    compileBtn.onclick = compileAndRun;
+    stepBtn.onclick = checkCompilationAndStep;
+    stopBtn.onclick = stopPipeline;
 }
 
 function updateUi() {
@@ -37,18 +48,44 @@ function updateUi() {
 
 /*----------  console IO  ----------*/
 
+function inputConsole() {
+    if (!consoleIO.value.includes(consoleIO.getAttribute("data"))) {
+        let selectionStart = consoleIO.selectionStart;
+        let selectionEnd = consoleIO.selectionEnd;
+        consoleIO.value = consoleIO.getAttribute("last");
+        consoleIO.selectionStart = selectionStart + 1;
+        consoleIO.selectionEnd = selectionEnd + 1;
+    }
+    consoleIO.setAttribute("last", consoleIO.value);
+}
+
+function submitConsoleInput(e) {
+    if (e.key === 'Enter') {
+        consoleIO.setAttribute("data", consoleIO.value + '\n');
+    }
+}
+
 function outputInt(int) {
     outputToConsole(
         LogicGate.bitstringToDecimal(int)
     );
 }
 
-function outputString(string) {
-    outputToConsole(string + ' BUT AS ASCII');
+function outputString(fourByteString) {
+    const split = LogicGate.split(fourByteString, 8, 8, 8, 8);
+    outputToConsole(
+        LogicGate.toAscii(split[0]) +
+        LogicGate.toAscii(split[1]) +
+        LogicGate.toAscii(split[2]) +
+        LogicGate.toAscii(split[3])
+    );
 }
 
-function outputToConsole(out) {
-    output.innerText += out;
+function outputToConsole(output) {
+    consoleIO.setAttribute(
+        "data",
+        consoleIO.getAttribute("data") + output
+    );
 }
 
 /*----------  Tables  ----------*/
@@ -165,7 +202,7 @@ function createTrapTable() {
         createTableRow('trap-sysin', 'Sysin', trap.sysin)
     );
     trapTable.append(
-        createTableRow('trap-exit', 'Exit', trap.sysin)
+        createTableRow('trap-exit', 'Exit', trap.exit)
     );
     trapTable.append(
         createTableRow('trap-pipeline-trap', 'Pipeline Trap', trap.pipelineTrap)
@@ -174,10 +211,10 @@ function createTrapTable() {
 
 function updateTrapTable() {
     const trap = mips.trap;
-    updateTableRow('trap-trap', trap.trap)
+    updateTableRow('trap-trap', trap.trap);
     updateTableRow('trap-of', trap.OvF);
     updateTableRow('trap-sysin', trap.sysin);
-    updateTableRow('trap-exit', trap.sysin);
+    updateTableRow('trap-exit', trap.exit);
     updateTableRow('trap-pipeline-trap', trap.pipelineTrap);
 }
 

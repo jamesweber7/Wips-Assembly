@@ -195,13 +195,29 @@ button:hover {
     background: var(--hacker-green-gray-dark);
 }
 
-#code-input {
+.programmer-input {
     background: none;
     width: 95%;
     height: 100%;
     color: var(--hacker-green-gray-light);
     border: none;
     font-size: 18px;
+}
+
+caret {
+    background: var(--hacker-green);
+    width: 7px;
+    height: 12px;
+    animation: caret-blink 1s infinite;
+}
+
+@keyframes caret-blink {
+    0%, 49%, 100% {
+        opacity: 100;
+    }
+    50%, 99% {
+        opacity: 0;
+    }
 }
 
 contentbox {
@@ -227,23 +243,4 @@ sectionbody {
     display: block;
     width: 100%;
     height: 100%;
-}
-
-#console {
-    display: block;
-    width: -webkit-fill-available;
-    min-height: calc(100% - 34px);
-    cursor: text;
-}
-
-#console output {
-    display: inline-block;
-}
-
-#console consoleinput {
-    display: inline-block;
-}
-
-#console caret {
-    display: inline-block;
 }

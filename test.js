@@ -111,9 +111,11 @@ function syscallInstruction() {
     );
 }
 
+// $v0 (for syscall)
+mips._registerMemory._data[2] = '00000000000000000000000000001010'
 
 // give instructions
-let instructions = [];
+let testInstructions = [];
 let opcode, rs, rt, rd, shamt, funct;
 let instruction, instructionCache;
 
@@ -124,21 +126,21 @@ let instruction, instructionCache;
 // );
 // console.log(instructionCache);
 
-// instructions['00000000010000000000000000000000'] = instructionCache[0];
-// instructions['00000000010000000000000000000100'] = instructionCache[1];
+// testInstructions['00000000010000000000000000000000'] = instructionCache[0];
+// testInstructions['00000000010000000000000000000100'] = instructionCache[1];
 
-// instructions['00000000010000000000000000000000'] = oriInstruction(
+// testInstructions['00000000010000000000000000000000'] = oriInstruction(
 //     '00000',
 //     '00010',
 //     '0000000000000001'
 // );
 
-instructions['00000000010000000000000000000000'] = syscallInstruction();
+testInstructions['00000000010000000000000000000000'] = syscallInstruction();
 
 
 
 // watch instructions (debugging)
-// const WATCH_INSTRUCTIONS = Object.keys(instructions);
+// const WATCH_INSTRUCTIONS = Object.keys(testInstructions);
 // for (let i = 0; i < WATCH_INSTRUCTIONS.length; i++) {
 //     WATCH_INSTRUCTIONS[i] = LogicGate.add(
 //         WATCH_INSTRUCTIONS[i],
@@ -147,7 +149,7 @@ instructions['00000000010000000000000000000000'] = syscallInstruction();
 // }
 
 console.log(mips.registers());
-mips.setInstructions(instructions);
+mips.setInstructions(testInstructions);
 
 const lastInstruction = 0;
 const numCycles = lastInstruction + 4 + 1;

@@ -1199,6 +1199,10 @@ class Wath {
 
     // note: order of a and b do not matter (not necessarily respective min and max)
     static between(value, a, b) {
+        return this.betweenExclusive(value, a, b);
+    }
+
+    static betweenExclusive(value, a, b) {
         if (a < b) {
             return a < value && value < b;
         }
@@ -1206,6 +1210,13 @@ class Wath {
         return b < value && value < a;
     }
 
+    static betweenInclusive(value, a, b) {
+        if (a < b) {
+            return a <= value && value <= b;
+        }
+        // b < a
+        return b <= value && value <= a;
+    }
     
     /*----------  Sums  ----------*/
     
