@@ -79,6 +79,13 @@ class D_FlipFlopAsync extends D_FlipFlop {
     }
 
 }
+class D_FlipFlopAsyncReset extends D_FlipFlop {
+    write(d, clr, clk) {
+        super.write(d, clk);
+        this.q = LogicGate.bitstringAndBit(d, clr);
+        this.notq = LogicGate.not(this.q);
+    }
+}
 
 class S_R_FlipFlop extends ClockTriggeredGate {
     constructor() {
@@ -481,7 +488,7 @@ class MipsDataRam extends BigRam {
             }
         }
         if (LogicGate.bitToBool(read)) {
-            this.dataOut = this.dataAt(this._addr);
+            this.readData();
         }
         this.updateClockPulse(clk);
     }
@@ -657,7 +664,7 @@ class Mips {
     constructor() {
         // RAM
         this._instructionMemory = new SingleReadBigRam(32);
-        this._dataMemory = new MipsDataRam();
+        this._mainMemory = new MipsDataRam();
         this._registerMemory = MipsRegisterRam.indexValues(32, 32);
         // PC
         this._pc = new D_FlipFlop(32);
@@ -665,14 +672,17 @@ class Mips {
         this._pcWb = LogicGate.empty(32);
         this._pcStopWb = LogicGate.empty(1);
         this._pcStartWb = LogicGate.empty(1);
+        this._gpWf = LogicGate.empty(32);
 
         this.NOP_ADDRESS = '00000000000000000000000000000000';
-        this.RA_ADDRESS = '11111';
         this.A0_ADDRESS = '00100';
+        this.GP_ADDRESS = '11100';
+        this.RA_ADDRESS = '11111';
 
         // exceptions
         this.trap = new MipsTrap();
         this.io = new MipsSyscall();
+        this._stringLengthFlipFlop = new D_FlipFlop(32);
         this._pcBlock = new S_R_FlipFlopAsyncSet();
         this.delayPcBlock = new S_R_FlipFlop();
         this.noDelayPcBlock = new S_R_FlipFlop();
@@ -750,6 +760,8 @@ class Mips {
         // syscall
         this.io.write(writeData, pipeline.syscallOp, clk);
 
+        const string = this.io.string;
+
         // trap
         this.trap.write(
             {
@@ -757,8 +769,24 @@ class Mips {
                 syscall: this.io.syscall,
                 sysin: this.io.sysin,
                 exit: this.io.exit,
-                string: this.io.string,
+                string: string,
             },
+            clk
+        );
+
+        // string length
+        const previousStringLen = this._stringLengthFlipFlop.q;
+        const stringLength = LogicGate.addALU32(
+            previousStringLen,
+            '00000000000000000000000000000100'  // 4
+        );
+        const nextStringLen = LogicGate.mux(
+            '11111111111111111111111111111100', // -4
+            stringLength,
+            string
+        )
+        this._stringLengthFlipFlop.write(
+            nextStringLen,
             clk
         );
 
@@ -778,9 +806,11 @@ class Mips {
 
         // Update WB Wires
         this._wb.write({
+            string: string,
             regWrite: regWrite,
             writeData: writeData,
-            writeReg: writeReg
+            writeReg: writeReg,
+            len: stringLength,
         });
     }
 
@@ -825,20 +855,20 @@ class Mips {
         // Update PC WB Wire
         this._pcWb = pc;
 
-        // aluResultWb + 4
-        const incrementedWriteDataWb = LogicGate.addALU32(
-            this._wb.writeData,
-            '00000000000000000000000000000100'  // 4
+        // $gp + length
+        const incrementedGp = LogicGate.addALU32(
+            this._gpWf,
+            this._wb.len
         );
-        const string = this.io.string;
+        const string = this._wb.string;
         const aluResult = LogicGate.mux(
             pipeline.aluResult,
-            incrementedWriteDataWb,
+            incrementedGp,
             string
         );
 
         // data mem
-        this._dataMemory.write(
+        this._mainMemory.write(
             pipeline.aluResult,
             pipeline.writeData,
             pipeline.memRead,
@@ -847,10 +877,10 @@ class Mips {
         );
 
         const readData = LogicGate.merge(
-            this._dataMemory.dataOut4,
-            this._dataMemory.dataOut3,
-            this._dataMemory.dataOut2,
-            this._dataMemory.dataOut1
+            this._mainMemory.dataOut4,
+            this._mainMemory.dataOut3,
+            this._mainMemory.dataOut2,
+            this._mainMemory.dataOut1
         );
 
         // update MEM → WB pipeline
@@ -1059,7 +1089,11 @@ class Mips {
         const rt = instruction[2];
         const rd = instruction[3];
         const readReg1 = rs;
-        const readReg2 = rt;
+        const readReg2 = LogicGate.mux(
+            rt,
+            this.GP_ADDRESS,
+            this.trap.pipelineTrap
+        );
 
         // Write Register
         const writeReg = this._wb.writeReg;
@@ -1088,6 +1122,9 @@ class Mips {
                 4           // syscall funct
             )[1]
         );
+
+        // $gp wf (readData2)
+        this._gpWf = readData2;
 
         // if opcode ≠ 0 (nor opcode = 0)  funct = opcode
         // if opcode = 0, (nor opcode = 1) funct = funct
@@ -1759,13 +1796,13 @@ class Mips {
         const stackPointerAddr = '11101'; // 31
         const stackPointer = this._registerMemory.dataAt(stackPointerAddr);
         let pointer = stackPointer;
-        const dataOut1 = this._dataMemory.dataAt(pointer);
+        const dataOut1 = this._mainMemory.dataAt(pointer);
         pointer = LogicGate.incrementer32(pointer);
-        const dataOut2 = this._dataMemory.dataAt(pointer);
+        const dataOut2 = this._mainMemory.dataAt(pointer);
         pointer = LogicGate.incrementer32(pointer);
-        const dataOut3 = this._dataMemory.dataAt(pointer);
+        const dataOut3 = this._mainMemory.dataAt(pointer);
         pointer = LogicGate.incrementer32(pointer);
-        const dataOut4 = this._dataMemory.dataAt(pointer);
+        const dataOut4 = this._mainMemory.dataAt(pointer);
         return {
             stackPointer: stackPointer,
             dataOut4: dataOut4,
@@ -1970,14 +2007,18 @@ class MemToWriteBackPipeline extends PipelineRegister {
 class WriteBack {
     constructor(computer) {
         this.computer = computer;
+        this.string = LogicGate.empty(1);
         this.regWrite = LogicGate.empty(1);
         this.writeData = LogicGate.empty(32);
         this.writeReg = LogicGate.empty(5);
+        this.len = LogicGate.empty(32);
     }
     write(wires) {
+        this.string = wires.string;
         this.regWrite = wires.regWrite;
         this.writeData = wires.writeData;
         this.writeReg = wires.writeReg;
+        this.len = wires.len;
     }
 }
 

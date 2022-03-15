@@ -104,6 +104,7 @@ function outputToConsole(output) {
         "data",
         consoleIO.getAttribute("data") + output
     );
+    consoleIO.value = consoleIO.getAttribute("data");
 }
 
 /*----------  Tables  ----------*/

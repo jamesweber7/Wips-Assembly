@@ -105,8 +105,8 @@ function liInstruction(rt, imm) {
 function syscallInstruction() {
     return typeIInstruction(
         '110011',
-        // '00100',     // $a0
-        '11100',     // $gp
+        '00100',     // $a0
+        // '11100',     // $gp
         '00010',
         '0000000000000000'
     );
@@ -122,39 +122,39 @@ let instruction, instructionCache;
 
 // syscall
 // li $v0, syscallCode
-// testInstructions['00000000010000000000000000000000'] = luiInstruction(
-//     '00010',
-//     '0000000000000000'
-// );
-// testInstructions['00000000010000000000000000000010'] = oriInstruction(
-//     '00010',
-//     '00010',
-//     '0000000000000001'
-// );
-// testInstructions['00000000010000000000000000000110'] = syscallInstruction();
-
-// sw
-// sw $v0, 0($sp)
-testInstructions['00000000010000000000000000000000'] = swInstruction(
-    '11101',
+testInstructions['00000000010000000000000000000000'] = luiInstruction(
     '00010',
     '0000000000000000'
 );
-
-// lw
-// lw $a0, 0($sp)
-testInstructions['00000000010000000000000000000100'] = lwInstruction(
-    '11101',
-    '00100',
-    '0000000000000000'
+testInstructions['00000000010000000000000000000010'] = oriInstruction(
+    '00010',
+    '00010',
+    '0000000000000001'
 );
+testInstructions['00000000010000000000000000000110'] = syscallInstruction();
+
+// // sw
+// // sw $v0, 0($sp)
+// testInstructions['00000000010000000000000000000000'] = swInstruction(
+//     '11101',
+//     '00010',
+//     '0000000000000000'
+// );
+
+// // lw
+// // lw $a0, 0($sp)
+// testInstructions['00000000010000000000000000000100'] = lwInstruction(
+//     '11101',
+//     '00100',
+//     '0000000000000000'
+// );
 
 
 
 console.log(mips.registers());
 mips.setInstructions(testInstructions);
 
-const lastInstruction = 4;
+const lastInstruction = 6;
 const numCycles = lastInstruction + 4 + 1;
 console.log('DOING STUFF');
 for (let i = 0; i < numCycles; i++) {
@@ -163,6 +163,12 @@ for (let i = 0; i < numCycles; i++) {
     console.log('_______CYCLE_'+i+'_OVER_______');
     if (LogicGate.bitToBool(mips.io.syscall)) {
         console.log('SYSCALL');
+        console.log('SYSCALL');
+        console.log('SYSCALL');
+        console.log('SYSCALL');
+        console.log('SYSCALL');
+        console.log('SYSCALL');
+
         printObject(mips.io);
     }
     if (LogicGate.bitToBool(mips.io.exit)) {

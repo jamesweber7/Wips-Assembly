@@ -131,7 +131,6 @@ function pulseMipsClock() {
     if (LogicGate.bitToBool(mips.io.syscall)) {
         if (!LogicGate.bitToBool(mips.io.sysin) &&
             !LogicGate.bitToBool(mips.io.exit)) {
-
             if(LogicGate.bitToBool(mips.io.string)) {
                 outputString(mips.io.sysout);
             } else {

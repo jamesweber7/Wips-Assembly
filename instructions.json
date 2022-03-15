@@ -84,7 +84,7 @@
         "name" : "syscall",
         "type" : "i",
         "opcode" : "0x33",
-        "rs": "0x28",
+        "rs": "0x04",
         "rt": "0x02",
         "immediate": "0x0000",
         "iFormat": "offset"
