@@ -8,10 +8,13 @@ const trapTable = document.getElementById('trap-table');
 
 const programTitle = document.getElementById('program-title');
 
+const codeInput = document.getElementById('code-input');
+
 const compileBtn = document.getElementById('compile-btn');
 const stopBtn = document.getElementById('stop-btn');
 const stepBtn = document.getElementById('step-btn');
-const codeInput = document.getElementById('code-input');
+const cyclesContainer = document.getElementById('cycles-container');
+const numCyclesInput = document.getElementById('num-cycles-input');
 
 const consoleIO = document.getElementById('console');
 // setup
@@ -33,10 +36,14 @@ function createUi() {
     consoleIO.addEventListener('input', inputConsole);
     consoleIO.addEventListener('keypress', submitConsoleInput);
 
-    // compile button
+    // button row
     compileBtn.onclick = compileAndRun;
     stepBtn.onclick = checkCompilationAndStep;
     stopBtn.onclick = stopPipeline;
+    cyclesContainer.onfocus = (e) => {
+        e.stopPropagation();
+        numCyclesInput.select();
+    };
 }
 
 function updateUi() {
@@ -45,6 +52,14 @@ function updateUi() {
     updateTrapTable();
 }
 
+
+/*----------  UI variables  ----------*/
+
+function getCyclesPerRun() {
+    return Number.parseInt(
+        numCyclesInput.value
+    );
+}
 
 /*----------  console IO  ----------*/
 
@@ -61,6 +76,9 @@ function inputConsole() {
 
 function submitConsoleInput(e) {
     if (e.key === 'Enter') {
+        let input = consoleIO.value;
+        input = input.replace(consoleIO.getAttribute("data"), "");
+        submitInput(input);
         consoleIO.setAttribute("data", consoleIO.value + '\n');
     }
 }

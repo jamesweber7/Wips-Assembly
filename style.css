@@ -72,6 +72,30 @@ textarea {
     resize: none;
 }
 
+/* Input Arrow Steppers */
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+#num-cycles-input {
+    background: none;
+    border: none;
+    font: inherit;
+    color: inherit;
+    width: 52px;
+    text-align: right;
+    padding: 0;
+}
+
 #program-title {
     background: none;
     font: inherit;
@@ -79,6 +103,25 @@ textarea {
     border: none;
     text-align: center;
     width: 100%;
+}
+
+.tooltip-parent tooltip {
+    visibility: hidden;
+    display: block;
+    position: absolute;
+    background: black;
+    color: white;
+    font-size: 12px;
+    opacity: 0.8;
+    cursor: default;
+    font-family: system-ui;
+    z-index: 1000;
+    transition-delay: 0;
+}
+
+.tooltip-parent:hover tooltip {
+    visibility: visible;
+    transition-delay: 1s;
 }
 
 table {

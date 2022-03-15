@@ -105,53 +105,56 @@ function liInstruction(rt, imm) {
 function syscallInstruction() {
     return typeIInstruction(
         '110011',
-        '00100',
+        // '00100',     // $a0
+        '11100',     // $gp
         '00010',
         '0000000000000000'
     );
 }
 
 // $v0 (for syscall)
-mips._registerMemory._data[2] = '00000000000000000000000000001010'
+// mips._registerMemory._data[2] = '00000000000000000000000000000101'
 
 // give instructions
 let testInstructions = [];
 let opcode, rs, rt, rd, shamt, funct;
 let instruction, instructionCache;
 
-// li $v0, 8
-// instructionCache = liInstruction(
+// syscall
+// li $v0, syscallCode
+// testInstructions['00000000010000000000000000000000'] = luiInstruction(
 //     '00010',
-//     '00000000000000000000000000001010'
+//     '0000000000000000'
 // );
-// console.log(instructionCache);
-
-// testInstructions['00000000010000000000000000000000'] = instructionCache[0];
-// testInstructions['00000000010000000000000000000100'] = instructionCache[1];
-
-// testInstructions['00000000010000000000000000000000'] = oriInstruction(
-//     '00000',
+// testInstructions['00000000010000000000000000000010'] = oriInstruction(
+//     '00010',
 //     '00010',
 //     '0000000000000001'
 // );
+// testInstructions['00000000010000000000000000000110'] = syscallInstruction();
 
-testInstructions['00000000010000000000000000000000'] = syscallInstruction();
+// sw
+// sw $v0, 0($sp)
+testInstructions['00000000010000000000000000000000'] = swInstruction(
+    '11101',
+    '00010',
+    '0000000000000000'
+);
+
+// lw
+// lw $a0, 0($sp)
+testInstructions['00000000010000000000000000000100'] = lwInstruction(
+    '11101',
+    '00100',
+    '0000000000000000'
+);
 
 
-
-// watch instructions (debugging)
-// const WATCH_INSTRUCTIONS = Object.keys(testInstructions);
-// for (let i = 0; i < WATCH_INSTRUCTIONS.length; i++) {
-//     WATCH_INSTRUCTIONS[i] = LogicGate.add(
-//         WATCH_INSTRUCTIONS[i],
-//         '100'   // 4
-//     );
-// }
 
 console.log(mips.registers());
 mips.setInstructions(testInstructions);
 
-const lastInstruction = 0;
+const lastInstruction = 4;
 const numCycles = lastInstruction + 4 + 1;
 console.log('DOING STUFF');
 for (let i = 0; i < numCycles; i++) {

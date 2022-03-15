@@ -51,11 +51,12 @@ function setInstructions(instructions) {
 function run() {
     stop = false;
     running = true;
+    const MAX_CYCLES = getCyclesPerRun();
     
-    const lastInstruction = 10;
-    const numCycles = lastInstruction + 4 + 1;
-    for (let i = 0; i < numCycles && !isStopped(); i++) {
+    for (let i = 0; i < MAX_CYCLES && !isStopped(); i++) {
+        console.log('HI CYCLE, ', i);
         step();
+        printObject(mips.trap);
     }
 }
 
@@ -77,7 +78,34 @@ function stopPipeline() {
 }
 
 function isStopped() {
-    return stop || mips.trap.trap;
+    return stop || LogicGate.bitToBool(mips.trap.trap);
+}
+
+function submitInput(input) {
+    if (!LogicGate.bitToBool(mips.io.sysin)) {
+        return;
+    }
+    let inputQueue = getInputQueue(input);
+    inputQueue.forEach(inputWord => {
+        mips.input(inputWord);
+        pulseMipsClock();
+    });
+}
+
+function getInputQueue(input) {
+    let inputQueue = [];
+    if (LogicGate.bitToBool(mips.io.string)) {
+        inputQueue = LogicGate.fromAscii(input);
+    } else {
+        inputQueue.push(LogicGate.bitstringToPrecision(
+                LogicGate.toBitstring(
+                    Number.parseInt(input)
+                ),
+                32
+            )
+        );
+    }
+    return inputQueue;
 }
 
 function printObject(obj) {

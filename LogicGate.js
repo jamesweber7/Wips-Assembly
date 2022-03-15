@@ -34,6 +34,31 @@ class LogicGate {
         );
     }
 
+    // returns array of words with four byte ascii bitstrings
+    static fromAscii(str) {
+        let word = '';
+        let words = [];
+        // FILO → first word = string's first 4 bytes
+        for (let i = 0; i < str.length; i++) {
+            let byte = LogicGate.bitstringToPrecision(
+                LogicGate.toBitstring(
+                    str.charCodeAt(i)
+                ),
+                8
+            );
+            word += byte;
+            if (i % 4 === 3) {
+                words.push(word);
+                word = '';
+            }
+        }
+        if (word) {
+            word = this.shiftLeftToPrecision(word, 32);
+            words.push(word);
+        }
+        return words;
+    }
+
     static bitToBool(bit) {
         if (bit === '1') {
             return true;
@@ -823,6 +848,18 @@ class LogicGate {
         );
     }
 
+    // for undoing sll+xtnd
+    static shiftRightReduce(bitstring) {
+        return this.split(bitstring, bitstring.length - 1, 1)[0];
+    }
+    static shiftRightReduceTwo(bitstring) {
+        return this.shiftRightReduce(
+            this.shiftRightReduce(
+                bitstring
+            )
+        );
+    }
+
     static barrelShift(bitstring, shamt, right) {
         return this.mux(
             this.barrelShiftLeft(bitstring, shamt),
@@ -887,6 +924,16 @@ class LogicGate {
         }
         while (bitstring.length < precision) {
             bitstring = '0' + bitstring;
+        }
+        return bitstring;
+    }
+
+    static shiftLeftToPrecision(bitstring, precision) {
+        if (bitstring.length > precision) {
+            bitstring = bitstring.substring(bitstring.length - precision);
+        }
+        while (bitstring.length < precision) {
+            bitstring += '0';
         }
         return bitstring;
     }
