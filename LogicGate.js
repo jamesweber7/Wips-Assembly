@@ -24,8 +24,43 @@ class LogicGate {
         return num.toString(2);
     }
 
+    static dynamicToBitstring(num) {
+        if (typeof num === 'number') {
+            return this.toBitstring(num);
+        }
+        if (typeof num === 'string') {
+            if (this.isBitstring(num)) {
+                return num;
+            }
+            if (Wath.isHex(num)) {
+                return this.hexToBitstring(num);
+            }
+        }
+        throw 'Not THAT Dynamic!';
+    }
+
+    static toSignedBitstring(num) {
+        const abs = Math.abs(num);
+        const uBitstring = this.toBitstring(abs);
+        if (num < 0) {
+            return '1' + this.twosComplement(uBitstring);
+        } else {
+            return '0' + uBitstring;
+        }
+    }
+
+    // warning: true even if string is intended to be decimal '10'
+    // false if str includes - (negative) or . (decimal)
+    static isBitstring(str) {
+        return !/[^10]/.test(str);
+    }
+
     static toHexString(num) {
         return num.toString(16);
+    }
+
+    static hexToBitstring(num) {
+        return this.toBitstring(Wath.parseFloat(num, 16));
     }
 
     static toAscii(bitstring) {

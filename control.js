@@ -4,6 +4,8 @@
 
 var mips = new Mips();
 
+const PC_START = '00000000010000000000000000000000';
+
 const registers = [
     'zero', 'at', 'v0', 'v1', 'a0', 'a1', 'a2', 'a3', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 't8', 't9', 'k0', 'k1', 'gp', 'sp', 'fp', 'ra'
 ];
@@ -21,18 +23,15 @@ loadInstructions();
 
 function compileAndRun() {
     stop = false;
-    const instructions = compile();
-    console.log('RUNNING INSTRUCTIONS');
-    console.log(instructions);
-    setInstructions(instructions);
+    compile();
     run();
-
     updateUi();
 }
 
 function compile() {
     compiled = true;
-    return Compiler.createInstructions(codeInput.value);
+    const instructions = Compiler.createInstructions(codeInput.value);
+    setInstructions(instructions); 
 }
 
 function setInstructions(instructions) {
@@ -40,7 +39,7 @@ function setInstructions(instructions) {
     for (let i = 0; i < instructions.length; i++) {
         mips.setInstruction(
             LogicGate.addNoResize(
-                '00000000010000000000000000000000',
+                PC_START,
                 LogicGate.toBitstring(i)
             ),
             instructions[i]
@@ -58,6 +57,10 @@ function run() {
         step();
         printObject(mips.trap);
     }
+    updateUi();
+    if (!isStopped()) {
+        promptContinue();
+    }
 }
 
 function step() {
@@ -66,11 +69,13 @@ function step() {
     printPipelines();
 }
 
-function checkCompilationAndStep() {
+function singleStep() {
+    // check compilation
     if (!compiled) {
         compile();
     }
     step();
+    updateUi();
 }
 
 function stopPipeline() {

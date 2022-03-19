@@ -1275,6 +1275,11 @@ class Wath {
         if (base === 10) {
             return Number.parseFloat(numstring);
         }
+        numstring = StringReader.removeWhiteSpace(numstring);
+        // starts with 0x, 0X
+        if (this.isHex(numstring)) {
+            numstring = numstring.substring('0x'.length);
+        }
 
         let isNegative = false;
         // if includes negative sign
@@ -1312,6 +1317,10 @@ class Wath {
             float *= -1;
         }
         return float;
+    }
+
+    static isHex(numericString) {
+        return StringReader.startsWith(numericString.toLowerCase(), '0x');
     }
     
     /*=====  End of Misc  ======*/   

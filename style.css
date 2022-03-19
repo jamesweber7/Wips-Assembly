@@ -62,10 +62,36 @@ output err {
     color: var(--error-red);
 }
 
+popup {
+    position: fixed;
+    padding: 20px;
+    text-align: center;
+    font-size: 30px;
+    left: 35%;
+    top: 30%;
+    width: 30%;
+    height: 40%;
+    background: var(--hacker-gray-dark);
+    color: var(--hacker-green);
+    border: 4px solid;
+    border-radius: 4px;
+    box-shadow: 0 0 10px 5px black;
+    opacity: 0.9;
+}
+
+popup button {
+    display: block;
+    margin: auto;
+    margin-top: 66px;
+    font-size: 35px;
+}
+
 input, textarea {
     outline: none;
     text-decoration: none;
     font-family: 'consolas';
+    tab-size: 4;
+    -moz-tab-size: 4;
 }
 
 textarea {

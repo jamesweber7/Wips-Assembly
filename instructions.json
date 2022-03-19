@@ -159,6 +159,10 @@
     },
     {
         "name" : "move",
+        "type" : "r",
+        "funct" : "0x20",
+        "rt":     "0x00",
+        "shamt":  "0x00",
         "pseudo" : true
     },
     {
@@ -179,6 +183,10 @@
     },
     {
         "name" : "li",
+        "pseudo" : true
+    },
+    {
+        "name" : "la",
         "pseudo" : true
     }
 ]

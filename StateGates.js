@@ -665,7 +665,7 @@ class Mips {
         // RAM
         this._instructionMemory = new SingleReadBigRam(32);
         this._mainMemory = new MipsDataRam();
-        this._registerMemory = MipsRegisterRam.indexValues(32, 32);
+        this._registerMemory = MipsRegisterRam.empty(32, 32);
         // PC
         this._pc = new D_FlipFlop(32);
         // Wires:
@@ -948,13 +948,14 @@ class Mips {
 
         // forwarding unit
         const forward = this.forwardingUnit(
-            pipeline.regWrite,
+            pipeline.rs,
+            pipeline.rt,
+            this._exToMem.regWrite,
             this._exToMem.writeReg,
             this._exToMem.aluResult,
+            this._wb.regWrite,
             this._wb.writeReg,
-            this._wb.writeData,
-            pipeline.rs,
-            pipeline.rt
+            this._wb.writeData
         );
 
         // alu
@@ -1376,13 +1377,14 @@ class Mips {
             opcode[3]
         );
 
+        // 00001
         let jType = LogicGate.and(
             LogicGate.not(iType),
             opcode[5]
         );
 
         // opcode = 00001x (j or jal)
-        let someJump = LogicGate.and(
+        let jump = LogicGate.and(
             LogicGate.not(opcode[0]),
             LogicGate.not(opcode[1]),
             LogicGate.not(opcode[2]),
@@ -1391,7 +1393,7 @@ class Mips {
         );
         // write $ra
         let jal = LogicGate.and(
-            someJump,
+            jump,
             opcode[5]
         );
 
@@ -1421,7 +1423,6 @@ class Mips {
             someBranch,
             opcode[5]
         );
-        let jump = someJump;
         // funct = 0x8 = 001000
         let jr = LogicGate.and(
             rType,
@@ -1515,13 +1516,15 @@ class Mips {
 
         let aluOp = LogicGate.merge(aluOp1, aluOp0);
 
-        // (jal OR ~pcStop) AND ~sw
+        // (jal OR ~pcStop) AND ~sw AND ~jr AND ~j
         let regWrite = LogicGate.nor(
             LogicGate.and(
                 LogicGate.not(jal),
                 pcStop
             ),
-            memWrite
+            memWrite,
+            jr,
+            jump
         );
 
         return {
@@ -1547,7 +1550,10 @@ class Mips {
         };
     }
 
-    forwardingUnit(regWrite, memWriteReg, memAluResult, wbWriteReg, wbWriteData, rs, rt) {
+    forwardingUnit(rs, rt, memRegWrite, memWriteReg, memAluResult, wbRegWrite, wbWriteReg, wbWriteData,) {
+
+        const memEnable = memRegWrite;
+        const wbEnable = wbRegWrite;
 
         /*----------  forward A  ----------*/
         const rsEqMemWriteReg = LogicGate.eq(
@@ -1558,10 +1564,14 @@ class Mips {
             wbWriteReg,
             rs
         );
-        const forwardAEnable = LogicGate.and(
-            regWrite,
-            LogicGate.or(
-                rsEqMemWriteReg,
+        // enable
+        const forwardAEnable = LogicGate.or(
+            LogicGate.and(
+                memEnable,
+                rsEqMemWriteReg
+            ),
+            LogicGate.and(
+                wbEnable,
                 rsEqWbWriteReg
             )
         );
@@ -1580,10 +1590,13 @@ class Mips {
             wbWriteReg,
             rt
         );
-        const forwardBEnable = LogicGate.and(
-            regWrite,
-            LogicGate.or(
-                rtEqMemWriteReg,
+        const forwardBEnable = LogicGate.or(
+            LogicGate.and(
+                memEnable,
+                rtEqMemWriteReg
+            ),
+            LogicGate.and(
+                wbEnable,
                 rtEqWbWriteReg
             )
         );
@@ -1642,6 +1655,10 @@ class Mips {
     /*----------  Boot up  ----------*/
     writeBootupInstructions() {
 
+        /*
+         * Instructions
+         */
+        
         const NOP = '00000000000000000000000000000000';
         const lui = (rt, imm) => {
             const op = "001111";
@@ -1693,25 +1710,25 @@ class Mips {
             '11101',            // $sp addr = 0x29
             '1111111111111100'  // 0x fffc
         );
-        // $ra = 0x 0000 000b → addr of syscall EXIT program
-        // lui $ra, 0x 0000
+        // $ra = 0x 003f fff8 → addr of syscall EXIT program
+        // lui $ra, 0x 003f
         const LOAD_RETURN_ADDRESS_UPPER = lui(
             '11111',            // $ra addr = 0x31
-            '0000000000000000'  // 0x 0000
+            '0000000000111111'  // 0x 003f
         );
-        // ori $ra, 0x 000b
+        // ori $ra, 0x fff8
         const LOAD_RETURN_ADDRESS_LOWER = ori(
             '11111',            // $ra addr = 0x31
-            '0000000000001011'  // 0x 000b
+            '1111111111111000'  // 0x fff8
         );
 
         // $v0 = 0x 0000 000a → syscall EXIT
         const LOAD_SYSCALL_EXIT_ARGUMENT_UPPER = lui(
-            '11111',            // $v0 addr = 0x02
+            '00010',            // $v0 addr = 0x02
             '0000000000000000'  // 0x 0000
         );
         const LOAD_SYSCALL_EXIT_ARGUMENT_LOWER = ori(
-            '11111',            // $v0 addr = 0x02
+            '00010',            // $v0 addr = 0x02
             '0000000000001010'  // 0x 000a
         );
         const SYSCALL = LogicGate.merge(
@@ -1742,13 +1759,13 @@ class Mips {
         this._instructionMemory._data['00000000000000000000000000001010'] = JUMP_TO_PROGRAM_START;
 
         // exit program
-        this._instructionMemory._data['00000000000000000000000000001011'] = LOAD_SYSCALL_EXIT_ARGUMENT_UPPER;
-        this._instructionMemory._data['00000000000000000000000000001100'] = NOP;
-        this._instructionMemory._data['00000000000000000000000000001101'] = LOAD_SYSCALL_EXIT_ARGUMENT_LOWER;
-        this._instructionMemory._data['00000000000000000000000000001110'] = NOP;
-        this._instructionMemory._data['00000000000000000000000000001111'] = NOP;
-        this._instructionMemory._data['00000000000000000000000000010000'] = NOP;
-        this._instructionMemory._data['00000000000000000000000000010001'] = SYSCALL;
+        this._instructionMemory._data['00000000001111111111111111111000'] = LOAD_SYSCALL_EXIT_ARGUMENT_UPPER;
+        this._instructionMemory._data['00000000001111111111111111111001'] = NOP;
+        this._instructionMemory._data['00000000001111111111111111111010'] = LOAD_SYSCALL_EXIT_ARGUMENT_LOWER;
+        this._instructionMemory._data['00000000001111111111111111111011'] = NOP;
+        this._instructionMemory._data['00000000001111111111111111111100'] = NOP;
+        this._instructionMemory._data['00000000001111111111111111111101'] = NOP;
+        this._instructionMemory._data['00000000001111111111111111111110'] = SYSCALL;
     }
 
     bootup() {

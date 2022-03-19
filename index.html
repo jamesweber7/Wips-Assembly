@@ -18,6 +18,12 @@
         <script defer src="/Toolkit/Wom.js"></script>
         <script defer src="/Toolkit/RangedVariable.js"></script>
 
+        <script defer src="/Toolkit/Compiler2.js"></script>
+        <script defer src="/Toolkit/Format.js"></script>
+        <script defer src="/Toolkit/CompilerData.js"></script>
+        <script defer src="/Toolkit/CompilerFormats.js"></script>
+        <script defer src="/Toolkit/CompilerDataTypes.js"></script>
+
         <script defer src="/control.js"></script>
         <script defer src="/compiler.js"></script>
         <script defer src="/ui.js"></script>
@@ -55,7 +61,16 @@
                         <input id="program-title" spellcheck=false value="HelloWorld.s">
                     </sectionhead>
                     <sectionbody>
-                        <textarea spellcheck="false" class="programmer-input" id="code-input"></textarea>
+                        <textarea spellcheck="false" class="programmer-input" id="code-input">
+                            .data
+                            seven: .word 7
+                            .text 
+                            .globl main
+
+                            main:
+                                jr  $ra
+                            #IWANTANERRORPLEASE
+                        </textarea>
                     </sectionbody>
                 </contentbox>
                 <buttonrow>

@@ -1,22 +1,22 @@
 
 class Wom {
 
-    
+
     /*=============================================
     =                  Constants                  =
     =============================================*/
-    
+
     static ID_IDENTIFIER = '#';
     static TAG_IDENTIFIER = '';
     static CLASS_IDENTIFIER = '.';
     static IDENTIFIERS = [this.ID_IDENTIFIER, this.TAG_IDENTIFIER, this.CLASS_IDENTIFIER];
 
-    
+
     /*=====  End of Constants  ======*/
-    
-    
+
+
     // create element and give it an id; returns element matching id if it exists
-    static create(tagName, id='') {
+    static create(tagName, id = '') {
         if (id && document.getElementById(id)) {
             return document.getElementById(id);
         }
@@ -28,23 +28,23 @@ class Wom {
     }
 
     // create element and append to parent
-    static createTo(parent, tagName, id='') {
+    static createTo(parent, tagName, id = '') {
         const el = this.create(tagName, id);
         parent.append(el);
         return el;
     }
 
     // create element and append to document body
-    static createToBody(tagName, id='') {
+    static createToBody(tagName, id = '') {
         return this.createTo(document.body, tagName, id);
     }
 
     // create element and append to document head
-    static createToHead(tagName, id='') {
+    static createToHead(tagName, id = '') {
         return this.createTo(document.head, tagName, id);
     }
 
-    static createTextarea(id='', autoResize=true, spellcheck=false) {
+    static createTextarea(id = '', autoResize = true, spellcheck = false) {
         const textarea = this.create('textarea', id);
         if (autoResize) {
             this.addAutoResize(textarea);
@@ -57,36 +57,100 @@ class Wom {
         el.addEventListener('keydown', (e) => {
             if (e.key === 'Tab') {
                 e.preventDefault();
-                const TAB_STRING = '  ';
 
-                let selectionStart = el.selectionStart;
-                let selectionEnd = el.selectionEnd;
+                const NEWLINE_STRING = '\n';
+                const TAB_STRING = '\t';
+                const NEWLINE_TAB_STRING = NEWLINE_STRING + TAB_STRING
 
-                // selection
-                if (selectionEnd !== selectionStart) {
+                const selectionStart = el.selectionStart;
+                const selectionEnd = el.selectionEnd;
+
+                if (e.shiftKey) {
+                    let newSelectionStart = selectionStart;
+                    let newSelectionEnd = selectionEnd;
+
                     let value = el.value;
                     let start = value.substring(0, selectionStart);
                     let modifying = value.substring(selectionStart, selectionEnd);
                     let end = value.substring(selectionEnd);
-                    if (start.includes('\n')) {
-                        let newlineIndex = start.lastIndexOf('\n');
-                        start = start.substring(0, newlineIndex) + '\n' + TAB_STRING + start.substring(newlineIndex + '\n'.length);
-                    } else {
-                        start = TAB_STRING + start;
+                    if (start.includes(NEWLINE_STRING)) {
+                        let newlineIndex = start.lastIndexOf(NEWLINE_STRING);
+                        if (start.lastIndexOf(NEWLINE_TAB_STRING) === newlineIndex) {
+                            start = start.substring(0, newlineIndex) + NEWLINE_STRING + start.substring(newlineIndex + NEWLINE_TAB_STRING.length);
+                            newSelectionStart -= TAB_STRING.length;
+                            newSelectionEnd -= TAB_STRING.length;
+                        }
+                    } else if (start.indexOf(TAB_STRING) === 0) {
+                        start = start.substring(TAB_STRING.length);
+                        newSelectionStart -= TAB_STRING.length;
+                        newSelectionEnd -= TAB_STRING.length;
                     }
-                    modifying = modifying.replaceAll('\n', '\n' + TAB_STRING);
+                    newSelectionEnd -= TAB_STRING.length * StringReader.numInstancesOf(modifying, NEWLINE_TAB_STRING);
+                    modifying = modifying.replaceAll(NEWLINE_TAB_STRING, NEWLINE_STRING);
                     value = start + modifying + end;
                     el.value = value;
+
+                    el.selectionStart = newSelectionStart;
+                    el.selectionEnd = newSelectionEnd;
                 } else {
-                    let value = el.value;
-                    value = value.substring(0, selectionStart) + TAB_STRING + value.substring(selectionStart);
-                    el.value = value;
+                    let numAdditions = 1;
+                    if (selectionEnd !== selectionStart) {
+                        let value = el.value;
+                        let start = value.substring(0, selectionStart);
+                        let modifying = value.substring(selectionStart, selectionEnd);
+                        numAdditions += StringReader.numInstancesOf(modifying, NEWLINE_STRING);
+                        let end = value.substring(selectionEnd);
+                        if (start.includes(NEWLINE_STRING)) {
+                            let newlineIndex = start.lastIndexOf(NEWLINE_STRING);
+                            start = start.substring(0, newlineIndex) + NEWLINE_TAB_STRING + start.substring(newlineIndex + NEWLINE_STRING.length);
+                        } else {
+                            start = TAB_STRING + start;
+                        }
+                        modifying = modifying.replaceAll(NEWLINE_STRING, NEWLINE_TAB_STRING);
+                        value = start + modifying + end;
+                        el.value = value;
+
+                    } else {
+                        let value = el.value;
+                        value = value.substring(0, selectionStart) + TAB_STRING + value.substring(selectionStart);
+                        el.value = value;
+                    }
                     el.selectionStart = selectionStart + TAB_STRING.length;
-                    el.selectionEnd = selectionStart + TAB_STRING.length;
+                    el.selectionEnd = selectionEnd + TAB_STRING.length * numAdditions;
                 }
             }
         });
     }
+
+    static addLineSelectFunctionality(el) {
+        el.addEventListener('keydown', (e) => {
+            if ((e.key !== 'l' && e.key !== 'L') || !e.ctrlKey) {
+                return;
+            }
+
+            e.preventDefault();
+
+            const NEWLINE_STRING = '\n';
+
+            const selectionStart = el.selectionStart;
+            
+            let newSelectionStart = 0;
+            let newSelectionEnd = el.value.length;
+
+            const pre = el.value.substring(0, selectionStart);
+            if (pre.includes(NEWLINE_STRING)) {
+                newSelectionStart = pre.lastIndexOf(NEWLINE_STRING) + NEWLINE_STRING.length;
+            }
+            const post = el.value.substring(selectionStart);
+            if (post.includes(NEWLINE_STRING)) {
+                newSelectionEnd = pre.length + post.indexOf(NEWLINE_STRING);
+            }
+
+            el.selectionStart = newSelectionStart;
+            el.selectionEnd = newSelectionEnd;
+        });
+    }
+
 
     static createScript(body) {
         const script = this.createToHead('script');
@@ -105,26 +169,32 @@ class Wom {
 
     static createStyleBody(identifier, body) {
         const id = identifier.replaceAll(' ', '-');
-        return this.createStyle(id, 
+        return this.createStyle(id,
             `${identifier} {
                 ${body}
             }`);
     }
 
     static createRoot(id, body) {
-        return this.createStyle(id, 
+        return this.createStyle(id,
             `:root {
                 ${body}
             }`);
     }
 
     static createRootVariable(variable, value) {
-        return this.createRoot(variable, 
+        return this.createRoot(variable,
             `${variable}: ${value};`);
     }
 
     static createSVG() {
         throw 'FUNCTION NOT CREATED YET o.O';
+    }
+
+    static createPopup(text, id='') {
+        const popup = this.createToBody('popup', id);
+        popup.innerText = text;
+        return popup;
     }
 
     // get array of matching elements (not DOMList) by classname
@@ -146,7 +216,7 @@ class Wom {
             element.lastChild.remove();
         }
     }
-    
+
     static getParent(child, identifierTitle, identifierValue) {
         if (child.getAttribute(identifierTitle) == identifierValue) {
             return child;
@@ -157,19 +227,22 @@ class Wom {
         return getParent(child.parentElement, identifierTitle, identifierValue);
     }
 
-    
+
     /*----------  Textareas  ----------*/
-    
+
 
     static addAutoResizeToTextareas() {
         [...document.getElementsByTagName('textarea')].forEach(textarea => {
             this.addAutoResize(textarea);
         });
     }
- 
+
     static addAutoResize(textarea) {
         textarea.setAttribute("style", "height:" + (textarea.scrollHeight) + "px;overflow-y:hidden;");
         textarea.addEventListener("input", this.expandTextarea);
+    }
+
+    static expandTextareaOnlyOnFocus(textarea) {
         textarea.addEventListener("focus", this.expandTextarea);
         textarea.addEventListener("focusout", this.collapseTextarea);
     }
@@ -185,9 +258,9 @@ class Wom {
         this.style.height = "auto";
     }
 
-    
+
     /*----------  Data  ----------*/
-    
+
     static createDocumentData(id, data) {
         if (!id.includes('-data')) {
             id += '-data';
@@ -204,7 +277,7 @@ class Wom {
         return document.getElementById(id).getAttribute('data');
     }
 
-    
+
     /*----------  Magic Sets  ----------*/
     // "magic sets" are a pair of two elements: a "wand" and a "magicbox"
     // clicking on a wand makes its magicbox appear and disappear
@@ -227,7 +300,7 @@ class Wom {
     static toggleMagicBox(magicbox) {
         magicbox.classList.toggle('hidden');
     }
-    
+
     static openMagicBox(magicbox) {
         magicbox.classList.remove('hidden');
     }
@@ -256,9 +329,9 @@ class Wom {
         return `${id}-wand`;
     }
 
-    
+
     /*----------  Identifiers  ----------*/
-    
+
     static isIdentifier(identifier) {
         return this.IDENTIFIERS.includes(identifier);
     }

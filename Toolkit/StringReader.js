@@ -1,7 +1,7 @@
 class StringReader {
 
     static NULL_INDEX = -1;
-    static NULL_CHAR = '';
+    static NULL_STRING = '';
 
     static substring(str, from, to=this.NULL_INDEX) {
         let fromIndex, toIndex;
@@ -40,15 +40,78 @@ class StringReader {
         } else {
             fromIndex += from.length;
         }
+        if (!str.substring(fromIndex).includes(to)) {
+            return this.NULL_STRING;
+        }
         return this.substring(str, fromIndex, to);
     }
 
     static substringAfter(str, from) {
-        return this.substringBetween(str, from);
+        let length = 1;
+        if (typeof from === 'string') {
+            length = from.length;
+            from = this.toIndex(str, from);
+        }
+        return str.substring(from + length);
     }
 
     static substringBefore(str, to) {
         return this.substring(str, 0, to);
+    }
+
+    static includes(substrings) {
+        if (!Array.isArray(substrings)) {
+            substrings = [...arguments];
+            substrings.splice(0, 1);
+        }
+        for (let i = 0; i < substrings.length; i++) {
+            if (str.includes(substrings[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // at least one substring from substrings1 equals at least one substring from substrings2
+    static hasEqual(substrings1, substrings2) {
+        if (!Array.isArray(substrings1)) {
+            substrings1 = [substrings1];
+        }
+        if (!Array.isArray(substrings2)) {
+            substrings2 = [substrings2];
+        }
+        for (let i = 0; i < substrings1.length; i++) {
+            for (let j = 0; j < substrings2.length; j++) {
+                if (substrings1[i] === substrings2[j]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // (RegExp) validStr.test(testedStr) or (String/String Array) hasEqual(testedStr, validStr)
+    static dynamicStringTest(testedStr, validStr) {
+        if (this.isRegExp(validStr)) {
+            return validStr.test(testedStr);
+        }
+        return this.hasEqual(testedStr, validStr);
+    }
+
+    // return first existant index
+    static indexOf(str, substrings) {
+        if (!Array.isArray(substrings)) {
+            substrings = [...arguments];
+            substrings.splice(0, 1);
+        }
+        let first = -1;
+        for (let i = 0; i < substrings.length; i++) {
+            let index = str.indexOf(substrings[i]);
+            if (index !== -1 && index < first) {
+                first = index;
+            }
+        }
+        return first;
     }
 
     static indexAfter(str, after, find) {
@@ -75,12 +138,38 @@ class StringReader {
         return Wath.isNumber(index);
     }
 
+    static isRegExp(regex) {
+        return regex instanceof RegExp;
+    }
+
     static isUpperCase(str) {
         return str === str.toUpperCase();
     }
 
     static isLowerCase(str) {
         return str === str.toLowerCase();
+    }
+
+    static startsWith(str, end) {
+        return str.indexOf(end) === 0;
+    }
+
+    static endsWith(str, end) {
+        return end === '' ||
+        (
+            str.includes(end) && 
+            (
+                (str.indexOf(end) + end.length) === str.length
+            )
+        );
+    }
+
+    static isBetween(str, start, end) {
+        return this.startsWith(str, start) && this.endsWith(str, end);
+    }
+
+    static numInstancesOf(str, substr) {
+        return str.split(substr).length - 1;
     }
 
     static reverse(str) {
@@ -135,6 +224,17 @@ class StringReader {
         return start + replaceWith + this.substringAfter(str, to);
     }
 
+    static removeWhiteSpace(str) {
+        return this.regexReplaceAll(str, /\s/, '');
+    }
+
+    static regexReplaceAll(str, regex, replaceWith) {
+        while (regex.test(str)) {
+            str = str.replace(regex, replaceWith);
+        }
+        return str;
+    }
+
     static mult(str, times) {
         let extended = '';
         for (let i = 0; i < times; i++) {
@@ -144,9 +244,9 @@ class StringReader {
     }
 
     static getAlphabeticString(index) {
-        let char = 'abcdefghijklmnopqrstuvwxyz'[index];
+        let char = 'abcdefghijklmnopqrstuvwxyz'[index % 26];
         if (index > 25) {
-            return getAlphabeticChar(index - 26) + char;
+            return this.getAlphabeticChar(index - 26) + char;
         }
         return char;
     }
@@ -160,6 +260,32 @@ class StringReader {
             str = this.substringBefore(str, '\n');
         }
         return str;
+    }
+
+    // expects first word to be start of string
+    // returns string without quotes
+    static getQuotedString(str, validQuoteChar=/["'`]/) {
+
+        // \s"..."...
+
+        // "
+        const quoteChar = this.firstWord(str)[0];
+        if (!this.dynamicStringTest(quoteChar, validQuoteChar)) {
+            return '';
+        }
+
+        str = this.substring(str, quoteChar);
+        // "..."...
+        let quote;
+        quote = this.substringBetween(str, quoteChar, quoteChar);
+        // check for \"
+        while (quote[quote.length - 1] === '\\') {
+            quote += quoteChar;
+            quote = this.substring(str, quote, quoteChar);
+        }
+        // replace \" with "
+        quote = quote.replaceAll('\\' + quoteChar, quoteChar);
+        return quote;
     }
 
 

@@ -27,10 +27,12 @@ function createUi() {
     programTitle.onfocus = programTitle.select;
     // code input
     Wom.addTabFunctionality(codeInput);
+    Wom.addLineSelectFunctionality(codeInput);
     codeInput.onchange = () => {
         compiled = false;
         saved = false;
     }
+    Wom.addAutoResize(codeInput);
 
     // console
     consoleIO.addEventListener('input', inputConsole);
@@ -38,7 +40,7 @@ function createUi() {
 
     // button row
     compileBtn.onclick = compileAndRun;
-    stepBtn.onclick = checkCompilationAndStep;
+    stepBtn.onclick = singleStep;
     stopBtn.onclick = stopPipeline;
     cyclesContainer.onfocus = (e) => {
         e.stopPropagation();
@@ -237,3 +239,22 @@ function updateTrapTable() {
     updateTableRow('trap-pipeline-trap', trap.pipelineTrap);
 }
 
+// prompt user whether they want to continue
+function promptContinue() {
+    const popup = Wom.createPopup("Continue?");
+    const yes = Wom.createTo(popup, 'button', 'continue-yes');
+    const no = Wom.createTo(popup, 'button', 'continue-no');
+    yes.innerText = 'Yes';
+    no.innerText = 'No';
+
+    yes.onclick = () => {
+        closePopup();
+        run();
+    }
+
+    no.onclick = closePopup;
+
+    function closePopup() {
+        popup.remove();
+    }
+}
