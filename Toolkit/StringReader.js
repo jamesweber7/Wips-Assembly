@@ -131,11 +131,24 @@ class StringReader {
             return identifier;
         }
         // str
-        return str.indexOf(identifier);
+        if (this.isRegExp(identifier)) {
+            return this.indexOfRegExp(str, identifier);
+        } else {
+            return str.indexOf(identifier);
+        }
     }
 
     static isIndex(index) {
         return Wath.isNumber(index);
+    }
+
+    static indexOfRegExp(str, regex) {
+        for (let i = 0; i < str.length; i++) {
+            if (regex.test(str[i])) {
+                return i;
+            }
+        }
+        return this.NULL_INDEX;
     }
 
     static isRegExp(regex) {
@@ -252,12 +265,10 @@ class StringReader {
     }
 
     static firstWord(str) {
+        const whitespace = /\s/;
         str = str.trim();
-        if (str.includes(' ')) {
-            str = this.substringBefore(str, ' ');
-        }
-        if (str.includes('\n')) {
-            str = this.substringBefore(str, '\n');
+        if (whitespace.test(str)) {
+            str = this.substringBefore(str, whitespace);
         }
         return str;
     }

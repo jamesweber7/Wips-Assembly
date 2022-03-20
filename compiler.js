@@ -11,7 +11,9 @@ class Compiler {
     ASSEMBLER_TEMPORARY = '$at';
     ZERO = '$zero';
     GLOBAL_POINTER = '$gp';
-    HEAP_OFFSET_START = -1 * 2**15;  // 0x8000
+    GLOBAL_POINTER_ADDRESS = '0x10008000';
+    GP_OFFSET = -1 * 2**15;  // 0x8000
+
 
     constructor(code) {
         this.code = code;
@@ -151,6 +153,9 @@ class Compiler {
                 this.registerStringToBinary(this.ASSEMBLER_TEMPORARY),
                 value
             );
+            this.pushNopInstruction();
+            this.pushNopInstruction();
+            this.pushNopInstruction();
             // sw   $at, offset($gp)
             this.pushInstruction(
                 this.dynamicMakeInstruction({
@@ -164,7 +169,7 @@ class Compiler {
     }
 
     getDataOffset(index) {
-        return this.HEAP_OFFSET_START + 4 * index;
+        return this.GP_OFFSET + 4 * index;
     }
 
     pushLiInstruction(reg, value) {
@@ -196,18 +201,31 @@ class Compiler {
         const index = this.indexOfDataPoint(label);
         // la   $rt, LABEL
         // lw   $rt, offset($gp)
-        this.dynamicMakeInstruction({
-            name: 'lw',
-            rt: rt,
-            rs: '$gp',
-            immediate: this.getDataOffset(index)
-        });
+        let offset = this.getDataOffset(index);
+
+        // rt = $gp + offset
+        this.pushAddiInstruction(
+            rt,
+            '$gp',
+            offset
+        );
     }
 
     pushNopInstruction() {
         this.pushInstruction(
             this.dynamicMakeInstruction({
                 name: 'nop'
+            })
+        );
+    }
+
+    pushAddiInstruction(rt, rs, immediate) {
+        this.pushInstruction(
+            this.dynamicMakeInstruction({
+                name: 'addi',
+                rt: rt,
+                rs: rs,
+                immediate: immediate
             })
         );
     }
@@ -362,6 +380,7 @@ class Compiler {
     // returns machine code for next instruction AND returns uncompiled code after next instruction
     compileNextInstruction() {
 
+
         if (this.nextWord() === 'IWANTANERRORPLEASE') {
             console.log(this.compiling);
             console.log(this._data);
@@ -377,7 +396,7 @@ class Compiler {
         }
 
 
-        const instructionName = StringReader.firstWord(this.compiling);
+        const instructionName = this.nextWord();
         const instructionInfo = this.getInstructionInfoFromName(instructionName);
 
         switch (instructionName) {
@@ -453,10 +472,10 @@ class Compiler {
                 this.compileOffsetIType(instructionInfo);
                 break;
 
-            // immediate one reg
-            // name $rt, imm
+            // 32-bit immediate one reg
+            // name $rt, 32-bit-imm
             case 'li':
-                this.compileOneRegImmediate(instructionInfo);
+                this.compileLiInstruction(instructionInfo);
                 break;
 
             // no param/reg
@@ -467,6 +486,7 @@ class Compiler {
                 break;
 
             default:
+                console.log(instructionInfo, instructionName);
                 this.throwUnexpected();
 
         }
@@ -627,7 +647,7 @@ class Compiler {
         // LABEL remaining
         const label = this.compileNextWord();
 
-        if (this.someBranch(name)) {
+        if (this.isSomeBranch(name)) {
             this.pushBranchInstruction(instructionInfo, name, label);
         } else if (this.someJump(name)) {
             this.pushSomeJumpInstruction(instructionInfo, name, label);
@@ -652,7 +672,7 @@ class Compiler {
         // LABEL remaining
         const label = this.compileNextWord();
 
-        if (this.someBranch(name)) {
+        if (this.isSomeBranch(name)) {
             this.pushSomeBranchInstruction(instructionInfo, name, label);
         } else if (name === 'la') {
             this.pushLaInstruction(rt, label);
@@ -663,6 +683,19 @@ class Compiler {
 
     pushSomeJumpInstruction(instructionInfo, name, label) {
 
+    }
+
+    isSomeBranch(branch) {
+        const branchInstructions = [
+            'b',
+            'beq',
+            'bne',
+            'blt',
+            'bgt',
+            'ble',
+            'bge'
+        ];
+        return StringReader.hasEqual(branch, branchInstructions);
     }
 
     pushSomeBranchInstruction(instructionInfo, name, label) {
@@ -745,31 +778,33 @@ class Compiler {
         this.endLine();
     }
 
-    compileOneRegImmediate(instructionInfo) {
+    compileLiInstruction(instructionInfo) {
+
         // name $rt, imm
         const opcode = this.numericStringToOpcodeBinary(instructionInfo.opcode);
         const rs = this.numericStringToRegisterBinary(instructionInfo.rs);
 
 
         // name $rt, imm remaining
-        this.compiling = StringReader.substringAfter(this.compiling, instructionInfo.name);
+        const name = instructionInfo.name;
+
+        this.goPast(name);
 
         // $rt, imm remaining
 
         // rt
-        const rt = this.compileNextRegister();
+        let rt = this.nextWord();
+        if (rt.includes(',')) {
+            rt = StringReader.substringBefore(rt, ',');
+        }
+        this.goPast(rt);
         this.goPastComma();
 
         // imm remaining
-        const immediate = this.compileNextImmediate();
+        let immediate = this.compileNextWord();
+        immediate = this.explicitSignToPreciseSignedBitstring(immediate, 32);
 
-        const instruction = LogicGate.merge(
-            opcode,
-            rs,
-            rt,
-            immediate
-        );
-        this.instructions.push(instruction);
+        this.pushLiInstruction(rt, immediate);
 
         this.endLine();
 
@@ -810,7 +845,10 @@ class Compiler {
     }
 
     compileNextImmediate() {
-        return this.numericStringToImmediateBinary(this.compileNextWord());
+        return this.explicitSignToPreciseSignedBitstring(
+            this.compileNextWord(),
+            16
+        );
     }
 
     compileNextOffset() {
@@ -832,9 +870,10 @@ class Compiler {
         if (reg.includes(')')) {
             reg = StringReader.substringBefore(reg, ')');
         }
-        reg = this.registerStringToBinary(reg);
 
         this.goPast(reg);
+
+        reg = this.registerStringToBinary(reg);
 
         this.goPastCloseParenthesis();
 
@@ -921,10 +960,6 @@ class Compiler {
         }
     }
     */
-
-    compileLiInstruction() {
-
-    }
 
     compileBltInstruction() {
         throw 'not done xd';
@@ -1197,6 +1232,31 @@ class Compiler {
             );
     }
 
+    dynamicToSigned(value) {
+        if (typeof value === 'number') {
+            return LogicGate.toSignedBitstring(value);
+        }
+        if (typeof value === 'string') {
+            if (Wath.isHex(value)) {
+                return this.signedNumericStringToBinary(value);
+            }
+            if (value[0] === '-') {
+                value = LogicGate.twosComplement(value.substring(1));
+            }
+            if (LogicGate.isBitstring(value)) {
+                return value;
+            }
+        }
+        this.throwUnexpected('number or hex/bitstring', value);
+    }
+
+    dynamicToSignedPrecision(value, precision) {
+        return LogicGate.signedBitstringToPrecision(
+            this.dynamicToSigned(value),
+            precision
+        );
+    }
+
     // special case: reg name
     dynamicToRegisterBinary(reg) {
         // special case: reg name
@@ -1207,10 +1267,13 @@ class Compiler {
     }
 
     // special case: branch label
-    dynamicToImmediateBinary(imm) {
+    dynamicToImmediateBinary(imm, signed=true) {
         // special case: branch label
         if (this.isBranchLabel(imm)) {
             return imm;
+        }
+        if (signed) {
+            return this.dynamicToSignedPrecision(imm, 16);
         }
         return this.dynamicToPrecision(imm, 16);
     }
@@ -1584,6 +1647,19 @@ class Compiler {
         );
     }
 
+    signedNumericStringToBinary(num) {
+        if (Wath.isHex(num)) {
+            let precision = 4 * num.length;
+            num = LogicGate.hexToBitstring(num);
+            num = LogicGate.signedBitstringToPrecision(num, precision);
+            return num;
+        } else {
+            return LogicGate.toSignedBitstring(
+                Number.parseInt(num)
+            );
+        }
+    }
+
     numericStringToRegisterBinary(reg) {
         return LogicGate.bitstringToPrecision(
             this.numericStringToBinary(reg),
@@ -1612,11 +1688,18 @@ class Compiler {
         );
     }
 
-    numericStringToImmediateBinary(immediate) {
-        return LogicGate.bitstringToPrecision(
-            this.numericStringToBinary(immediate),
+    numericStringToImmediateBinary(immediate, signed=true) {
+        if (signed) {
+        return LogicGate.signedBitstringToPrecision(
+            this.signedNumericStringToBinary(immediate),
             16
         );
+        } else {
+            LogicGate.bitstringToPrecision(
+                this.numericStringToBinary(immediate),
+                16
+            );
+        }
     }
 
     numericStringToWord(num) {
@@ -1624,6 +1707,23 @@ class Compiler {
             this.numericStringToBinary(num),
             32
         ); 
+    }
+
+    explicitSignToSignedBitstring(num) {
+        if (num[0] === '-') {
+            num = num.substring(1);
+            return LogicGate.twosComplement(
+                '0' + this.numericStringToBinary(num)
+            );
+        }
+        return this.numericStringToBinary(num);
+    }
+
+    explicitSignToPreciseSignedBitstring(num, precision) {
+        return LogicGate.bitstringToPrecision(
+            this.explicitSignToSignedBitstring(num),
+            precision
+        );
     }
 
     createLabel(name, address) {

@@ -19,6 +19,19 @@ class LogicGate {
     static bitstringToDecimal(bitstring) {
         return Wath.parseFloat(bitstring, 2);
     }
+
+    static sign(bitstring) {
+        return bitstring[0];
+    }
+
+    static signedBitstringToDecimal(bitstring) {
+        // positive
+        if (!this.bitToBool(this.sign(bitstring))) {
+            return this.bitstringToDecimal(bitstring);
+        }
+        // negative
+        return -1 * this.bitstringToDecimal(this.undoTwosComplement(bitstring));
+    }
     
     static toBitstring(num) {
         return num.toString(2);
@@ -953,12 +966,32 @@ class LogicGate {
         )
     }
 
+    static undoTwosComplement(bitstring) {
+        return this.not(
+                this.sub(
+                bitstring,
+                '1'
+            )
+        );
+    }
+
     static bitstringToPrecision(bitstring, precision) {
         if (bitstring.length > precision) {
             bitstring = bitstring.substring(bitstring.length - precision);
         }
         while (bitstring.length < precision) {
             bitstring = '0' + bitstring;
+        }
+        return bitstring;
+    }
+
+    static signedBitstringToPrecision(bitstring, precision) {
+        const sign = this.sign(bitstring);
+        if (bitstring.length > precision) {
+            bitstring = sign + bitstring.substring(bitstring.length - precision + 1);
+        }
+        while (bitstring.length < precision) {
+            bitstring = sign + bitstring;
         }
         return bitstring;
     }

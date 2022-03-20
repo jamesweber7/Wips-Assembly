@@ -28,7 +28,7 @@
         <script defer src="/compiler.js"></script>
         <script defer src="/ui.js"></script>
 
-        <script defer src="/test.js"></script>
+        <!-- <script defer src="/test.js"></script> -->
     </head>
 
     <body>
@@ -62,14 +62,25 @@
                     </sectionhead>
                     <sectionbody>
                         <textarea spellcheck="false" class="programmer-input" id="code-input">
-                            .data
-                            seven: .word 7
-                            .text 
-                            .globl main
+.data
+    num1: .word 1
+    num2: .word 2
+.text 
+.globl main
 
-                            main:
-                                jr  $ra
-                            #IWANTANERRORPLEASE
+main:
+    la  $a1, num1
+    la  $a2, num2
+    nop
+    add $a3, $a1, $a2
+    addi $t0, $a3, 7
+    lw  $a0, 0($a1)
+    li	$v0, 1
+    nop
+    nop
+    syscall
+    jr  $ra
+#IWANTANERRORPLEASE
                         </textarea>
                     </sectionbody>
                 </contentbox>
@@ -78,7 +89,7 @@
                     <button id='step-btn'>Step</button>
                     <button id='stop-btn'>Stop</button>
                     <button id='cycles-container' class="tooltip-parent">
-                        Cycles: <input type='number' min=1 max=9999 step=1 id='num-cycles-input' value=25>
+                        Cycles: <input type='number' min=1 max=9999 step=1 id='num-cycles-input' value=50>
                         <tooltip>The number of clock cycles the computer will run before you are asked if you wish to continue</tooltip>
                     </button>
                 </buttonrow>

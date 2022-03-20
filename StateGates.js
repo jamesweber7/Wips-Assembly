@@ -1106,9 +1106,9 @@ class Mips {
         // Update Register Memory
         this._registerMemory.write(readReg1, readReg2, writeReg, writeData, regWrite, clk);
 
-        // signal extend immediate
+        // sign extend immediate
         const immediate16 = LogicGate.split(pipeline.instruction, 16, 16)[1];
-        const immediate32 = this.signalExtend(immediate16);
+        const immediate32 = this.signExtend(immediate16, control.sign);
 
         const shamt = instruction[4];
 
@@ -1470,12 +1470,13 @@ class Mips {
         let sl1 = LogicGate.and(sl0, opcode[4]);
         let sl = LogicGate.merge(sl1, sl0);
 
+        // 0x0f = 001111
         let lui = LogicGate.and(
             opcode[2],
             opcode[3],
             opcode[4],
             opcode[5]
-        )
+        );
 
         // 00 alu result
         // 01 read result (lw or syscall)
@@ -1527,6 +1528,23 @@ class Mips {
             jump
         );
 
+        // 0x0d = 001101
+        const ori = LogicGate.and(
+            LogicGate.nor(
+                opcode[0],
+                opcode[1],
+                opcode[4]
+            ),
+            opcode[2],
+            opcode[3],
+            opcode[5]
+        );
+
+        let sign = LogicGate.nor(
+            ori,
+            lui
+        );
+
         return {
             regDst: regDst,
 
@@ -1546,7 +1564,8 @@ class Mips {
             syscall: syscall,
 
             aluOp: aluOp,
-            regWrite: regWrite
+            regWrite: regWrite,
+            sign: sign
         };
     }
 
@@ -1614,9 +1633,16 @@ class Mips {
         }
     }
 
-    signalExtend(bitstring16) {
+    signExtend(bitstring16, signed) {
+        const signedBit = bitstring16[0];
+        console.log(bitstring16, signed, signedBit);
+        const sign = LogicGate.and(
+            signedBit,
+            signed
+        );
+        const signExtend16 = LogicGate.duplicate(sign, 16);
         return LogicGate.merge(
-            LogicGate.empty(16),
+            signExtend16,
             bitstring16
         );
     }
@@ -1695,7 +1721,7 @@ class Mips {
         // ori $gp, 0x 8000
         const LOAD_GLOBAL_POINTER_LOWER = ori(
             '11100',            // $gp addr = 0x28
-            '1000000000000000'  // 0x 1000
+            '1000000000000000'  // 0x 8000
         );
 
         // $sp = 0x 7fff fffc

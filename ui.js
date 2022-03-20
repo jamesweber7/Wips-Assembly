@@ -87,7 +87,7 @@ function submitConsoleInput(e) {
 
 function outputInt(int) {
     outputToConsole(
-        LogicGate.bitstringToDecimal(int)
+        LogicGate.signedBitstringToDecimal(int)
     );
 }
 

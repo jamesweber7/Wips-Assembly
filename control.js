@@ -32,6 +32,7 @@ function compile() {
     compiled = true;
     const instructions = Compiler.createInstructions(codeInput.value);
     setInstructions(instructions); 
+    console.log(instructions);
 }
 
 function setInstructions(instructions) {
