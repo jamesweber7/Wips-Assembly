@@ -57,6 +57,7 @@ function run() {
         console.log('HI CYCLE, ', i);
         step();
         printObject(mips.trap);
+        printObject(mips.io);
     }
     updateUi();
     if (!isStopped()) {
@@ -92,10 +93,7 @@ function submitInput(input) {
         return;
     }
     let inputQueue = getInputQueue(input);
-    inputQueue.forEach(inputWord => {
-        mips.input(inputWord);
-        pulseMipsClock();
-    });
+    mips.input(inputQueue);
 }
 
 function getInputQueue(input) {
@@ -133,14 +131,13 @@ function printPipelines() {
 function pulseMipsClock() {
     mips.write('0');
     mips.write('1');
-    mips.write('0');
     if (LogicGate.bitToBool(mips.io.syscall)) {
         if (!LogicGate.bitToBool(mips.io.sysin) &&
             !LogicGate.bitToBool(mips.io.exit)) {
             if(LogicGate.bitToBool(mips.io.string)) {
-                outputString(mips.io.sysout);
+                outputString(mips.io.output);
             } else {
-                outputInt(mips.io.sysout);
+                outputInt(mips.io.output);
             }
         }
     }

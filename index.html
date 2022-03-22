@@ -58,40 +58,27 @@
             <griditem class="center-column">
                 <contentbox>
                     <sectionhead>
-                        <input id="program-title" spellcheck=false value="HelloWorld.s">
+                        <input id="program-title" spellcheck=false value="MyProgram.s">
                     </sectionhead>
                     <sectionbody>
-                        <textarea spellcheck="false" class="programmer-input" id="code-input">
-.data
-    num1: .word 1
-    num2: .word 2
-.text 
-.globl main
-
-main:
-    la  $a1, num1
-    la  $a2, num2
-    nop
-    add $a3, $a1, $a2
-    addi $t0, $a3, 7
-    lw  $a0, 0($a1)
-    li	$v0, 1
-    nop
-    nop
-    syscall
-    jr  $ra
-#IWANTANERRORPLEASE
-                        </textarea>
+                        <textarea spellcheck="false" class="programmer-input" id="code-input"></textarea>
                     </sectionbody>
                 </contentbox>
                 <buttonrow>
-                    <button id='compile-btn'>Compile</button>
-                    <button id='step-btn'>Step</button>
-                    <button id='stop-btn'>Stop</button>
-                    <button id='cycles-container' class="tooltip-parent">
+                    <button id='compile-btn' title="Run">Compile</button>
+                    <button id='step-btn' title="Step">Step</button>
+                    <button id='stop-btn' title="Stop">Stop</button>
+                    <button id='cycles-container' class="tooltip-parent" title="The number of clock cycles the computer will run before you are asked if you wish to continue">
                         Cycles: <input type='number' min=1 max=9999 step=1 id='num-cycles-input' value=50>
-                        <tooltip>The number of clock cycles the computer will run before you are asked if you wish to continue</tooltip>
                     </button>
+                    <dropdown class="dropdown style1" id="load-program">
+                        <span class="title">
+                            <button title="Load">Load</button>
+                        </span>
+                        <span class="options" id="load-dropdown-options">
+                            <button>Import File</button>
+                        </span>
+                    </dropdown>
                 </buttonrow>
             </griditem>
             <griditem class="right-column-top">

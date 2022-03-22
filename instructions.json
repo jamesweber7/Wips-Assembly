@@ -71,7 +71,7 @@
         "name" : "lui",
         "type" : "i",
         "opcode" : "0x0f",
-        "rs": "0x00",
+        "rs": "0x10",
         "iFormat": "value"
     },
     {
@@ -123,11 +123,13 @@
     {
         "name" : "sll",
         "type" : "r",
+        "rs" : "0x00",
         "funct" : "0x00"
     },
     {
         "name" : "srl",
         "type" : "r",
+        "rs" : "0x00",
         "funct" : "0x02"
     },
     {

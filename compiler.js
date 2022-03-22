@@ -184,6 +184,7 @@ class Compiler {
                 immediate: upper
             })
         );
+        console.log(this.instructions[this.instructions.length - 1]);
         // nop - buffer
         this.pushNopInstruction();
         // ori  reg, reg, value[15-0]
@@ -284,8 +285,7 @@ class Compiler {
                 )) {
                     this.throwUnexpected('integer');
                 }
-                const num = this.numericStringToWord(nextValueStr);
-
+                // correct # of bits
                 let numBits;
                 if (type === 'byte') {
                     numBits = 8;
@@ -295,10 +295,12 @@ class Compiler {
                     numBits = 32;
                 }
 
-                const gotBits = LogicGate.toSignedBitstring(num).length;
+                const gotBits = LogicGate.toSignedBitstring(nextValueStr).length;
                 if (numBits < gotBits) {
                     this.throwUnexpected(type, got);
                 }
+
+                const num = this.numericStringToWord(nextValueStr);
                 addValue(num);
             }
 
@@ -342,39 +344,60 @@ class Compiler {
     assignLabels() {
         this._labels.forEach(label => {
             for (let i = 0; i < this.instructions.length; i++) {
-                if (this.getLabel(this.instructions[i]) === label.name) {
-                    this.instructions[i] = this.replaceLabel(this.instructions[i], i, label.value);
+                if (this.hasLabel(this.instructions[i])) {
+                    if (this.getLabel(this.instructions[i]) === label.name) {
+                        this.instructions[i] = this.replaceLabel(this.instructions[i], i, label.index);
+                    }
                 }
             }
-        })
+        });
+        // handle error : nonexistant function called
+        for (let i = 0; i < this.instructions.length; i++) {
+            if (this.hasLabel(this.instructions[i])) {
+                this.throwUnexpected(
+                    'valid function', 
+                    this.getLabel(this.instructions[i])
+                )
+            }
+        }
     }
 
     getLabel(instruction) {
-        // if not instruction
-        if (!instruction.includes('<')) {
-            return null;
-        }
         // branch
-        if (instruction.includes(this.BRANCH_START)) {
-            return StringReader.substringBetween(instruction, this.BRANCH_START, this.BRANCH_END);
+        if (this.hasBranchLabel(instruction)) {
+            return this.getBranchLabel(instruction);
         }
         // jump
-        return StringReader.substringBetween(instruction, this.JUMP_START, this.JUMP_END);
+        if (this.hasJumpLabel(instruction)) {
+            return this.getJumpLabel(instruction);
+        }    
+        this.throwUnexpected('Branch or Jump Instruction', instruction);
     }
 
-    replaceLabel(instruction, from, goto) {
+    replaceLabel(instruction, fromIndex, gotoIndex) {
+        const fromAddress = this.getInstructionAddress(
+            LogicGate.bitstringToPrecision(
+                LogicGate.toBitstring(fromIndex),
+                32
+            )
+        );
+        const gotoAddress = this.getInstructionAddress(
+            LogicGate.bitstringToPrecision(
+                LogicGate.toBitstring(gotoIndex),
+                32
+            )
+        );
         // branch
-        if (instruction.includes(this.BRANCH_START)) {
-            const pcFrom = LogicGate.add(
-                PC_START,
-                LogicGate.toBitstring(from)
-            );
-            const branchTo = this.branchAddressToMachineCode(pcFrom, goto);
+        if (this.hasBranchLabel(instruction)) {
+            const branchTo = this.branchAddressToMachineCode(fromAddress, gotoAddress);
             return StringReader.replaceFrom(instruction, branchTo, this.BRANCH_START, this.BRANCH_END);
         }
         // jump
-        const jumpTo = this.jumpAddressToMachineCode(goto);
-        return StringReader.replaceFrom(instruction, jumpTo, this.JUMP_START, this.JUMP_END);
+        if (this.hasJumpLabel(instruction)) {
+            const jumpTo = this.jumpAddressToMachineCode(gotoAddress);
+            return StringReader.replaceFrom(instruction, jumpTo, this.JUMP_START, this.JUMP_END);
+        }
+        this.throwUnexpected('Branch or Jump Label', instruction);
     }
 
     // returns machine code for next instruction AND returns uncompiled code after next instruction
@@ -550,7 +573,7 @@ class Compiler {
         const funct = this.numericStringToFunctBinary(instructionInfo.funct);
 
         // name $rd, $rt, shamt remaining
-        this.compiling = StringReader.substringAfter(this.compiling, instructionInfo.name);
+        this.goPast(instructionInfo.name);
 
         // $rd, $rt, shamt remaining
 
@@ -649,7 +672,7 @@ class Compiler {
 
         if (this.isSomeBranch(name)) {
             this.pushBranchInstruction(instructionInfo, name, label);
-        } else if (this.someJump(name)) {
+        } else if (this.isJType(name)) {
             this.pushSomeJumpInstruction(instructionInfo, name, label);
         }
 
@@ -681,10 +704,6 @@ class Compiler {
         this.endLine();
     }
 
-    pushSomeJumpInstruction(instructionInfo, name, label) {
-
-    }
-
     isSomeBranch(branch) {
         const branchInstructions = [
             'b',
@@ -696,6 +715,58 @@ class Compiler {
             'bge'
         ];
         return StringReader.hasEqual(branch, branchInstructions);
+    }
+
+    isJType(jump) {
+        const jTypeInstructions = [
+            'j',
+            'jal'
+        ];
+        return StringReader.hasEqual(jump, jTypeInstructions);
+    }
+
+    makeJumpLabel(label) {
+        return this.JUMP_START + label + this.JUMP_END;
+    }
+
+    makeBranchLabel(label) {
+        return this.BRANCH_START + label + this.BRANCH_END;
+    }
+
+    decodeJumpInstruction(instruction) {
+        if (!this.hasJumpLabel(instruction)) {
+            this.throwUnexpected('Jump Instruction');
+        }
+        let label = this.getJumpLabel(instruction);
+        let jAddr = this.getFunctionAddress(label);
+        return StringReader.replaceAt(instruction, jAddr, this.JUMP_START, this.JUMP_END);
+    }
+
+    getFunctionAddress(name) {
+        for (let i = 0; i < this._labels.length; i++) {
+            if (this._labels[i].name === name) {
+                return this.getInstructionAddress(this._labels[i].index);
+            }
+        }
+        this.throwUnexpected('function/label');
+    }
+
+    getInstructionAddress(offset) {
+        return LogicGate.addNoResize(
+            PC_START,
+            offset
+        );
+    }
+
+    // jr not included
+    pushSomeJumpInstruction(instructionInfo, name, label) {
+        this.pushInstruction(
+            this.dynamicMakeInstruction({
+                name: name,
+                opcode: instructionInfo.opcode,
+                jAddr: this.makeJumpLabel(label)
+            })
+        );
     }
 
     pushSomeBranchInstruction(instructionInfo, name, label) {
@@ -779,11 +850,6 @@ class Compiler {
     }
 
     compileLiInstruction(instructionInfo) {
-
-        // name $rt, imm
-        const opcode = this.numericStringToOpcodeBinary(instructionInfo.opcode);
-        const rs = this.numericStringToRegisterBinary(instructionInfo.rs);
-
 
         // name $rt, imm remaining
         const name = instructionInfo.name;
@@ -1297,24 +1363,38 @@ class Compiler {
                 StringReader.isBetween(bLabel, this.BRANCH_START, this.BRANCH_END);
     }
 
-    getJumpLabel(jLabel) {
-        if (!this.isJumpLabel(jLabel)) {
-            this.throwUnexpected('jump label', jLabel);
-        }
-        return StringReader.substringBetween(jLabel, this.JUMP_START, this.JUMP_END);
+    hasJumpLabel(instruction) {
+        return instruction.includes(this.JUMP_START) && 
+            this.isJumpLabel(
+                StringReader.substring(instruction, this.JUMP_START)
+            );
     }
 
-    getBranchLabel(bLabel) {
-        if (!this.isJumpLabel(bLabel)) {
-            this.throwUnexpected('branch label', bLabel);
+    hasBranchLabel(instruction) {
+        return instruction.includes(this.BRANCH_START) && 
+            this.isJumpLabel(
+                StringReader.substring(instruction, this.BRANCH_START)
+            );
+    }
+
+    getJumpLabel(instruction) {
+        if (!this.hasJumpLabel(instruction)) {
+            this.throwUnexpected('jump label', instruction);
         }
-        return StringReader.substringBetween(bLabel, this.BRANCH_START, this.BRANCH_END);
+        return StringReader.substringBetween(instruction, this.JUMP_START, this.JUMP_END);
+    }
+
+    getBranchLabel(instruction) {
+        if (!this.hasBranchLabel(instruction)) {
+            this.throwUnexpected('branch label', instruction);
+        }
+        return StringReader.substringBetween(instruction, this.BRANCH_START, this.BRANCH_END);
     }
 
     
     hasLabel(instruction) {
-        return  this.isJumpLabel(instruction)   ||
-                this.isBranchLabel(instruction);
+        return  this.hasJumpLabel(instruction)   ||
+                this.hasJumpLabel(instruction);
     }
 
     rTypeInstruction(rd, rs, rt, funct, shamt = '00000') {
@@ -1710,17 +1790,22 @@ class Compiler {
     }
 
     explicitSignToSignedBitstring(num) {
+
         if (num[0] === '-') {
             num = num.substring(1);
             return LogicGate.twosComplement(
                 '0' + this.numericStringToBinary(num)
             );
         }
-        return this.numericStringToBinary(num);
+        let bitstring = this.numericStringToBinary(num);
+        if (LogicGate.bitToBool(LogicGate.sign(bitstring))) {
+            bitstring = '0' + bitstring;
+        }
+        return bitstring;
     }
 
     explicitSignToPreciseSignedBitstring(num, precision) {
-        return LogicGate.bitstringToPrecision(
+        return LogicGate.signedBitstringToPrecision(
             this.explicitSignToSignedBitstring(num),
             precision
         );
@@ -1734,6 +1819,7 @@ class Compiler {
     }
 
     jumpAddressToMachineCode(jAddr) {
+        console.log(jAddr);
         return LogicGate.split(
             jAddr,
             4,      // remove first 4 bits

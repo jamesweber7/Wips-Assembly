@@ -443,50 +443,33 @@ class LogicGate {
         );
     }
 
-    // >
-    static gt(bitstring1, bitstring2) {
-        const lengthStandardizedBitStrings = this.standardizeBitStringLengths(bitstring1, bitstring2);
-        bitstring1 = lengthStandardizedBitStrings[0];
-        bitstring2 = lengthStandardizedBitStrings[1];
-        const length = bitstring1.length;
-        for (let i = 0; i < length; i++) {
-            if (this.bitToBool(
-                this.bitGt(
-                    bitstring1[i],
-                    bitstring2[i]))) {
-                        return '1';
-            }
-            else if (this.bitToBool(
-                this.bitLt(
-                    bitstring1[i],
-                    bitstring2[i]))) {
-                        return '0';
-            }
-        }
-        return '0'
-    }
-
     // ≥
     static geq(bitstring1, bitstring2) {
-        const lengthStandardizedBitStrings = this.standardizeBitStringLengths(bitstring1, bitstring2);
-        bitstring1 = lengthStandardizedBitStrings[0];
-        bitstring2 = lengthStandardizedBitStrings[1];
-        const length = bitstring1.length;
-        for (let i = 0; i < length; i++) {
-            if (this.bitToBool(
-                this.bitGt(
-                    bitstring1[i],
-                    bitstring2[i]))) {
-                        return '1';
-            }
-            else if (this.bitToBool(
-                this.bitLt(
-                    bitstring1[i],
-                    bitstring2[i]))) {
-                        return '0';
-            }
+        return this.not(
+            this.lt(bitstring1, bitstring2)
+        );
+    }
+
+    static signedGeq(bitstring1, bitstring2) {
+        if (bitstring1.length !== bitstring2.length) {
+            throw "you're too dumb to avoid a semantic error if these can be different lengths";
         }
-        return '1'
+        const split1 = this.split(bitstring1, 1, bitstring1.length - 1);
+        const sign1 = split1[0];
+        const uBitstring1 = split1[1];
+        const split2 = this.split(bitstring2, 1, bitstring2.length - 1);
+        const sign2 = split2[0];
+        const uBitstring2 = split2[1];
+
+        const uGeq = this.geq(uBitstring1, uBitstring2);
+
+        return this.mux(
+            uGeq,   // both +
+            '1',    // bitstring2 -
+            '0',    // bitstring1 -
+            uGeq,   // both -
+            this.merge(sign1, sign2)
+        );
     }
 
     static bitLt(bit1, bit2) {
@@ -497,8 +480,69 @@ class LogicGate {
     }
 
     // <
-    static lt() {
+    static lt(bitstring1, bitstring2) {
+        const lengthStandardizedBitStrings = this.standardizeBitStringLengths(bitstring1, bitstring2);
+        bitstring1 = lengthStandardizedBitStrings[0];
+        bitstring2 = lengthStandardizedBitStrings[1];
+        const length = bitstring1.length;
+        let gt = '0';
+        let lt = '0';
+        for (let i = 0; i < length; i++) {
+            gt = this.and(
+                this.not(lt),
+                this.or(
+                    gt,
+                    this.bitGt(
+                        bitstring1[i],
+                        bitstring2[i]
+                    )
+                )
+            );
+            lt = this.and(
+                this.not(gt),
+                this.or(
+                    lt,
+                    this.bitLt(
+                        bitstring1[i],
+                        bitstring2[i]
+                    )
+                )
+            )
+        }
+        return lt;
+    }
 
+    // >
+    static gt(bitstring1, bitstring2) {
+        const lengthStandardizedBitStrings = this.standardizeBitStringLengths(bitstring1, bitstring2);
+        bitstring1 = lengthStandardizedBitStrings[0];
+        bitstring2 = lengthStandardizedBitStrings[1];
+        const length = bitstring1.length;
+        let gt = '0';
+        let lt = '0';
+        for (let i = 0; i < length; i++) {
+            gt = this.and(
+                this.not(lt),
+                this.or(
+                    gt,
+                    this.bitGt(
+                        bitstring1[i],
+                        bitstring2[i]
+                    )
+                )
+            );
+            lt = this.and(
+                this.not(gt),
+                this.or(
+                    lt,
+                    this.bitLt(
+                        bitstring1[i],
+                        bitstring2[i]
+                    )
+                )
+            )
+        }
+        return gt;
     }
 
     static bitLeq(bit1, bit2) {
@@ -509,8 +553,10 @@ class LogicGate {
     }
 
     // ≤
-    static leq() {
-
+    static leq(bitstring1, bitstring2) {
+        return this.not(
+            this.gt(bitstring1, bitstring2)
+        );
     }
 
     static bitEq(bits) {

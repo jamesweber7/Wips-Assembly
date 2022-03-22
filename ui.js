@@ -17,6 +17,18 @@ const cyclesContainer = document.getElementById('cycles-container');
 const numCyclesInput = document.getElementById('num-cycles-input');
 
 const consoleIO = document.getElementById('console');
+
+const loadDropdownOptions = document.getElementById('load-dropdown-options');
+
+
+// options
+var PREMADE_PROGRAMS;
+async function loadPremadePrograms() {
+    const response = await fetch('programs.json');
+    PREMADE_PROGRAMS = await response.json();
+}
+loadPremadePrograms().then(updatePremadeProgramUi);
+
 // setup
 createUi();
 updateUi();
@@ -226,7 +238,7 @@ function createTrapTable() {
         createTableRow('trap-exit', 'Exit', trap.exit)
     );
     trapTable.append(
-        createTableRow('trap-pipeline-trap', 'Pipeline Trap', trap.pipelineTrap)
+        createTableRow('trap-pipeline-trap', 'Pipeline Trap', trap.pipelineTrap.q)
     );
 }
 
@@ -236,7 +248,7 @@ function updateTrapTable() {
     updateTableRow('trap-of', trap.OvF);
     updateTableRow('trap-sysin', trap.sysin);
     updateTableRow('trap-exit', trap.exit);
-    updateTableRow('trap-pipeline-trap', trap.pipelineTrap);
+    updateTableRow('trap-pipeline-trap', trap.pipelineTrap.q);
 }
 
 // prompt user whether they want to continue
@@ -257,4 +269,26 @@ function promptContinue() {
     function closePopup() {
         popup.remove();
     }
+}
+
+
+/*----------  Premade Programs  ----------*/
+
+function updatePremadeProgramUi() {
+    PREMADE_PROGRAMS.forEach(program => {
+        const btn = Wom.createTo(loadDropdownOptions, 'button', `load-${program.title}`);
+        btn.innerText = program.title;
+        btn.onclick = () => {
+            setCodeInput(program.title, program.text);
+        }
+        loadDropdownOptions.append(btn);
+    });
+    const BLANK_PROGRAM = PREMADE_PROGRAMS[1];
+    setCodeInput(BLANK_PROGRAM.title, BLANK_PROGRAM.text);
+}
+
+function setCodeInput(title, text) {
+    programTitle.value = title;
+    codeInput.value = text;
+    codeInput.dispatchEvent(new Event('input'));
 }

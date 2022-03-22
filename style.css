@@ -10,6 +10,9 @@
     --hacker-green-gray-light: #c6eec6;
     --hacker-green-gray-dark: rgb(26, 48, 26);
     --error-red: #ff0048;
+    --font-business: system-ui;
+    --font-main: Verdana;
+    --font-code: consolas;
 }
 
 body, html {
@@ -20,8 +23,8 @@ body {
     background-color: var(--bg-gray);
 }
 
-body * {
-    font-family: "Verdana";
+body, button, td {
+    font-family: var(--font-main);
 }
 
 .tiltbutton {
@@ -89,7 +92,7 @@ popup button {
 input, textarea {
     outline: none;
     text-decoration: none;
-    font-family: 'consolas';
+    font-family: var(--font-code);
     tab-size: 4;
     -moz-tab-size: 4;
 }
@@ -140,7 +143,7 @@ input[type=number] {
     font-size: 12px;
     opacity: 0.8;
     cursor: default;
-    font-family: system-ui;
+    font-family: var(--font-business);
     z-index: 1000;
     transition-delay: 0;
 }
@@ -187,7 +190,7 @@ griditem {
     grid-column-end: 4;
     color: var(--hacker-green);
     font-size: 30px;
-    font-family: Verdana;
+    font-family: var(--font-main);
 }
 
 titletext {
@@ -225,7 +228,7 @@ buttonrow {
     margin: 0 10px;
 }
 
-buttonrow button {
+buttonrow button, buttonrow .dropdown {
     display: inline-block;
     width: fit-content;
     font-size: 20px;
@@ -233,9 +236,43 @@ buttonrow button {
     padding: 4px;
 }
 
+buttonrow .dropdown {
+    padding: 0;
+}
+
+.dropdown .options {
+    display: none;
+}
+
+.dropdown:focus .options, .dropdown:focus-within .options {
+    display: block;
+}
+
+
+.dropdown .title button, .dropdown .options button {
+    border: none;
+    width: -webkit-fill-available;
+}
+
+
+.dropdown .options button {
+    border-radius: 0;
+    border-top: var(--hacker-green) 1px solid;
+    display: block;
+    text-align: left;
+    font-family: var(--font-business);
+}
+
 button:hover {
     cursor: pointer;
     background-color: var(--hacker-gray-less-dark);
+}
+
+.just-contents {
+    padding: none;
+    margin: none;
+    border: none;
+    background: none;
 }
 
 .hidden {
@@ -244,7 +281,11 @@ button:hover {
 
 /* scrollbar */
 
-::-webkit-scrollbar {
+html ::-webkit-scrollbar {
+    width: 14px;
+}
+
+body ::-webkit-scrollbar {
     width: 5px;
 }
 
