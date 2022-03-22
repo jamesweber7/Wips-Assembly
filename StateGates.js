@@ -454,6 +454,10 @@ class SingleReadRam extends Ram {
         this.dataOut = this.dataAt(this._addr);
     }
 
+    setDataAt(data, addr) {
+        this._data[addr] = data;
+    }
+
 }
 
 class SingleReadBigRam extends BigRam {
@@ -686,16 +690,38 @@ class MipsSyscall extends ClockExclusiveGate {
             this.receivedInput,
             this.sysin
         );
-        const bytes = LogicGate.split(output, 8, 8, 8, 8);
-        const nulChar = LogicGate.or(
-            LogicGate.zero(bytes[0]),
-            LogicGate.zero(bytes[1]),
-            LogicGate.zero(bytes[2]),
-            LogicGate.zero(bytes[3])
-        )
+        // reset input on nul char
+        this.inputQueue.reset(this.stringStop);
+        // len = '00000';
+        console.log('LEN', len);
+        this.input = this.inputQueue.dataAt(
+            LogicGate.shiftRight(len, 2)
+        );
+        const bytesOut = LogicGate.split(output, 8, 8, 8, 8);
+        const nulCharOut = LogicGate.or(
+            LogicGate.zero(bytesOut[0]),
+            LogicGate.zero(bytesOut[1]),
+            LogicGate.zero(bytesOut[2]),
+            LogicGate.zero(bytesOut[3])
+        );
+        const bytesIn = LogicGate.split(this.input, 8, 8, 8, 8);
+        const nulCharIn = LogicGate.or(
+            LogicGate.zero(bytesIn[0]),
+            LogicGate.zero(bytesIn[1]),
+            LogicGate.zero(bytesIn[2]),
+            LogicGate.zero(bytesIn[3])
+        );
+        const nulStop = LogicGate.mux(
+            nulCharOut,
+            LogicGate.and(
+                nulCharIn,
+                this.receivedInput
+            ),
+            sysin
+        );
         this.stringStop = LogicGate.and(
             this.string,
-            nulChar
+            nulStop
         );
         this.string = LogicGate.and(
             this.syscall,
@@ -706,19 +732,16 @@ class MipsSyscall extends ClockExclusiveGate {
                 this.exit
             )
         );
-        // reset input on nul char
-        this.inputQueue.reset(this.stringStop);
-        this.input = this.inputQueue.dataAt(
-            len
-        );
         this.output = output;
     }
 
     inputData(input) {
         this.receivedInput = '1';
         for (let i = 0; i < input.length; i++) {
-            this.inputQueue[i] = input[i];
+            console.log('INPUTTING ', input[i]);
+            this.inputQueue.setDataAt(input[i], i);
         }
+        console.log(' NEW DATA ', this.inputQueue);
     }
 }
 
@@ -737,6 +760,9 @@ class MipsStaticMemoryPointer extends ClockExclusiveGate {
         const writeUpper = splitWrite[0];
         const writeLower = splitWrite[1];
         const currentLower = this._savedAddressLower;
+
+        console.log('WRITING TO MEM POINTER');
+        console.log(writeAddr, memWrite, this.address);
 
         // writeAddr upper === static upper
         const isInStaticMem = LogicGate.eq(
@@ -865,8 +891,8 @@ class Mips {
         );
 
         // read string len
-        const previousStringLen = this._wb.len;
-        const lenLowerFive = LogicGate.split(previousStringLen, 27, 5)[1];
+        const lastLen = this._wb.len;
+        const lenLowerFive = LogicGate.split(lastLen, 27, 5)[1];
 
         // syscall
         this.io.write(writeData, pipeline.syscallOp, lenLowerFive, clk);
@@ -886,11 +912,19 @@ class Mips {
             clk
         );
 
-        // string length
+        clk = LogicGate.and(
+            clk,
+            LogicGate.not(this.trap.trap)
+        );
 
+        // string length
+        const stringin = LogicGate.and(
+            string,
+            this.io.sysin
+        );
         const unincrementedLen = LogicGate.mux(
             '11111111111111111111111111111100', // -4
-            previousStringLen,
+            lastLen,
             string
         );
         this._stringLengthFlipFlop.write(
@@ -898,9 +932,15 @@ class Mips {
             clk
         );
         
-        const stringLength = LogicGate.addALU32(
+        const len = LogicGate.addALU32(
             this._stringLengthFlipFlop.q,
             '00000000000000000000000000000100'  // 4
+        );
+
+        const memIncrement = LogicGate.mux(
+            len,
+            unincrementedLen,
+            stringin
         );
 
         // sysin writeData
@@ -908,7 +948,7 @@ class Mips {
             writeData,
             this.io.input,
             this.io.sysin
-        );
+        );        
 
         // sysin writeReg
         const writeReg = LogicGate.mux(
@@ -922,10 +962,12 @@ class Mips {
             sysin: this.io.sysin,
             syscallOp: pipeline.syscallOp,
             string: string,
+            stringin: stringin,
             regWrite: regWrite,
             writeData: writeData,
             writeReg: writeReg,
-            len: stringLength
+            len: len,
+            memIncrement: memIncrement,
         });
     }
 
@@ -1005,11 +1047,13 @@ class Mips {
         );
 
         // read pipeline trap
-        const string = this.trap.pipelineTrap.q;
-        const stringin = LogicGate.and(
-            string,
-            sysin
-        );
+        // const string = this.trap.pipelineTrap.q;
+        const string = this.io.string;
+        // const stringin = LogicGate.and(
+        //     string,
+        //     sysin
+        // );
+        const stringin = this._wb.stringin;
         const stringout = LogicGate.and(
             string,
             LogicGate.not(
@@ -1036,27 +1080,69 @@ class Mips {
             stringin
         );
 
-        // baseAddr + length
+        const memIncrement = this._wb.memIncrement;
+
+        // baseAddr + memIncrement
         const memAddr = LogicGate.addALU32(
             baseAddr,
-            len
+            memIncrement
         );
 
+        console.log(
+            'IMPORTANT THINGS',
+            len,
+            pipeline.aluResult,
+            staticMemPointer,
+            stringin,
+            baseAddr,
+            memIncrement,
+            memAddr,
+            this._staticMemoryPointer.address
+        );
 
         // update static mem pointer
         this._staticMemoryPointer.write(
             memAddr,
             memWrite,
-            clk
+            LogicGate.and(
+                clk,
+                LogicGate.not(this.trap.pipelineTrap.q)
+            )
         );
+
+        const writeData = LogicGate.mux(
+            pipeline.writeData, // mem
+            this._wb.writeData, // wb
+            stringin
+        );
+
+        console.log(
+            this._staticMemoryPointer.address,
+            memWrite,
+            clk,
+            writeData
+        );
+
+        if (memWrite === '1' && clk === '1') {
+            console.log('WRITING DATA');
+            console.log(writeData, memAddr);
+        }
 
         // data mem
         this._mainMemory.write(
             memAddr,
-            pipeline.writeData,
+            writeData,
             pipeline.memRead,
             memWrite,
             clk
+        );
+
+        console.log('WRITING : ');
+        console.log(
+            memAddr,
+            pipeline.writeData,
+            pipeline.memRead,
+            memWrite
         );
 
         const readData = LogicGate.merge(
@@ -2272,19 +2358,23 @@ class WriteBack {
         this.sysin = LogicGate.empty(1);
         this.syscallOp = LogicGate.empty(3);
         this.string = LogicGate.empty(1);
+        this.stringin = LogicGate.empty(1);
         this.regWrite = LogicGate.empty(1);
         this.writeData = LogicGate.empty(32);
         this.writeReg = LogicGate.empty(5);
         this.len = LogicGate.empty(32);
+        this.memIncrement = LogicGate.empty(32);
     }
     write(wires) {
         this.sysin = wires.sysin;
         this.syscallOp = wires.syscallOp;
         this.string = wires.string;
+        this.stringin = wires.stringin;
         this.regWrite = wires.regWrite;
         this.writeData = wires.writeData;
         this.writeReg = wires.writeReg;
         this.len = wires.len;
+        this.memIncrement = wires.memIncrement;
     }
 }
 

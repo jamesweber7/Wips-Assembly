@@ -10,6 +10,7 @@ const registers = [
     'zero', 'at', 'v0', 'v1', 'a0', 'a1', 'a2', 'a3', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 't8', 't9', 'k0', 'k1', 'gp', 'sp', 'fp', 'ra'
 ];
 var stop = false, running = false, compiled = false, saved = false;
+var cycles = 0; var stopCycle = 0;
 
 var INSTRUCTION_DATA;
 async function loadInstructions() {
@@ -24,7 +25,7 @@ loadInstructions();
 function compileAndRun() {
     stop = false;
     compile();
-    run();
+    retreiveFreshCyclesAndRun();
     updateUi();
 }
 
@@ -48,17 +49,22 @@ function setInstructions(instructions) {
     }
 }
 
+function retreiveFreshCyclesAndRun() {
+    stopCycle = cycles + getCyclesPerRun();
+    run();
+}
+
 function run() {
-    stop = false;
     running = true;
-    const MAX_CYCLES = getCyclesPerRun();
     
-    for (let i = 0; i < MAX_CYCLES && !isStopped(); i++) {
-        console.log('HI CYCLE, ', i);
+    do {
+        console.log('CYCLE ' + cycles);
+
         step();
+        
         printObject(mips.trap);
         printObject(mips.io);
-    }
+    } while(cycles < stopCycle && !isStopped());
     updateUi();
     if (!isStopped()) {
         promptContinue();
@@ -67,8 +73,14 @@ function run() {
 
 function step() {
     pulseMipsClock();
+    cycles ++;
+
     console.log(mips._ifToId.pc);
     printPipelines();
+
+    // if (mips.io.sysin === '1') {
+    //     outputString(mips.io.input);
+    // }
 }
 
 function singleStep() {
@@ -89,11 +101,15 @@ function isStopped() {
 }
 
 function submitInput(input) {
-    if (!LogicGate.bitToBool(mips.io.sysin)) {
+    if (!LogicGate.bitToBool(mips.trap.sysin)) {
         return;
     }
     let inputQueue = getInputQueue(input);
+    console.log('INPUTTING ', inputQueue);
     mips.input(inputQueue);
+    if (running) {
+        run();
+    }
 }
 
 function getInputQueue(input) {

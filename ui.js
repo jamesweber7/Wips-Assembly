@@ -261,7 +261,7 @@ function promptContinue() {
 
     yes.onclick = () => {
         closePopup();
-        run();
+        retreiveFreshCyclesAndRun();
     }
 
     no.onclick = closePopup;
@@ -279,16 +279,19 @@ function updatePremadeProgramUi() {
         const btn = Wom.createTo(loadDropdownOptions, 'button', `load-${program.title}`);
         btn.innerText = program.title;
         btn.onclick = () => {
-            setCodeInput(program.title, program.text);
+            setCodeInput(program.title, program.text, program.cycles);
         }
         loadDropdownOptions.append(btn);
     });
     const BLANK_PROGRAM = PREMADE_PROGRAMS[1];
-    setCodeInput(BLANK_PROGRAM.title, BLANK_PROGRAM.text);
+    setCodeInput(BLANK_PROGRAM.title, BLANK_PROGRAM.text, BLANK_PROGRAM.cycles);
 }
 
-function setCodeInput(title, text) {
+function setCodeInput(title, text, cycles) {
     programTitle.value = title;
     codeInput.value = text;
     codeInput.dispatchEvent(new Event('input'));
+    if (cycles) {
+        numCyclesInput.value = cycles;
+    }
 }

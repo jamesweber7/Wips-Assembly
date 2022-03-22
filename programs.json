@@ -1,14 +1,17 @@
 [
     {
         "title": "NewProgram.s",
-        "text": "# static data declarations begin at .data\n\t.data\n\n# program text begins at .text\n.text \n\n# define global function main\n.globl main\n\n# program begins execution at main\nmain:\n    \n    jr  $ra\t\t\t# Exit"
+        "text": "# static data declarations begin at .data\n\t.data\n\n# program text begins at .text\n.text \n\n# define global function main\n.globl main\n\n# program begins execution at main\nmain:\n    \n    jr  $ra\t\t\t# Exit",
+        "cycles" : 50
     },
     {
         "title": "HelloWorld.s",
-        "text": "# static data declarations begin at .data\n\t.data\n    msg:\t.asciiz\t\t\"Helo World!\\n\"\n\n# program text begins at .text\n.text \n\n# define global function main\n.globl main\n\n# program begins execution at main\nmain:\n    la  $a0, msg\t# $a0 = address of message\n    li\t$v0, 4\t\t# $v0 = 4: print string code\n\tnop\t\t\t\t# buffer\n\tnop\t\t\t\t# buffer\n\tsyscall\t\t\t# print msg\n    jr  $ra\t\t\t# Exit"
+        "text": "# static data declarations begin at .data\n\t.data\n    msg:\t.asciiz\t\t\"Helo World!\\n\"\n\n# program text begins at .text\n.text \n\n# define global function main\n.globl main\n\n# program begins execution at main\nmain:\n    la  $a0, msg\t# $a0 = address of message\n    li\t$v0, 8\t\t# $v0 = 4: print string code\n\tnop\t\t\t\t# buffer\n\tnop\t\t\t\t# buffer\n\tsyscall\t\t\t# print msg\n    jr  $ra\t\t\t# Exit",
+        "cycles": 100
     },
     {
         "title": "Showcase.s",
-        "text": "\t.data\n\tnum1:\t.word 1\n\tnum2:\t.word 2\n.text \n.globl main\n\nmain:\n    la  $a1, num1\n    la  $a2, num2\n    nop\n    add $a3, $a1, $a2\n    addi $t0, $a3, 7\n    lw  $a0, 0($a1)\n    li\t$v0, 1\n    nop\n    nop\n    syscall\n    \n    li\t$t0, 404\n    li\t$t1, 1024\n    addi $sp, $sp, -4\n    sw\t$ra, 0($sp)\n    jal\tfunction1\n    nop\n    nop\n    lw\t$ra, 0($sp)\n    addi $sp, $sp, 4\n    jr  $ra\n\nfunction1:\n    la  $a0, num1\n    li\t$v0, 1\n    nop\n    nop\n    syscall\n    jr\t$ra"
+        "text": "\t.data\n\tnum1:\t.word 1\n\tnum2:\t.word 2\n.text \n.globl main\n\nmain:\n    la  $a1, num1\n    la  $a2, num2\n    nop\n    add $a3, $a1, $a2\n    addi $t0, $a3, 7\n    lw  $a0, 0($a1)\n    li\t$v0, 1\n    nop\n    nop\n    syscall\n    \n    li\t$t0, 404\n    li\t$t1, 1024\n    addi $sp, $sp, -4\n    sw\t$ra, 0($sp)\n    jal\tfunction1\n    nop\n    nop\n    lw\t$ra, 0($sp)\n    addi $sp, $sp, 4\n    jr  $ra\n\nfunction1:\n    la  $a0, num1\n    li\t$v0, 1\n    nop\n    nop\n    syscall\n    jr\t$ra",
+        "cycles" : 100
     }
 ]

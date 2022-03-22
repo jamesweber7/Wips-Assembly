@@ -925,6 +925,14 @@ class LogicGate {
         );
     }
 
+    static shiftRight(bitstring, numpositions=1) {
+        return this.bitstringToPrecision(
+            this.split(bitstring, bitstring.length - numpositions)[0],
+            bitstring.length
+        )
+    }
+
+
     static shiftLeftExtend(bitstring) {
         // lsb
         let shifted = '0';
