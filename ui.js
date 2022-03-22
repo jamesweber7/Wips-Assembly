@@ -121,6 +121,15 @@ function outputToConsole(output) {
     consoleIO.value = consoleIO.getAttribute("data");
 }
 
+function uiInput(input) {
+    input = input + '\n';
+    consoleIO.setAttribute(
+        "data",
+        consoleIO.getAttribute("data") + input
+    );
+    consoleIO.value = consoleIO.getAttribute("data");
+}
+
 /*----------  Tables  ----------*/
 
 function createTables() {

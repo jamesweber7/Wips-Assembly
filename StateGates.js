@@ -1407,6 +1407,16 @@ class Mips {
 
         // Update Register Memory
         this._registerMemory.write(readReg1, readReg2, writeReg, writeData, regWrite, clk);
+        if (LogicGate.zero(this._registerMemory._data[0]) === '0') {
+            console.log('ZERO NOT ZERO');
+            console.log('ZERO NOT ZERO');
+            console.log('ZERO NOT ZERO');
+            console.log('ZERO NOT ZERO');
+            console.log('ZERO NOT ZERO');
+            console.log('ZERO NOT ZERO');
+            console.log('ZERO NOT ZERO');
+            printObject(this);
+        }
 
         // sign extend immediate
         const immediate16 = LogicGate.split(pipeline.instruction, 16, 16)[1];
@@ -1485,6 +1495,17 @@ class Mips {
 
     instructionFetch(clk) {
 
+        // clk traps
+        clk = LogicGate.and(
+            clk,
+            LogicGate.not(
+                this.trap.pipelineTrap.q
+            ),
+            LogicGate.not(
+                this.trap.trap
+            )
+        );
+
         // read PC Block
         const pcBlock = this._pcBlock.q;
 
@@ -1519,17 +1540,6 @@ class Mips {
         // read instruction at current pc
         this._instructionMemory.write(pc, LogicGate.empty(32), '0', clk);
         const instruction = this._instructionMemory.dataOut;
-
-        // clk traps
-        clk = LogicGate.and(
-            clk,
-            LogicGate.not(
-                this.trap.pipelineTrap.q
-            ),
-            LogicGate.not(
-                this.trap.trap
-            )
-        );
 
         // update IF → ID pipeline
         this._ifToId.write(
