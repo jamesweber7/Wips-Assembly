@@ -551,6 +551,73 @@ class MipsDataRam extends BigRam {
     }
 }
 
+class MipsMainMemory extends BigRam {
+    constructor() {
+        super(8);
+        this._dataAddr = LogicGate.empty(32);
+        this._instructionAddr = LogicGate.empty(32);
+        this.readData();
+        this.readInstructions();
+    }
+
+    writeData(addr, dataIn, read, write, clk) {
+        this._dataAddr = addr;
+        if (this.isClockPulse(clk)) {
+            this.writeAt(dataIn, this._dataAddr, write);
+        }
+        if (LogicGate.bitToBool(read)) {
+            this.dataOut = this.wordAt(this._dataAddr);
+        }
+        this.updateClockPulse(clk);
+    }
+
+    writeInstructions(pc, clk) {
+        this._instructionAddr = pc;
+        if (this.isClockPulse(clk)) {
+            this.writeAt(pc, this._instructionAddr, '1');
+        }
+        this.instructionOut = this.wordAt(this._instructionAddr);
+        this.updateClockPulse(clk);
+    }
+
+    wordAt(addr) {
+        let word1 = this.dataAt(addr);
+        addr = LogicGate.incrementer32(addr);
+        let word2 = this.dataAt(addr);
+        addr = LogicGate.incrementer32(addr);
+        let word3 = this.dataAt(addr);
+        addr = LogicGate.incrementer32(addr);
+        let word4 = this.dataAt(addr);
+        return LogicGate.merge(word4, word3, word2, word1);
+    }
+
+    writeAt(dataIn, addr, write) {
+        const bytes = LogicGate.split(dataIn, 8, 8, 8, 8);
+        this._data[addr] = LogicGate.mux(
+            this._data[addr],
+            bytes[3],
+            write
+        );
+        addr = LogicGate.incrementer32(addr);
+        this._data[addr] = LogicGate.mux(
+            this._data[addr],
+            bytes[2],
+            write
+        );        addr = LogicGate.incrementer32(addr);
+        this._data[addr] = LogicGate.mux(
+            this._data[addr],
+            bytes[1],
+            write
+        );        addr = LogicGate.incrementer32(addr);
+        this._data[addr] = LogicGate.mux(
+            this._data[addr],
+            bytes[0],
+            write
+        );    
+    }
+}
+
+
 class MipsRegisterRam extends Ram {
     constructor(data) {
         super(data);
@@ -801,8 +868,9 @@ class MipsStaticMemoryPointer extends ClockExclusiveGate {
 class Mips {
     constructor() {
         // RAM
-        this._instructionMemory = new SingleReadBigRam(32);
-        this._mainMemory = new MipsDataRam();
+        // this._instructionMemory = new SingleReadBigRam(32);
+        // this._mainMemory = new MipsDataRam();
+        this._mainMemory = new MipsMainMemory();
         this._registerMemory = MipsRegisterRam.empty(32, 32);
         // PC
         this._pc = new D_FlipFlop(32);
