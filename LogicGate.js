@@ -83,10 +83,13 @@ class LogicGate {
     }
 
     // returns array of words with four byte ascii bitstrings
+    // last word will have nul char - if length multiple of 4, last word will be 0
     static fromAscii(str) {
         let word = '';
         let words = [];
-        // FILO → first word = string's first 4 bytes
+        // "abcdefghij"     abcd    +0
+        //                  efgh    +4
+        //                  ij00    +8
         for (let i = 0; i < str.length; i++) {
             let byte = LogicGate.bitstringToPrecision(
                 LogicGate.toBitstring(
@@ -100,10 +103,10 @@ class LogicGate {
                 word = '';
             }
         }
-        if (word) {
+        // if (word) {
             word = this.shiftLeftToPrecision(word, 32);
             words.push(word);
-        }
+        // }
         return words;
     }
 
@@ -642,7 +645,7 @@ class LogicGate {
         }
         const splitOut = [];
         for (let i = 0; i < positions.length; i++) {
-            let bitstring = '';
+            bitstring = '';
             for (let j = 0; j < positions[i]; j++) {
                 bitstring = this.merge(bitstring, bits.splice(0, 1));
             }

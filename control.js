@@ -105,7 +105,6 @@ function submitInput(input) {
         return;
     }
     let inputQueue = getInputQueue(input);
-    console.log('INPUTTING ', inputQueue);
     uiInput(input);
     mips.input(inputQueue);
     if (running) {
@@ -121,7 +120,7 @@ function getInputQueue(input) {
         inputQueue.push(
             LogicGate.bitstringToPrecision(
                 LogicGate.toBitstring(
-                    Number.parseInt(input)
+                    Wath.parseAnyStringAsInt(input) // if string is input, will use ascii codes
                 ),
                 32
             )

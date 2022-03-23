@@ -48,7 +48,7 @@ function createUi() {
 
     // console
     consoleIO.addEventListener('input', inputConsole);
-    consoleIO.addEventListener('keypress', submitConsoleInput);
+    consoleIO.addEventListener('keypress', submitConsoleInputOnEnter);
 
     // button row
     compileBtn.onclick = compileAndRun;
@@ -88,13 +88,18 @@ function inputConsole() {
     consoleIO.setAttribute("last", consoleIO.value);
 }
 
-function submitConsoleInput(e) {
+function submitConsoleInputOnEnter(e) {
     if (e.key === 'Enter') {
-        let input = consoleIO.value;
-        input = input.replace(consoleIO.getAttribute("data"), "");
-        submitInput(input);
+        submitConsoleInput();
         consoleIO.setAttribute("data", consoleIO.value + '\n');
     }
+}
+
+function submitConsoleInput() {
+    let input = consoleIO.value;
+    input = input.replace(consoleIO.getAttribute("data"), "");
+    submitInput(input);
+    consoleIO.setAttribute("data", consoleIO.value);
 }
 
 function outputInt(int) {
@@ -105,15 +110,22 @@ function outputInt(int) {
 
 function outputString(fourByteString) {
     const split = LogicGate.split(fourByteString, 8, 8, 8, 8);
-    outputToConsole(
-        LogicGate.toAscii(split[0]) +
-        LogicGate.toAscii(split[1]) +
-        LogicGate.toAscii(split[2]) +
-        LogicGate.toAscii(split[3])
-    );
+    const NUL_CHAR = '\x00';
+    let out = '';
+    let exit;
+    for (let i = 0; i < split.length && !exit; i++) {
+        let asciiByte = LogicGate.toAscii(split[i]);
+        if (asciiByte === NUL_CHAR) {
+            exit = true;
+        } else {
+            out += asciiByte;
+        }
+    }
+    outputToConsole(out);
 }
 
 function outputToConsole(output) {
+    submitConsoleInput();
     consoleIO.setAttribute(
         "data",
         consoleIO.getAttribute("data") + output

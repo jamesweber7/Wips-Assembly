@@ -299,6 +299,14 @@ class StringReader {
         return quote;
     }
 
+    static fakeToRealSpecialCharacters(str) {
+        str = str.replaceAll('\\n', '\n');
+        str = str.replaceAll('\\t', '\t');
+        str = str.replaceAll('\\\\', '\\');
+        str = str.replaceAll('\\r', '\r');
+        return str;
+    }
+
 
     /*----------  Equations/Math  ----------*/
 

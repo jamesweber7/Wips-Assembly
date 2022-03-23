@@ -1270,6 +1270,19 @@ class Wath {
         return sum;
     }
 
+    // if non-numeric string, parses ascii codes
+    static parseAnyStringAsInt(string) {
+        if (StringReader.isNumericString(string)) {
+            return Number.parseInt(string);
+        }
+        let num = 0;
+        for (let i = 0; i < string.length; i++) {
+            let index = string.length - i - 1;
+            num += string.charCodeAt(index) * 10**i;
+        }
+        return num;
+    }
+
     // like Number.parseFloat, but allows for other based like Number.parseInt
     static parseFloat(numstring, base=10) {
         if (base === 10) {

@@ -71,6 +71,8 @@ class Compiler {
         let checking = this.compiling;
         let next;
 
+        console.log('CHECKING , ' + checking);
+
         // name
         next = StringReader.firstWord(checking);
         if (next.includes(':')) {
@@ -203,6 +205,12 @@ class Compiler {
         // la   $rt, LABEL
         // lw   $rt, offset($gp)
         let offset = this.getDataOffset(index);
+        console.log('LA');
+        console.log('LA');
+        console.log('LA');
+        console.log('LA');
+        console.log('LA');
+        console.log(offset, rt, label, index);
 
         // rt = $gp + offset
         this.pushAddiInstruction(
@@ -268,11 +276,12 @@ class Compiler {
 
             if (isString) {
                 nextValueStr = StringReader.getQuotedString(this.compiling, QUOTE);
-                nextValueStr += QUOTE;
+                nextValueStr = StringReader.fakeToRealSpecialCharacters(nextValueStr);
                 let nextValues = LogicGate.fromAscii(nextValueStr);
                 nextValues.forEach(value => {
                     addValue(value);
                 });
+                nextValueStr += QUOTE;
             }
             // else
             if (isNumeric) {
@@ -602,11 +611,22 @@ class Compiler {
     }
 
     compileTwoReg(instructionInfo) {
+        console.log('MOVE');
+        console.log('MOVE');
+        console.log('MOVE');
+        console.log('MOVE');
+        console.log('MOVE');
+        console.log('MOVE');
+        console.log('MOVE');
+
+        console.log(instructionInfo);
         // name $rd, $rs
         const opcode = '000000';
         const rt = this.numericStringToRegisterBinary(instructionInfo.rt);
         const shamt = this.numericStringToShamtBinary(instructionInfo.shamt);
         const funct = this.numericStringToFunctBinary(instructionInfo.funct);
+
+        console.log(this.compiling);
 
         // name $rd, $rs remaining
         this.compiling = StringReader.substringAfter(this.compiling, instructionInfo.name);
@@ -629,6 +649,8 @@ class Compiler {
             funct
         );
         this.instructions.push(instruction);
+        console.log(this.compiling);
+        console.log(instruction);
 
         this.endLine();
     }

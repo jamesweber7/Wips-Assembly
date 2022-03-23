@@ -6,12 +6,17 @@
     },
     {
         "title": "HelloWorld.s",
-        "text": "# static data declarations begin at .data\n\t.data\n    msg:\t.asciiz\t\t\"Helo World!\\n\"\n\n# program text begins at .text\n.text \n\n# define global function main\n.globl main\n\n# program begins execution at main\nmain:\n    la  $a0, msg\t# $a0 = address of message\n    li\t$v0, 8\t\t# $v0 = 4: print string code\n\tnop\t\t\t\t# buffer\n\tnop\t\t\t\t# buffer\n\tsyscall\t\t\t# print msg\n    jr  $ra\t\t\t# Exit",
+        "text": "# static data declarations begin at .data\n\t.data\n    msg:\t.asciiz\t\t\"Hello World!\\n\"\n\n# program text begins at .text\n.text \n\n# define global function main\n.globl main\n\n# program begins execution at main\nmain:\n    la  $a0, msg\t# $a0 = address of message\n    li\t$v0, 4\t\t# $v0 = 4: print string code\n\tnop\t\t\t\t# buffer\n\tnop\t\t\t\t# buffer\n\tsyscall\t\t\t# print msg\n    jr  $ra\t\t\t# Exit",
         "cycles": 100
     },
     {
         "title": "Showcase.s",
-        "text": "\t.data\n\tnum1:\t.word 1\n\tnum2:\t.word 2\n.text \n.globl main\n\nmain:\n    la  $a1, num1\n    la  $a2, num2\n    nop\n    add $a3, $a1, $a2\n    addi $t0, $a3, 7\n    lw  $a0, 0($a1)\n    li\t$v0, 1\n    nop\n    nop\n    syscall\n    \n    li\t$t0, 404\n    li\t$t1, 1024\n    addi $sp, $sp, -4\n    sw\t$ra, 0($sp)\n    jal\tfunction1\n    nop\n    nop\n    lw\t$ra, 0($sp)\n    addi $sp, $sp, 4\n    jr  $ra\n\nfunction1:\n    la  $a0, num1\n    li\t$v0, 1\n    nop\n    nop\n    syscall\n    jr\t$ra",
+        "text": "# data declarations begin at .data\n.data\n\tword1:\t.word 4294967295\n\thalf1:\t.halfword 65535\n\tbyte1:\t.byte 255\n\tmsg1:\t.asciiz \"Hello!\"\n\tmsg2:\t.ascii\t\"Hi Again!\"\n\t\n# program text begins at .text\n.text \n# declare global function main\n.globl main\n\n# program execution starts at main\nmain:\n    la  $a0, word1\n    li\t$v0, 1\n    nop\n    nop\n    syscall\n    addi $sp, $sp, -4\n    sw\t$ra, 0($sp)\n    jal\tfunction1\n    nop\n    nop\n    lw\t$ra, 0($sp)\n    addi $sp, $sp, 4\n    jr  $ra\n\nfunction1:\n    add\t$v0, $a0, $a1\n    jr\t$ra",
         "cycles" : 100
+    },
+    {
+        "title": "SayHi.s",
+        "text": "# static data declarations begin at .data\n\t.data\n    prompt:\t.asciiz\t\t\"Please Enter Your Name: \"\n\tmsg:\t.asciiz\t\t\"Hello, \"\n\n# program text begins at .text\n.text \n\n# define global function main\n.globl main\n\n# program begins execution at main\nmain:\n    la  $a0, prompt # $a0 = address of message\n    li\t$v0, 4\t\t# $v0 = 4: print string code\n\tnop\t\t\t\t# buffer\n\tnop\t\t\t\t# buffer\n\tsyscall\t\t\t# print msg\n\tli\t$v0, 8\t\t# $v0 = 8: read string code\n\tnop\t\t\t\t# buffer\n\tnop\t\t\t\t# buffer\n\tsyscall\t\t\t# print msg\n\tnop\t\t\t\t# buffer\n\taddi $sp, $sp, -4\t# push stack pointer\n\tsw\t$a0, 0($sp)\t\t# push $a0 to stack\n    la  $a0, msg\t# $a0 = address of message\n\tli\t$v0, 4\t\t# $v0 = 4: print string code\n\tnop\t\t\t\t# buffer\n\tnop\t\t\t\t# buffer\n\tsyscall\t\t\t# print msg\n\tlw\t$a0, 0($sp)\t\t# retreive $a0 from stack\n\taddi $sp, $sp, 4\t# pop stack pointer\n\tnop\t\t\t\t# buffer\n\tnop\t\t\t\t# buffer\n\tsyscall\t\t\t# print msg\n    jr  $ra\t\t\t# Exit",
+        "cycles" : 150
     }
 ]
