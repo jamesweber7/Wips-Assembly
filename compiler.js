@@ -60,8 +60,12 @@ class Compiler {
         }
         this.goPastDataIdentifier();
         while (this.hasDataDeclarationNext()) {
+            console.log('HI FROM OUT HERE');
+            console.log(this.compiling);
             this.compileNextDataDeclaration();
+            console.log(this.compiling);
         }
+        console.log(this.compiling);
     }
 
     hasDataDeclarationNext() {
@@ -71,17 +75,15 @@ class Compiler {
         let checking = this.compiling;
         let next;
 
-        console.log('CHECKING , ' + checking);
-
         // name
         next = StringReader.firstWord(checking);
         if (next.includes(':')) {
             next = StringReader.substringBefore(next, ':');
         }
         let name = next;
+        checking = StringReader.substringAfter(checking, name);
 
         // :
-        checking = StringReader.substringAfter(checking, name);
         next = StringReader.firstWord(checking);
         if (next[0] !== ':') {
             return false;
@@ -106,7 +108,7 @@ class Compiler {
             case 'ascii':
             case 'word':
             case 'byte':
-            case 'halfword':
+            case 'half':
             return true;
         }
         return false;
@@ -298,7 +300,7 @@ class Compiler {
                 let numBits;
                 if (type === 'byte') {
                     numBits = 8;
-                } else if (type === 'halfword') {
+                } else if (type === 'half') {
                     numBits = 16;
                 } else if (type === 'word') {
                     numBits = 32;
@@ -306,13 +308,15 @@ class Compiler {
 
                 const gotBits = LogicGate.toSignedBitstring(nextValueStr).length;
                 if (numBits < gotBits) {
-                    this.throwUnexpected(type, got);
+                    this.throwUnexpected(type, gotBits + ' bits');
                 }
 
                 const num = this.numericStringToWord(nextValueStr);
                 addValue(num);
             }
 
+            console.log('HERES STUFF');
+            console.log(this.compiling, nextValueStr);
             this.compiling = StringReader.substringAfter(this.compiling, nextValueStr);
 
         } while (this.nextWord()[0] === COMMA);
@@ -398,12 +402,12 @@ class Compiler {
         );
         // branch
         if (this.hasBranchLabel(instruction)) {
-            const branchTo = this.branchAddressToMachineCode(fromAddress, gotoAddress);
+            const branchTo = LogicGate.encodeBAddr(fromAddress, gotoAddress);
             return StringReader.replaceFrom(instruction, branchTo, this.BRANCH_START, this.BRANCH_END);
         }
         // jump
         if (this.hasJumpLabel(instruction)) {
-            const jumpTo = this.jumpAddressToMachineCode(gotoAddress);
+            const jumpTo = LogicGate.encodeJAddr(gotoAddress);
             return StringReader.replaceFrom(instruction, jumpTo, this.JUMP_START, this.JUMP_END);
         }
         this.throwUnexpected('Branch or Jump Label', instruction);
@@ -759,6 +763,7 @@ class Compiler {
         if (!this.hasJumpLabel(instruction)) {
             this.throwUnexpected('Jump Instruction');
         }
+        throw 'I think this is artifact from mark I and I dont think it works at all';
         let label = this.getJumpLabel(instruction);
         let jAddr = this.getFunctionAddress(label);
         return StringReader.replaceAt(instruction, jAddr, this.JUMP_START, this.JUMP_END);
@@ -1841,7 +1846,8 @@ class Compiler {
     }
 
     jumpAddressToMachineCode(jAddr) {
-        console.log(jAddr);
+        throw 'im tryna use logic gate encodeJAddr instead';
+
         return LogicGate.split(
             jAddr,
             4,      // remove first 4 bits
@@ -1851,6 +1857,7 @@ class Compiler {
     }
 
     branchAddressToMachineCode(bAddr, pcAddr) {
+        throw 'im tryna use logic gate encodeBAddr instead';
         // ( BA - PC - 4 ) ÷ 4
         // (16 bits)
         return LogicGate.bitstringToPrecision(

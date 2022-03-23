@@ -52,14 +52,40 @@ class LogicGate {
         throw 'Not THAT Dynamic!';
     }
 
+    // static toSignedBitstring(num) {
+    //     const abs = Math.abs(num);
+    //     const uBitstring = this.toBitstring(abs);
+    //     if (num < 0) {
+    //         return '1' + this.twosComplement(uBitstring);
+    //     } else {
+    //         return '0' + uBitstring;
+    //     }
+    // }
+
     static toSignedBitstring(num) {
         const abs = Math.abs(num);
         const uBitstring = this.toBitstring(abs);
+        let result;
         if (num < 0) {
-            return '1' + this.twosComplement(uBitstring);
+            result = this.twosComplement(uBitstring);
+            if (
+                LogicGate.bitToBool(
+                    uBitstring[0]
+                )
+            ) {
+                result = '1' + result;
+            }
         } else {
-            return '0' + uBitstring;
+            result = uBitstring;
+            if (
+                LogicGate.bitToBool(
+                    uBitstring[0]
+                )
+            ) {
+                result = '0' + result;
+            }
         }
+        return result;
     }
 
     // warning: true even if string is intended to be decimal '10'
@@ -903,6 +929,54 @@ class LogicGate {
         return result;
     }
 
+    static addALU(a, b) {
+        if (a.length !== b.length) {
+            throw "let's keep the lengths consistent pls";
+        }
+        let result = '';
+        let cin;
+        cin = '0';
+        for (let i = a.length - 1; i >= 0; i--) {
+            const adder = this.fullAdder(a[i], b[i], cin);
+            cin = adder.cout;
+            result = adder.sum + result;
+        }
+        return result;
+    }
+
+    static addALUWithFlags(a, b) {
+        if (a.length !== b.length) {
+            throw "let's keep the lengths consistent pls";
+        }
+        let result = '';
+        let cry, zero, overflow;
+        cry = '0';
+        zero = '1';
+        overflow = '0';
+        for (let i = a.length - 1; i >= 0; i--) {
+            const adder = this.fullAdder(a[i], b[i], cry);
+            if (i === 0) {
+                overflow = this.xor(
+                    cry,
+                    adder.cout
+                );
+            }
+            cry = adder.cout;
+            const sum = adder.sum;
+            result = sum + result;
+            zero = this.nor(
+                LogicGate.not(zero),
+                sum
+            );
+        }
+        return {
+            result,
+            zero,
+            overflow,
+            cry
+        };
+    } 
+
     static shiftLeft(bitstring, control) {
         // lsb
         let shifted = this.or(
@@ -935,6 +1009,14 @@ class LogicGate {
         )
     }
 
+    static shiftRightTwo(bitstring) {
+        return this.shiftRight(
+            this.shiftRight(
+                bitstring
+            )
+        )
+    }
+
 
     static shiftLeftExtend(bitstring) {
         // lsb
@@ -963,6 +1045,88 @@ class LogicGate {
                 bitstring
             )
         );
+    }
+
+    static encodeJAddr(jAddr32) {
+        if (jAddr32.length !== 32) {
+            throw 'wrong length dummy. maybe you wanna use decode?';
+        }
+        return this.split(
+            jAddr32,
+            4,      // remove first 4 bits
+            26,     // result
+            2       // remove last 2 bits
+        )[1];
+    }
+
+    static decodeJAddr(jAddr26) {
+        if (jAddr26.length !== 26) {
+            throw 'wrong length dummy. maybe you wanna use encode?';
+        }
+        // 28 bits
+        const jAddrTail = LogicGate.shiftLeftExtendTwo(jAddr26);
+        // 4 bits
+        const jAddrHead = LogicGate.split(pipeline.pc, 4)[0];
+        // 32 bits
+        return LogicGate.merge(
+            jAddrHead,
+            jAddrTail
+        );
+    }
+
+    static encodeBAddr(bAddr32, pcAddr) {
+        if (bAddr32.length !== 32) {
+            throw 'wrong length dummy. maybe you wanna use decode?';
+        }
+        // ( BA - PC - 4 ) ÷ 4
+        // (16 bits)
+        return this.bitstringToPrecision(
+            this.shiftRightTwo(    // ÷ 4
+                this.addALU32(    // BA - PC - 4
+                    this.addALU32(
+                        bAddr32,    
+                        this.twosComplement(    // - PC
+                            pcAddr
+                        ),
+                    ),
+                    '11111111111111111111111111111100'   // -4
+                )
+            ),
+            16      // 16 bits
+        );
+    }
+
+    static decodeBAddr(bAddr16, pcAddr) {
+        if (bAddr16.length !== 16) {
+            throw 'wrong length dummy. maybe you wanna use decode?';
+        }
+        // BA × 4
+        const bAddrTimesFour = this.shiftLeftTwo(bAddr16, '1');
+        const bAddr32 = this.merge(
+            '0000000000000000',
+            bAddrTimesFour
+        );
+        // PC + 4
+        const pcPlusFour = this.addALU32(
+            pcAddr,
+            '00000000000000000000000000000100'  // 4
+        );
+        // (BA × 4) + PC + 4
+        return this.addALU32(bAddr32, pcPlusFour);
+    }
+
+    static decodeBAddrIncrementedPc(bAddr16, pcPlusFour) {
+        if (bAddr16.length !== 16) {
+            throw 'wrong length dummy. maybe you wanna use decode?';
+        }
+        // BA × 4
+        const bAddrTimesFour = this.shiftLeftTwo(bAddr16, '1');
+        const bAddr32 = this.merge(
+            '0000000000000000',
+            bAddrTimesFour
+        );
+        // (BA × 4) + PC + 4
+        return this.addALU32(bAddr32, pcPlusFour);
     }
 
     static barrelShift(bitstring, shamt, right) {

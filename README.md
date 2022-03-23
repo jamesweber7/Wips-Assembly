@@ -1,6 +1,6 @@
 # wips-assembly
 Logic gates simulated in javascript which work their way up to a MIPS32 computer.
-Schematic: ![Schematic](/schematics/mipsSchematic05.png)
+Schematic: ![Schematic](/schematics/mipsSchematic06.png)
 ## mips model
 The general model of the computer is based on the schematics in Computer Organization and Design: The Hardware/Software Interface. This is the textbook my Assembly Language Programming class (CSE 230 @ ASU) uses, and it seems to be the most popular resource for MIPS and RISC architectures. Design implementations beyond the scope of the textbook I took from miscellaneous resources or made up myself.
 ## use
