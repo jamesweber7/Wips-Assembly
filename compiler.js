@@ -360,6 +360,9 @@ class Compiler {
     }
 
     assignLabels() {
+        console.log('compiling labels');
+
+        printObject(this.instructions)
         this._labels.forEach(label => {
             for (let i = 0; i < this.instructions.length; i++) {
                 if (this.hasLabel(this.instructions[i])) {
@@ -378,6 +381,7 @@ class Compiler {
                 )
             }
         }
+        printObject(this.instructions)
     }
 
     getLabel(instruction) {
@@ -395,13 +399,13 @@ class Compiler {
     replaceLabel(instruction, fromIndex, gotoIndex) {
         const fromAddress = this.getInstructionAddress(
             LogicGate.bitstringToPrecision(
-                LogicGate.toBitstring(fromIndex),
+                LogicGate.toBitstring(fromIndex * 4),
                 32
             )
         );
         const gotoAddress = this.getInstructionAddress(
             LogicGate.bitstringToPrecision(
-                LogicGate.toBitstring(gotoIndex),
+                LogicGate.toBitstring(gotoIndex * 4),
                 32
             )
         );

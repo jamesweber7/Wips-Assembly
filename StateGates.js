@@ -1107,14 +1107,13 @@ class Mips {
         );
 
         // writebacks
-        // pc start wb
         this._someJumpWb = LogicGate.or(
             pipeline.jump,
             pipeline.jr,
             pipeline.branch,
             pipeline.bne
         );
-        // pc wb
+
         // branch mux
         const pcBranchSrc = LogicGate.mux(
             pipeline.bne,
@@ -1269,6 +1268,13 @@ class Mips {
             writeRegUpper,
             writeRegLsb
         );
+
+        if (this._someJumpWb === '1') {
+            console.log('JUMPING');
+            console.log(pipeline.jump, pipeline.jr, pipeline.branch, pipeline.bne)
+            console.log(pipeline.pc);
+            console.log(this._pcWb);
+        }
 
         // update MEM → WB pipeline
         this._memToWb.write(
@@ -1577,34 +1583,31 @@ class Mips {
         );
 
         // read pc
-        const lastPc = this._pc.q;
-        // increment
-        // increment pc
-        const pcIncrement = '00000000000000000000000000000100';     // 4
-        const pcIncremented = LogicGate.addALU32(
-            lastPc,
-            pcIncrement
-        );
-        // read PC
         const pc = LogicGate.mux(
-            pcIncremented,
+            this._pc.q,
             this._pcWb,
             this._someJumpWb
         );
+        this._mainMemory.writeInstructions(pc, clk);
+        // increment pc
+        const pcIncrement = '00000000000000000000000000000100';     // 4
+        const pcPlusFour = LogicGate.addALU32(
+            pc,
+            pcIncrement
+        );        
         // write pc
         this._pc.write(
-            pc,
+            pcPlusFour,
             clk
         );
 
         // read instruction at current pc
-        this._mainMemory.writeInstructions(pc, clk);
         const instruction = this._mainMemory.instructionOut;
 
         // update IF → ID pipeline
         this._ifToId.write(
             {
-                pc: pcIncremented,
+                pc: pcPlusFour,
                 instruction: instruction
             },
             clk
@@ -2089,8 +2092,8 @@ class Mips {
                 op,rt,rt,imm
             );
         }
-        const jump = (jAddr) => {
-            const op = '000010';
+        const jal = (jAddr) => {
+            const op = '000011';
             const encodedJAddr = LogicGate.encodeJAddr(jAddr);
             
             return LogicGate.merge(
@@ -2153,7 +2156,7 @@ class Mips {
         );
 
         // pc = 0x 0040 0000
-        const JUMP_TO_PROGRAM_START = jump(
+        const JUMP_TO_PROGRAM_START = jal(
             '00000000010000000000000000000000'
         );
 
@@ -2168,21 +2171,28 @@ class Mips {
         this._mainMemory.push('00000000000000000000000000011000', LOAD_STACK_POINTER_LOWER);
 
         // load $ra
-        this._mainMemory.push('00000000000000000000000000011100', LOAD_RETURN_ADDRESS_UPPER);
-        this._mainMemory.push('00000000000000000000000000100000', NOP);
-        this._mainMemory.push('00000000000000000000000000100100', LOAD_RETURN_ADDRESS_LOWER);
+        // this._mainMemory.push('00000000000000000000000000011100', LOAD_RETURN_ADDRESS_UPPER);
+        // this._mainMemory.push('00000000000000000000000000100000', NOP);
+        // this._mainMemory.push('00000000000000000000000000100100', LOAD_RETURN_ADDRESS_LOWER);
 
         // jump to program start
         this._mainMemory.push('00000000000000000000000000101000', JUMP_TO_PROGRAM_START);
 
         // exit program
-        this._mainMemory.push('00000000001111111111111111100100', LOAD_SYSCALL_EXIT_ARGUMENT_UPPER);
-        this._mainMemory.push('00000000001111111111111111101000', NOP);
-        this._mainMemory.push('00000000001111111111111111101100', LOAD_SYSCALL_EXIT_ARGUMENT_LOWER);
-        this._mainMemory.push('00000000001111111111111111110000', NOP);
-        this._mainMemory.push('00000000001111111111111111110100', NOP);
-        this._mainMemory.push('00000000001111111111111111111000', NOP);
-        this._mainMemory.push('00000000001111111111111111111100', SYSCALL);
+        this._mainMemory.push('00000000000000000000000000101100', LOAD_SYSCALL_EXIT_ARGUMENT_UPPER);
+        this._mainMemory.push('00000000000000000000000000110000', NOP);
+        this._mainMemory.push('00000000000000000000000000110100', LOAD_SYSCALL_EXIT_ARGUMENT_LOWER);
+        this._mainMemory.push('00000000000000000000000000111000', NOP);
+        this._mainMemory.push('00000000000000000000000000111100', NOP);
+        this._mainMemory.push('00000000000000000000000001000000', NOP);
+        this._mainMemory.push('00000000000000000000000001000100', SYSCALL);
+        // this._mainMemory.push('00000000001111111111111111100100', LOAD_SYSCALL_EXIT_ARGUMENT_UPPER);
+        // this._mainMemory.push('00000000001111111111111111101000', NOP);
+        // this._mainMemory.push('00000000001111111111111111101100', LOAD_SYSCALL_EXIT_ARGUMENT_LOWER);
+        // this._mainMemory.push('00000000001111111111111111110000', NOP);
+        // this._mainMemory.push('00000000001111111111111111110100', NOP);
+        // this._mainMemory.push('00000000001111111111111111111000', NOP);
+        // this._mainMemory.push('00000000001111111111111111111100', SYSCALL);
 
         console.log(this._mainMemory);
     }
