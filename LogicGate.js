@@ -166,6 +166,8 @@ class LogicGate {
     }
 
     static twoInputAnd(bitstring1, bitstring2) {
+        this.checkEqualLengths(bitstring1, bitstring2);
+
         let andstring = '';
         for (let i = 0; i < bitstring1.length; i++) {
             andstring += this.bitAnd(bitstring1[i], bitstring2[i]);
@@ -197,6 +199,7 @@ class LogicGate {
     }
 
     static twoInputOr(bitstring1, bitstring2) {
+        this.checkEqualLengths(bitstring1, bitstring2);
         let orstring = '';
         for (let i = 0; i < bitstring1.length; i++) {
             orstring += this.bitOr(bitstring1[i], bitstring2[i]);
@@ -275,6 +278,7 @@ class LogicGate {
     }
 
     static twoInputXor(bitstring1, bitstring2) {
+        this.checkEqualLengths(bitstring1, bitstring2);
         let xorstring = '';
         for (let i = 0; i < bitstring1.length; i++) {
             xorstring += this.twoInputBitXor(bitstring1[i], bitstring2[i]);
@@ -368,6 +372,18 @@ class LogicGate {
             overflow: overflow,
             cout: cout
         };
+    }
+
+    static checkEqualLengths(bitstrings) {
+        if (!Array.isArray(bitstrings)) {
+            bitstrings = [...arguments];
+        }
+        const len = bitstrings[0].length;
+        for (let i = 1; i < bitstrings.length; i++) {
+            if (bitstrings[i].length !== len) {
+                throw 'These should be the same length pls';
+            }
+        }
     }
 
     static standardizeBitStringLengths(bitstrings) {
@@ -596,9 +612,8 @@ class LogicGate {
     }
 
     static twoInputEq(bitstring1, bitstring2) {
-        const standardizeBitStringLengths = this.standardizeBitStringLengths(bitstring1, bitstring2);
-        bitstring1 = standardizeBitStringLengths[0];
-        bitstring2 = standardizeBitStringLengths[1];
+        this.checkEqualLengths(bitstring1, bitstring2);
+
         for (let i = 0; i < bitstring1.length; i++) {
             if (this.bitToBool(this.not(this.bitEq(bitstring1[i], bitstring2[i])))) {
                 return '0';

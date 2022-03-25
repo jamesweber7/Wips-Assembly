@@ -42,7 +42,7 @@ function setInstructions(instructions) {
         mips.setInstruction(
             LogicGate.addNoResize(
                 PC_START,
-                LogicGate.toBitstring(i)
+                LogicGate.toBitstring(i * 4)
             ),
             instructions[i]
         );

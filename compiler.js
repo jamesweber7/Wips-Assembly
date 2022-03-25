@@ -169,6 +169,11 @@ class Compiler {
                     immediate: this.getDataOffset(index + offsetIndex)
                 })
             );
+            console.log('here daa')
+            console.log(this._data);
+            console.log(this.instructions);
+            console.log(this.getDataOffset(index + offsetIndex));
+
         });
     }
 
