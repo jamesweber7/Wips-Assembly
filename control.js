@@ -33,7 +33,6 @@ function compile() {
     compiled = true;
     const instructions = Compiler.createInstructions(codeInput.value);
     setInstructions(instructions); 
-    console.log(instructions);
 }
 
 function setInstructions(instructions) {
@@ -56,15 +55,13 @@ function retreiveFreshCyclesAndRun() {
 
 function run() {
     running = true;
-    
+    let time = Date.now();
+    let startCycles = cycles;
     do {
-        console.log('CYCLE ' + cycles);
-
         step();
-        
-        printObject(mips.trap);
-        printObject(mips.io);
     } while(cycles < stopCycle && !isStopped());
+    console.log('TIME : ', Date.now() - time);
+    console.log('CYCLES : ', cycles - startCycles);
     updateUi();
     if (!isStopped()) {
         promptContinue();
@@ -74,13 +71,6 @@ function run() {
 function step() {
     pulseMipsClock();
     cycles ++;
-
-    console.log(mips._ifToId.pc);
-    printPipelines();
-
-    // if (mips.io.sysin === '1') {
-    //     outputString(mips.io.input);
-    // }
 }
 
 function singleStep() {

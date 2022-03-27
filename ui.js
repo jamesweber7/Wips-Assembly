@@ -304,7 +304,7 @@ function updatePremadeProgramUi() {
         }
         loadDropdownOptions.append(btn);
     });
-    const BLANK_PROGRAM = PREMADE_PROGRAMS[1];
+    const BLANK_PROGRAM = PREMADE_PROGRAMS[0];
     setCodeInput(BLANK_PROGRAM.title, BLANK_PROGRAM.text, BLANK_PROGRAM.cycles);
 }
 

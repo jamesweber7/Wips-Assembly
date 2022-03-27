@@ -815,51 +815,13 @@ class MipsSyscall extends ClockExclusiveGate {
         );
         this.output = output;
 
-        if (LogicGate.or(
-            sysout,
-            sysin
-        ) === '1') {
-            console.log('SOMETHING HAPPENING IN SYSCALL');
-            console.log('SOMETHING HAPPENING IN SYSCALL');
-            console.log('SOMETHING HAPPENING IN SYSCALL');
-            console.log(nulCharIn);
-            console.log(nulCharOut);
-            console.log(this.string);
-            console.log(this.stringStop);
-            console.log(this.output);
-            let bytos, ascii;
-            bytos = LogicGate.split(this.output, 8, 8, 8, 8);
-            ascii = '';
-            for (const byte of bytos) {
-                ascii +=
-                    LogicGate.toAscii(
-                        byte
-                );
-            }
-            console.log('output : ' + ascii);
-
-            bytos = LogicGate.split(this.input, 8, 8, 8, 8);
-            ascii = '';
-            for (const byte of bytos) {
-                ascii +=
-                    LogicGate.toAscii(
-                        byte
-                );
-            }
-            console.log('input : ' + ascii);
-
-            console.log('len ' + len);
-            console.log(...arguments);
-        }
     }
 
     inputData(input) {
         this.receivedInput = '1';
         for (let i = 0; i < input.length; i++) {
-            console.log('INPUTTING ', input[i]);
             this.inputQueue.setDataAt(input[i], i);
         }
-        console.log(' NEW DATA ', this.inputQueue);
     }
 }
 
@@ -1001,7 +963,6 @@ class Mips {
         let writeData = LogicGate.mux(
             pipeline.aluResult,
             pipeline.readData,
-            pipeline.shifted,
             pipeline.pc,
             dataToReg
         );
@@ -1059,16 +1020,6 @@ class Mips {
             unincrementedLen,
             stringin
         );
-        if (string === '1') {
-            console.log('STRING STRING STRING');
-            console.log('STRING STRING STRING');
-            console.log('STRING STRING STRING');
-            console.log('STRING STRING STRING');
-            console.log('STRING STRING STRING');
-            console.log('STRING STRING STRING');
-            console.log(memIncrement, len, unincrementedLen, string, stringin);
-
-        }
 
         // sysin writeData
         writeData = LogicGate.mux(
@@ -1106,19 +1057,18 @@ class Mips {
             )
         );
 
-        // writebacks
-        this._someJumpWb = LogicGate.or(
-            pipeline.jump,
-            pipeline.jr,
-            pipeline.branch,
-            pipeline.bne
-        );
-
         // branch mux
         const pcBranchSrc = LogicGate.mux(
             pipeline.bne,
             pipeline.branch,
             pipeline.zero
+        );
+
+        // writebacks
+        this._someJumpWb = LogicGate.or(
+            pipeline.jump,
+            pipeline.jr,
+            pcBranchSrc
         );
 
         // jump mux
@@ -1206,15 +1156,6 @@ class Mips {
             stringin
         );
 
-        if (memWrite === '1') {
-            console.log("HIGHMEMWRITE");
-            console.log(memAddr,
-                writeData,
-                pipeline.memRead,
-                memWrite,
-                baseAddr,
-                memIncrement,pipeline.aluResult,staticMemPointer,stringin);
-        }
         // data mem
         this._mainMemory.writeData(
             memAddr,
@@ -1268,13 +1209,6 @@ class Mips {
             writeRegUpper,
             writeRegLsb
         );
-
-        if (this._someJumpWb === '1') {
-            console.log('JUMPING');
-            console.log(pipeline.jump, pipeline.jr, pipeline.branch, pipeline.bne)
-            console.log(pipeline.pc);
-            console.log(this._pcWb);
-        }
 
         // update MEM → WB pipeline
         this._memToWb.write(
@@ -1343,6 +1277,7 @@ class Mips {
             forward.forwardB,
             forward.forwardBEnable
         );
+        const writeData = bForwardMux;
         // b aluSrc mux
         const b = LogicGate.mux(
             bForwardMux,
@@ -1365,14 +1300,20 @@ class Mips {
         const shamt = LogicGate.mux(
             pipeline.rs,     // lui
             pipeline.shamt,  // shift logical
-            pipeline.sl[1]   // shift logical?
+            pipeline.sl[2]   // shift logical? (use shamt?)
         );
 
         const shifted = LogicGate.barrelShift(
             shiftSrc,
             shamt,
-            pipeline.sl[0]  // shift right? (srl)
+            pipeline.sl[1]  // shift right? (srl)
         );
+
+        const aluResult = LogicGate.mux(
+            alu.result,
+            shifted,
+            pipeline.sl[0]  // use shifted?
+        )
 
         // clk traps
         clk = LogicGate.and(
@@ -1405,8 +1346,8 @@ class Mips {
                 dataToReg: pipeline.dataToReg,
                 memWrite: pipeline.memWrite,
 
-                aluResult: alu.result,
-                writeData: pipeline.readData2,
+                aluResult: aluResult,
+                writeData: writeData,
 
                 OvF: OvF,
                 shifted: shifted,
@@ -1758,12 +1699,6 @@ class Mips {
             opcode[3]
         );
 
-        // 00001
-        let jType = LogicGate.and(
-            LogicGate.not(iType),
-            opcode[5]
-        );
-
         // opcode = 00001x (j or jal)
         let jump = LogicGate.and(
             LogicGate.not(opcode[0]),
@@ -1838,7 +1773,7 @@ class Mips {
             opcode[4],
             opcode[5],
         );
-        // funct = 0000x0
+        // Use shamt: funct = 0000x0 (shift logical)
         let sl0 = LogicGate.nor(
             LogicGate.not(rType),
             funct[0],
@@ -1847,10 +1782,9 @@ class Mips {
             funct[3],
             funct[5]
         );
-        // Right: funct = 000010
+        // Shift Right: funct = 000010
         let sl1 = LogicGate.and(sl0, funct[4]);
-        let sl = LogicGate.merge(sl1, sl0);
-
+        
         // 0x0f = 001111
         let lui = LogicGate.and(
             opcode[2],
@@ -1858,24 +1792,30 @@ class Mips {
             opcode[4],
             opcode[5]
         );
+        // Use shifted: sl or lui
+        let sl2 = LogicGate.or(
+            sl1,
+            lui
+        );
+
+        let sl = LogicGate.merge(sl2, sl1, sl0);
 
         // 00 alu result
         // 01 read result (lw or syscall)
-        // 10 sl
-        // 11 jal
+        // 10 jal
         let dataToReg = LogicGate.merge(
-            LogicGate.or(
-                sl0,
-                lui,
-                jal
-            ),
-            LogicGate.or(
-                memRead,
-                jal
-            )
+            jal,
+            memRead
         );
 
-        let aluSrc = iType;
+        // i type and no branch
+        let aluSrc = LogicGate.and(
+            iType,
+            LogicGate.nor(
+                branch,
+                bne
+            )
+        );
 
         // opcode = 0x33 = 110011
         let syscall = LogicGate.and(
@@ -1893,8 +1833,10 @@ class Mips {
             rType,
             aluImmediate
         );
-        // may need to be high for other conditions too, not sure
-        let aluOp0 = branch;
+        let aluOp0 = LogicGate.or(
+            branch,
+            bne
+        );
 
         let aluOp = LogicGate.merge(aluOp1, aluOp0);
 
@@ -1956,7 +1898,7 @@ class Mips {
         };
     }
 
-    forwardingUnit(rs, rt, memRegWrite, memWriteReg, memAluResult, wbRegWrite, wbWriteReg, wbWriteData,) {
+    forwardingUnit(rs, rt, memRegWrite, memWriteReg, memAluResult, wbRegWrite, wbWriteReg, wbWriteData) {
 
         const memEnable = memRegWrite;
         const wbEnable = wbRegWrite;
@@ -2127,19 +2069,6 @@ class Mips {
             '1111111111111100'  // 0x fffc
         );
 
-        // $ra = 0x 003f ffe4 → addr of syscall EXIT program
-        // 00000000001111111111111111100100
-        // lui $ra, 0x 003f
-        const LOAD_RETURN_ADDRESS_UPPER = lui(
-            '11111',            // $ra addr = 0x31
-            '0000000000111111'  // 0x 003f
-        );
-        // ori $ra, 0x fff8
-        const LOAD_RETURN_ADDRESS_LOWER = ori(
-            '11111',            // $ra addr = 0x31
-            '1111111111100100'  // 0x fff8
-        );
-
         // syscall EXIT program
 
         // $v0 = 0x 0000 000a → syscall EXIT
@@ -2162,55 +2091,32 @@ class Mips {
 
         // load $gp
         this._mainMemory.push('00000000000000000000000000000100', LOAD_GLOBAL_POINTER_UPPER);
-        this._mainMemory.push('00000000000000000000000000001000', NOP);
         this._mainMemory.push('00000000000000000000000000001100', LOAD_GLOBAL_POINTER_LOWER);
 
         // load $sp
         this._mainMemory.push('00000000000000000000000000010000', LOAD_STACK_POINTER_UPPER);
-        this._mainMemory.push('00000000000000000000000000010100', NOP);
         this._mainMemory.push('00000000000000000000000000011000', LOAD_STACK_POINTER_LOWER);
 
-        // load $ra
-        // this._mainMemory.push('00000000000000000000000000011100', LOAD_RETURN_ADDRESS_UPPER);
-        // this._mainMemory.push('00000000000000000000000000100000', NOP);
-        // this._mainMemory.push('00000000000000000000000000100100', LOAD_RETURN_ADDRESS_LOWER);
-
         // jump to program start
-        this._mainMemory.push('00000000000000000000000000101000', JUMP_TO_PROGRAM_START);
+        this._mainMemory.push('00000000000000000000000000100000', JUMP_TO_PROGRAM_START);
 
         // exit program
-        this._mainMemory.push('00000000000000000000000000101100', LOAD_SYSCALL_EXIT_ARGUMENT_UPPER);
+        this._mainMemory.push('00000000000000000000000000100100', LOAD_SYSCALL_EXIT_ARGUMENT_UPPER);
+        this._mainMemory.push('00000000000000000000000000101100', LOAD_SYSCALL_EXIT_ARGUMENT_LOWER);
         this._mainMemory.push('00000000000000000000000000110000', NOP);
-        this._mainMemory.push('00000000000000000000000000110100', LOAD_SYSCALL_EXIT_ARGUMENT_LOWER);
+        this._mainMemory.push('00000000000000000000000000110100', NOP);
         this._mainMemory.push('00000000000000000000000000111000', NOP);
-        this._mainMemory.push('00000000000000000000000000111100', NOP);
-        this._mainMemory.push('00000000000000000000000001000000', NOP);
-        this._mainMemory.push('00000000000000000000000001000100', SYSCALL);
-        // this._mainMemory.push('00000000001111111111111111100100', LOAD_SYSCALL_EXIT_ARGUMENT_UPPER);
-        // this._mainMemory.push('00000000001111111111111111101000', NOP);
-        // this._mainMemory.push('00000000001111111111111111101100', LOAD_SYSCALL_EXIT_ARGUMENT_LOWER);
-        // this._mainMemory.push('00000000001111111111111111110000', NOP);
-        // this._mainMemory.push('00000000001111111111111111110100', NOP);
-        // this._mainMemory.push('00000000001111111111111111111000', NOP);
-        // this._mainMemory.push('00000000001111111111111111111100', SYSCALL);
-
-        console.log(this._mainMemory);
+        this._mainMemory.push('00000000000000000000000000111100', SYSCALL);
     }
 
     bootup() {
-        console.log("START BOOTUP");
-        printObject(this);
-        const numBootupInstructions = 10;
+        const numBootupInstructions = 9;
         const bootupCycleOffset = 2;
         const numCycles = numBootupInstructions + bootupCycleOffset;
         for (let i = 0; i < numCycles; i++) {
-            console.log('cycle ', i);
             this.write('0');
             this.write('1');
-            printObject(this);
         }
-        console.log("END BOOTUP");
-        printObject(this);
     }
 
     /*----------  Helpers  ----------*/
@@ -2284,7 +2190,7 @@ class InstrFetchToInstrDecodePipeline extends PipelineRegister {
     flush(enable) {
         this.instruction = LogicGate.mux(
             this.instruction,
-            LogicGate.empty(32), // no
+            LogicGate.empty(32), // nop
             enable
         );
     }
@@ -2315,7 +2221,7 @@ class InstrDecodeToAluExPipeline extends PipelineRegister {
         this.readData2 = LogicGate.empty(32);
         this.immediate = LogicGate.empty(32);
 
-        this.sl = LogicGate.empty(2);
+        this.sl = LogicGate.empty(3);
         this.rs = LogicGate.empty(5);
         this.shamt = LogicGate.empty(5);
         this.syscallOp = LogicGate.empty(3);

@@ -1284,7 +1284,6 @@ class LogicGate {
                 let input = inputs[i];
                 for (let j = 0; j < inputLen; j++) {
                     for (let k = 0; k < inputs.length; k++) {
-                        console.log('hi ', inputs[k][i], input[j]);
                         if (k === i) {
                             break;
                         }
@@ -1320,7 +1319,6 @@ class LogicGate {
                 }
             }
         }
-        console.log(inputs);
     }
 
     static simplifyInput(inputs, outputs) {
