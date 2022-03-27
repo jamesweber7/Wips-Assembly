@@ -37,6 +37,7 @@ function compile() {
 
 function setInstructions(instructions) {
     mips = new Mips();
+    mips.bootup();
     for (let i = 0; i < instructions.length; i++) {
         mips.setInstruction(
             LogicGate.addNoResize(

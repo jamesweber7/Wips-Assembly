@@ -1,5 +1,4 @@
 
-
 /*----------  Data Declarations  ----------*/
 
 const registerTable = document.getElementById('register-table');
@@ -10,15 +9,20 @@ const programTitle = document.getElementById('program-title');
 
 const codeInput = document.getElementById('code-input');
 
-const compileBtn = document.getElementById('compile-btn');
+const playBtn = document.getElementById('play-btn');
+const pauseBtn = document.getElementById('pause-btn');
 const stopBtn = document.getElementById('stop-btn');
 const stepBtn = document.getElementById('step-btn');
+const saveBtn = document.getElementById('save-btn');
 const cyclesContainer = document.getElementById('cycles-container');
 const numCyclesInput = document.getElementById('num-cycles-input');
+const loadDropdownOptions = document.getElementById('load-dropdown-options');
+const importLoadBtn = document.getElementById('import-btn');
+const hiddenImportFileInput = document.getElementById('import-file-hidden');
 
 const consoleIO = document.getElementById('console');
+const clrConsoleBtn = document.getElementById('clear-console');
 
-const loadDropdownOptions = document.getElementById('load-dropdown-options');
 
 
 // options
@@ -34,6 +38,7 @@ createUi();
 updateUi();
 
 function createUi() {
+    // give the user something to look at
     createTables();
 
     programTitle.onfocus = programTitle.select;
@@ -44,20 +49,29 @@ function createUi() {
         compiled = false;
         saved = false;
     }
-    Wom.addAutoResize(codeInput);
 
     // console
-    consoleIO.addEventListener('input', inputConsole);
-    consoleIO.addEventListener('keypress', submitConsoleInputOnEnter);
+    clrConsoleBtn.onclick = clearConsole;
+    consoleIO.oninput = inputConsole;
+    consoleIO.addEventListener('keydown', submitConsoleInputOnEnter);
 
     // button row
-    compileBtn.onclick = compileAndRun;
-    stepBtn.onclick = singleStep;
-    stopBtn.onclick = stopPipeline;
+    playBtn.addEventListener("click", userPlay);
+    pauseBtn.addEventListener("click", userPause);
+    Wom.yinYang(playBtn, pauseBtn);
+
+    stepBtn.onclick = userStep;
+    stopBtn.onclick = userStop;
+    saveBtn.onclick = userSave;
     cyclesContainer.onfocus = (e) => {
         e.stopPropagation();
         numCyclesInput.select();
     };
+    importLoadBtn.onclick = userImport;
+    hiddenImportFileInput.onchange = readFileImport;
+
+    // shortcuts
+    addShortcuts();
 }
 
 function updateUi() {
@@ -66,6 +80,98 @@ function updateUi() {
     updateTrapTable();
 }
 
+function addShortcuts() {    
+    document.addEventListener('keydown', (e) => {
+        // doesn't matter if user is focused on input
+        if (e.ctrlKey) {
+            switch (e.key) {
+                case 's':
+                    userSave(e);
+                    return;
+                case 'o':
+                    userLoad(e);
+                    return;
+                case 'ArrowRight':
+                    userStep(e);
+                    return;
+                case 'Space':
+                    userPlayPause(e);
+                    break;
+            }
+        }
+        if (Wom.isFocusedOnInput()) {
+            return;
+        }
+        // if user is not focusing on input
+        if (e.ctrlKey) {
+            switch (e.key) {
+                case 'c':
+                    userStop(e);
+                    return;
+            }
+        }
+    })
+}
+
+
+/*----------  User Input Actions  ----------*/
+function userLoad(e) {
+    e.preventDefault();
+    loadDropdownOptions.focus();
+    loadDropdownOptions.click();
+    document.activeElement = loadDropdownOptions;
+}
+
+function userSave(e) {
+    e.preventDefault();
+    var a = document.createElement("a");
+    a.href = window.URL.createObjectURL(new Blob([codeInput.value], {type: "text/plain"}));
+    a.download = programTitle.value;
+    a.click();
+}
+
+function userPlayPause(e) {
+    e.preventDefault();
+}
+
+function userPlay() {
+    compileAndRun();
+}
+
+function userPause() {
+
+}
+
+// E. stEp with an E.
+function userStep(e) {
+    e.preventDefault();
+    singleStep();
+}
+
+// O. stOp with an O.
+function userStop(e) {
+    e.preventDefault();
+    stopPipeline();
+}
+
+function userImport() {
+    hiddenImportFileInput.click();
+}
+
+function readFileImport() {
+    if (!this.files.length) {
+        return;
+    }
+    const file = this.files[0];
+    const fr=new FileReader();
+    fr.onload = () => {
+        setCodeInput(
+            file.name,
+            fr.result
+        );
+    }
+    fr.readAsText(file);
+}
 
 /*----------  UI variables  ----------*/
 
@@ -79,11 +185,9 @@ function getCyclesPerRun() {
 
 function inputConsole() {
     if (!consoleIO.value.includes(consoleIO.getAttribute("data"))) {
-        let selectionStart = consoleIO.selectionStart;
-        let selectionEnd = consoleIO.selectionEnd;
         consoleIO.value = consoleIO.getAttribute("last");
-        consoleIO.selectionStart = selectionStart + 1;
-        consoleIO.selectionEnd = selectionEnd + 1;
+        consoleIO.selectionStart = consoleIO.value.length;
+        consoleIO.selectionEnd = consoleIO.value.length;
     }
     consoleIO.setAttribute("last", consoleIO.value);
 }
@@ -91,7 +195,7 @@ function inputConsole() {
 function submitConsoleInputOnEnter(e) {
     if (e.key === 'Enter') {
         submitConsoleInput();
-        consoleIO.setAttribute("data", consoleIO.value + '\n');
+        saveConsoleInput(consoleIO.value + '\n');
     }
 }
 
@@ -99,7 +203,17 @@ function submitConsoleInput() {
     let input = consoleIO.value;
     input = input.replace(consoleIO.getAttribute("data"), "");
     submitInput(input);
-    consoleIO.setAttribute("data", consoleIO.value);
+    saveConsoleInput(consoleIO.value);
+}
+
+function saveConsoleInput(value) {
+    consoleIO.setAttribute("data", value);
+    consoleIO.setAttribute("last", value);
+}
+
+function clearConsole() {
+    saveConsoleInput('');
+    consoleIO.value = '';
 }
 
 function outputInt(int) {
@@ -298,7 +412,11 @@ function promptContinue() {
 function updatePremadeProgramUi() {
     PREMADE_PROGRAMS.forEach(program => {
         const btn = Wom.createTo(loadDropdownOptions, 'button', `load-${program.title}`);
-        btn.innerText = program.title;
+        if (program.optionName) {
+            btn.innerText = program.optionName;
+        } else {
+            btn.innerText = program.title;
+        }
         btn.onclick = () => {
             setCodeInput(program.title, program.text, program.cycles);
         }
@@ -308,11 +426,9 @@ function updatePremadeProgramUi() {
     setCodeInput(BLANK_PROGRAM.title, BLANK_PROGRAM.text, BLANK_PROGRAM.cycles);
 }
 
-function setCodeInput(title, text, cycles) {
+function setCodeInput(title, text, cycles=150) {
     programTitle.value = title;
     codeInput.value = text;
     codeInput.dispatchEvent(new Event('input'));
-    if (cycles) {
-        numCyclesInput.value = cycles;
-    }
+    numCyclesInput.value = cycles;
 }

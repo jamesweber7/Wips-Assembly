@@ -2,13 +2,21 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Mips Assembly Computer Simulator">
+        <meta name="keywords" content="Assembly, Mips, JavaScript, Computer">
+        <meta name="application-name" content="Wips Assembly">
+        <meta name="author" content="James Weber">
+
         <title>Wips Assembly</title>
 
         <link rel="stylesheet" href="/style.css">
+        <!-- Google Fonts -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <!-- <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&display=swap" rel="stylesheet"> -->
         <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+
         <script defer src="/LogicGate.js"></script>
         <script defer src="/StateGates.js"></script>
 
@@ -24,70 +32,92 @@
     </head>
 
     <body>
+        <noscript>Sorry, your browser doesn't enable JavaScript, and this thing kinda needs JavaScript to run!</noscript>
         <grid class="grid-container">
             <griditem class="head">
                 <titletext>Wips Assembly</titletext>
             </griditem>
-            <griditem id='register-box' class="left-column-top">
+            <griditem id='register-box' class="left-column">
                 <contentbox>
                     <sectionhead>Registers</sectionhead>
-                    <sectionbody>
+                    <sectionbody  id="registers-section">
                         <table id="register-table"></table>
                     </sectionbody>
                 </contentbox>
             </griditem>
-            <griditem class="left-column-bottom">
-                <contentbox id="main-memory-box">
-                    <sectionhead>
-                        Main Memory
-                    </sectionhead>
-                    <sectionbody>
-                        <table id="main-mem-table"></table>
-                    </sectionbody>
-                </contentbox>
-
-            </griditem>
-            <griditem class="center-column">
+            <griditem class="center-column-top">
                 <contentbox>
-                    <sectionhead>
+                    <sectionhead style="--top-padding: 0px;">
                         <input id="program-title" spellcheck=false value="MyProgram.s">
                     </sectionhead>
                     <sectionbody>
                         <textarea spellcheck="false" class="programmer-input" id="code-input"></textarea>
                     </sectionbody>
                 </contentbox>
+            </griditem>
+            <griditem class="center-column-bottom">
                 <buttonrow>
-                    <button id='compile-btn' title="Run">Compile</button>
-                    <button id='step-btn' title="Step">Step</button>
-                    <button id='stop-btn' title="Stop">Stop</button>
-                    <button id='cycles-container' class="tooltip-parent" title="The number of clock cycles the computer will run before you are asked if you wish to continue">
-                        Cycles: <input type='number' min=1 max=9999 step=1 id='num-cycles-input' value=50>
+                    <button id='play-btn' class="icon-parent" title="Play [ctrl+⎵]">
+                        <i class="material-icons">play_arrow</i>
+                    </button>
+                    <button id='pause-btn' class="icon-parent hidden" title="Pause [ctrl+⎵]">
+                        <i class="material-icons">pause</i>
+                    </button>
+                    <button id='step-btn' class="icon-parent" title="Step [ctrl+→]">
+                        <i class="material-icons">skip_next</i>
+                    </button>
+                    <button id='stop-btn' class="icon-parent" title="Stop/Reset [ctrl+c]">
+                        <i class="material-icons">stop</i>
                     </button>
                     <dropdown class="dropdown style1" id="load-program">
                         <span class="title">
-                            <button title="Load">Load</button>
+                            <button title="Load [ctrl+o]" class="icon-parent">
+                                <i class="material-icons">upload_file</i>
+                            </button>
                         </span>
                         <span class="options" id="load-dropdown-options">
-                            <button>Import File</button>
+                            <button id="import-btn">
+                                Import File
+                                <input id="import-file-hidden" type="file" class="hidden">
+                            </button>
                         </span>
                     </dropdown>
+                    <button id='save-btn' class="icon-parent" title="Save [ctrl+s]">
+                        <i class="material-icons">save</i>
+                    </button>
+                    <button id='cycles-container' class="tooltip-parent" title="number of clock cycles the computer runs before user prompted to stop or continue">
+                        Pause at: <input type='number' min=1 max=9999 step=1 id='num-cycles-input' value=50>
+                    </button>
                 </buttonrow>
             </griditem>
             <griditem class="right-column-top">
                 <contentbox class="style1">
-                    <sectionhead>Console</sectionhead>
+                    <sectionhead style="--top-padding: 4px;">
+                        <i class="material-icons" id="clear-console" title="clear console">not_interested</i>
+                        Console
+                    </sectionhead>
                     <sectionbody>
                         <textarea id="console" class="programmer-input" spellcheck=false data=""></textarea>
                     </sectionbody>
                 </contentbox>
             </griditem>
-            <griditem class="right-column-bottom">
+            <griditem class="right-column-2">
                 <contentbox>
                     <sectionhead>
                         Trap
                     </sectionhead>
                     <sectionbody>
                         <table id="trap-table"></table>
+                    </sectionbody>
+                </contentbox>
+            </griditem>
+            <griditem class="right-column-3">
+                <contentbox id="main-memory-box">
+                    <sectionhead>
+                        Main Memory
+                    </sectionhead>
+                    <sectionbody>
+                        <table id="main-mem-table"></table>
                     </sectionbody>
                 </contentbox>
             </griditem>

@@ -329,11 +329,28 @@ class Wom {
         return `${id}-wand`;
     }
 
+    // swap visibility of buttons onclick
+    static yinYang(btn1, btn2) {
+        btn1.addEventListener("click", () => {
+            btn1.classList.add("hidden");
+            btn2.classList.remove("hidden");
+        });
+        btn2.addEventListener("click", () => {
+            btn2.classList.add("hidden");
+            btn1.classList.remove("hidden");
+        })
+    }
+
 
     /*----------  Identifiers  ----------*/
 
     static isIdentifier(identifier) {
         return this.IDENTIFIERS.includes(identifier);
+    }
+
+    static isFocusedOnInput() {
+        return  document.activeElement.tagName === 'TEXTAREA' || 
+                document.activeElement.tagName === 'INPUT';
     }
 
 }

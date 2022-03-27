@@ -1,18 +1,25 @@
 
 
 :root {
+    /* Color */
     --bg-gray: #444;
     --hacker-green: #080;
     --hacker-gray: #333;
     --hacker-gray-dark: #222;
+    --hacker-gray-darker: rgb(26, 26, 26);
     --hacker-gray-less-dark: rgb(43, 43, 43);
     --hacker-green-dark: rgb(0, 73, 0);
     --hacker-green-gray-light: #c6eec6;
+    --hacker-green-gray-darkish: rgb(0, 97, 0);
     --hacker-green-gray-dark: rgb(26, 48, 26);
     --error-red: #ff0048;
+    /* Fonts */
     --font-business: system-ui;
     --font-main: Verdana;
     --font-code: consolas;
+    /* Sizing */
+    --sectionhead-height: 38px;
+    --border-thickness-normal: 2px;
 }
 
 body, html {
@@ -38,14 +45,14 @@ body, button, td {
 .style1 {
     background-color: var(--hacker-gray-dark);
     color: var(--hacker-green);
-    border: 2px var(--hacker-green) solid;
+    border: var(--border-thickness-normal) var(--hacker-green) solid;
     border-radius: 4px;
 }
 
 button {
     background-color: var(--hacker-gray-dark);
     color: var(--hacker-green);
-    border: 2px var(--hacker-green) solid;
+    border: var(--border-thickness-normal) var(--hacker-green) solid;
     border-radius: 4px;
 }
 
@@ -132,6 +139,7 @@ input[type=number] {
     border: none;
     text-align: center;
     width: 100%;
+    height: calc(var(--sectionhead-height) - var(--border-thickness-normal) - var(--border-thickness-normal));
 }
 
 .tooltip-parent tooltip {
@@ -168,20 +176,6 @@ table tr td:first-child {
     width: 100%;
 }
 
-grid {
-    display: grid;
-    gap: 0;
-    grid-template-columns: 28% auto 28%;
-    grid-template-rows: 8% 67% 20%;
-}
-
-griditem {
-    display: inline-grid;
-    margin: 0;
-    padding: 0;
-    gap: 0;
-}
-
 .head {
     width: 100%;
     height: 80px;
@@ -197,30 +191,60 @@ titletext {
     margin: auto;
 }
 
-.left-column-top {
+grid {
+    display: grid;
+    gap: 0;
+    grid-template-columns: 28% auto 28%;
+    grid-template-rows: 8% 63% 18% 18%;
+}
+
+griditem {
+    display: inline-grid;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+}
+
+/* registers */
+.left-column {
     grid-column-start: 1;
     grid-row-start: 2;
+    grid-row-end: end;
 }
 
-.left-column-bottom {
-    grid-column-start: 1;
-    grid-row-start: 3;
-}
-
-.center-column {
+/* code */
+.center-column-top {
     grid-column-start: 2;
     grid-row-start: 2;
-    grid-row-end: 4;
+    grid-row-end: 3;
 }
 
+/* code */
+.center-column-bottom {
+    grid-column-start: 2;
+    grid-row-start: 3;
+    grid-row-end: end;
+}
+
+/* console */
 .right-column-top {
     grid-column-start: 3;
     grid-row-start: 2;
+    grid-row-end: 3;
 }
 
-.right-column-bottom {
+/* Trap */
+.right-column-2 {
     grid-column-start: 3;
     grid-row-start: 3;
+    grid-row-end: 4;
+}
+
+/* Main Memory */
+.right-column-3 {
+    grid-column-start: 3;
+    grid-row-start: 4;
+    grid-row-end: 5;
 }
 
 buttonrow {
@@ -228,16 +252,26 @@ buttonrow {
     margin: 0 10px;
 }
 
-buttonrow button, buttonrow .dropdown {
+buttonrow button, buttonrow dropdown {
+    vertical-align: top;
     display: inline-block;
     width: fit-content;
     font-size: 20px;
     margin: 0;
     padding: 4px;
+    margin-bottom: 10px;
 }
 
-buttonrow .dropdown {
+buttonrow button.icon-parent {
+    padding-bottom: 1px;
+}
+
+buttonrow dropdown {
     padding: 0;
+}
+
+buttonrow dropdown button {
+    margin: 0;
 }
 
 .dropdown .options {
@@ -279,6 +313,17 @@ button:hover {
     display: none;
 }
 
+#clear-console {
+    transform: translateY(3px);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#clear-console:hover {
+    background-color: var(--hacker-gray-darker);
+    color: var(--hacker-green-darkish);
+}
+
 /* scrollbar */
 
 html ::-webkit-scrollbar {
@@ -307,11 +352,13 @@ body ::-webkit-scrollbar {
 
 .programmer-input {
     background: none;
-    width: 95%;
-    height: 100%;
-    color: var(--hacker-green-gray-light);
     border: none;
+    --padding: 10px;
+    padding: var(--padding);
+    width: -webkit-fill-available;
+    height: calc(100% - var(--padding) - var(--padding));
     font-size: 18px;
+    color: var(--hacker-green-gray-light);
 }
 
 caret {
@@ -333,24 +380,29 @@ caret {
 contentbox {
     background-color: var(--hacker-gray-dark);
     color: var(--hacker-green);
-    border: 2px var(--hacker-green) solid;
+    border: var(--border-thickness-normal) var(--hacker-green) solid;
     border-radius: 4px;
     margin: 10px;
     margin-top: 0;
-    overflow-y: scroll;
+    overflow: hidden;
 }
 
 sectionhead {
+    --top-padding: 6px;
     display: block;
-    border-bottom: 2px solid;
-    width: fill-content;
+    border-bottom: var(--border-thickness-normal) solid;
+    padding-top: var(--top-padding);
+    min-height: calc(var(--sectionhead-height) - var(--border-thickness-normal) - var(--top-padding));
     font-size: 20px;
     text-align: center;
-    padding: 4px;
 }
 
 sectionbody {
     display: block;
-    width: 100%;
-    height: 100%;
+    height: calc(100% - var(--sectionhead-height));
+    overflow: hidden;
+}
+
+#registers-section {
+    overflow-x: auto;
 }
