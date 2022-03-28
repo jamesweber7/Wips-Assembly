@@ -128,9 +128,9 @@ class MipsRegisterRam extends Ram {
     constructor(data) {
         super(data);
         this._addr1 = LogicGate.empty(5);
-        this.readData1 = this.dataAt(this._addr1)
+        this.dataOut1 = this.dataAt(this._addr1)
         this._addr2 = LogicGate.empty(5);
-        this.readData2 = this.dataAt(this._addr2)
+        this.dataOut2 = this.dataAt(this._addr2)
     }
 
     write(readReg1, readReg2, writeReg, writeData, regWrite, clk) {
@@ -144,25 +144,25 @@ class MipsRegisterRam extends Ram {
         }
         // read data updated async
         this._addr1 = readReg1;
-        this.readData1 = this.dataAt(this._addr1);
+        this.dataOut1 = this.dataAt(this._addr1);
         this._addr2 = readReg2;
-        this.readData2 = this.dataAt(this._addr2);
+        this.dataOut2 = this.dataAt(this._addr2);
         this.updateClockPulse(clk);
     }
 
     read(readReg1, readReg2) {
         this._addr1 = readReg1;
-        this.readData1 = this.dataAt(this._addr1);
+        this.dataOut1 = this.dataAt(this._addr1);
         this._addr2 = readReg2;
-        this.readData2 = this.dataAt(this._addr2);
+        this.dataOut2 = this.dataAt(this._addr2);
     }
 
     setData(data) {
         super.setData(data);
         this._addr1 = LogicGate.empty(5);
-        this.readData1 = this.dataAt(this._addr1);
+        this.dataOut1 = this.dataAt(this._addr1);
         this._addr2 = LogicGate.empty(5);
-        this.readData2 = this.dataAt(this._addr2);
+        this.dataOut2 = this.dataAt(this._addr2);
     }
 
     static randomized(regLength, numRegisters) {
@@ -191,28 +191,37 @@ class MipsRegisterRam extends Ram {
 class MipsTrap extends ClockExclusiveGate {
     constructor() {
         super();
-        this.OvF = '0';
-        this.sysin = '0';
-        this.exit = '0';
-        this.pipelineTrap = new S_R_FlipFlopAsyncReset();
-        this.trap = LogicGate.or(
-            this.OvF,
-            this.exit,
-            this.sysin
+        // Overflow
+        this.Ov = '0';
+        // Sysin
+        this.Sys = '0';
+        // Exit
+        this.Exit = '0';
+        // Trap
+        this.Tr = LogicGate.or(
+            this.Ov,
+            this.Exit,
+            this.Sys
         );
+        // pseudo-trap - does not trigger Tr
+        this.pipelineTrap = new S_R_FlipFlopAsyncReset();
     }
 
     updateWires(wires) {
-        this.OvF = wires.OvF;
-        this.sysin = LogicGate.and(
+        // Overflow
+        this.Ov = wires.Ov;
+        // Sysin
+        this.Sys = LogicGate.and(
             wires.sysin,
             LogicGate.not(wires.receivedInput)
         );
-        this.exit = wires.exit;
-        this.trap = LogicGate.or(
-            this.OvF,
-            this.exit,
-            this.sysin
+        // Exit
+        this.Exit = wires.exit;
+        // Trap
+        this.Tr = LogicGate.or(
+            this.Ov,
+            this.Exit,
+            this.Sys
         );
     }
 }
@@ -425,8 +434,9 @@ class InstrDecodeToAluExPipeline extends PipelineRegister {
 
         this.regWrite = LogicGate.empty(1);
 
-        this.readData1 = LogicGate.empty(32);
-        this.readData2 = LogicGate.empty(32);
+        this.regData1 = LogicGate.empty(32);
+        this.regData2 = LogicGate.empty(32);
+
         this.immediate = LogicGate.empty(32);
 
         this.sl = LogicGate.empty(3);
@@ -457,13 +467,15 @@ class InstrDecodeToAluExPipeline extends PipelineRegister {
 
         this.regWrite = wires.regWrite;
 
-        this.readData1 = wires.readData1;
-        this.readData2 = wires.readData2;
+        this.regData1 = wires.regData1;
+        this.regData2 = wires.regData2;
+
         this.immediate = wires.immediate;
 
         this.sl = wires.sl;
         this.rs = wires.rs;
         this.shamt = wires.shamt;
+
         this.syscallOp = wires.syscallOp;
 
         this.funct = wires.funct;
@@ -514,7 +526,7 @@ class AluExToMemPipeline extends PipelineRegister {
         super();
         this.jAddr = LogicGate.empty(32);
         this.pc = LogicGate.empty(32);
-        this.branchPc = LogicGate.empty(32);
+        this.bAddr = LogicGate.empty(32);
 
         this.branch = LogicGate.empty(1);
         this.bne = LogicGate.empty(1);
@@ -528,10 +540,10 @@ class AluExToMemPipeline extends PipelineRegister {
         this.dataToReg = LogicGate.empty(2);
         this.memWrite = LogicGate.empty(1);
 
-        this.aluResult = LogicGate.empty(32);
+        this.exeResult = LogicGate.empty(32);
         this.writeData = LogicGate.empty(32);
 
-        this.OvF = LogicGate.empty(1);
+        this.Ov = LogicGate.empty(1);
         this.shifted = LogicGate.empty(32);
         this.syscallOp = LogicGate.empty(3);
 
@@ -541,7 +553,7 @@ class AluExToMemPipeline extends PipelineRegister {
         this.jAddr = wires.jAddr;
 
         this.pc = wires.pc;
-        this.branchPc = wires.branchPc;
+        this.bAddr = wires.bAddr;
 
         this.branch = wires.branch;
         this.bne = wires.bne;
@@ -555,10 +567,10 @@ class AluExToMemPipeline extends PipelineRegister {
         this.dataToReg = wires.dataToReg;
         this.memWrite = wires.memWrite;
 
-        this.aluResult = wires.aluResult;
+        this.exeResult = wires.exeResult;
         this.writeData = wires.writeData;
 
-        this.OvF = wires.OvF;
+        this.Ov = wires.Ov;
         this.shifted = wires.shifted;
         this.syscallOp = wires.syscallOp;
 
@@ -574,10 +586,10 @@ class MemToWriteBackPipeline extends PipelineRegister {
         this.regWrite = LogicGate.empty(1);
         this.dataToReg = LogicGate.empty(2);
 
-        this.aluResult = LogicGate.empty(32);
-        this.readData = LogicGate.empty(32);
+        this.exeResult = LogicGate.empty(32);
+        this.memData = LogicGate.empty(32);
 
-        this.OvF = LogicGate.empty(1);
+        this.Ov = LogicGate.empty(1);
         this.shifted = LogicGate.empty(32);
         this.syscallOp = LogicGate.empty(3);
 
@@ -589,10 +601,10 @@ class MemToWriteBackPipeline extends PipelineRegister {
         this.regWrite = wires.regWrite;
         this.dataToReg = wires.dataToReg;
 
-        this.aluResult = wires.aluResult;
-        this.readData = wires.readData;
+        this.exeResult = wires.exeResult;
+        this.memData = wires.memData;
 
-        this.OvF = wires.OvF;
+        this.Ov = wires.Ov;
         this.shifted = wires.shifted;
         this.syscallOp = wires.syscallOp;
 

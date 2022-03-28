@@ -86,11 +86,11 @@ function stopPipeline() {
 }
 
 function isStopped() {
-    return stop || LogicGate.bitToBool(mips.trap.trap);
+    return stop || LogicGate.bitToBool(mips.trap.Tr);
 }
 
 function submitInput(input) {
-    if (!LogicGate.bitToBool(mips.trap.sysin)) {
+    if (!LogicGate.bitToBool(mips.trap.Sys)) {
         return;
     }
     let inputQueue = getInputQueue(input);

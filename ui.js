@@ -390,29 +390,45 @@ function updateMainMemoryTable() {
 
 function createTrapTable() {
     const trap = mips.trap;
+    let row;
+    // Trap
+    row = createTableRow('trap-trap', 'Tr', trap.Tr);
+    row.title = 'Trap';
     trapTable.append(
-        createTableRow('trap-trap', 'Trap', trap.trap)
+        row
     );
+    // Exit
+    row = createTableRow('trap-exit', 'Exit', trap.Exit);
+    row.title = 'Exit';
     trapTable.append(
-        createTableRow('trap-exit', 'Exit', trap.exit)
+        row
     );
+    // Syscall
+    row = createTableRow('trap-sysin', 'Sys', trap.Sys);
+    row.title = 'Syscall';
     trapTable.append(
-        createTableRow('trap-sysin', 'Sysin', trap.sysin)
+        row
     );
+    // Overflow
+    row = createTableRow('trap-of', 'Ov', trap.Ov);
+    row.title = 'Overflow'
     trapTable.append(
-        createTableRow('trap-of', 'Overflow', trap.OvF)
+        row
     );
+    // Pipeline Trap
+    row = createTableRow('trap-pipeline-trap', 'Pipeline Trap', trap.pipelineTrap.q);
+    row.title = 'Pipeline Trap';
     trapTable.append(
-        createTableRow('trap-pipeline-trap', 'Pipeline Trap', trap.pipelineTrap.q)
+        row
     );
 }
 
 function updateTrapTable() {
     const trap = mips.trap;
-    updateTableRow('trap-trap', trap.trap);
-    updateTableRow('trap-exit', trap.exit);
-    updateTableRow('trap-sysin', trap.sysin);
-    updateTableRow('trap-of', trap.OvF);
+    updateTableRow('trap-trap', trap.Tr);
+    updateTableRow('trap-exit', trap.Exit);
+    updateTableRow('trap-sysin', trap.Sys);
+    updateTableRow('trap-of', trap.Ov);
     updateTableRow('trap-pipeline-trap', trap.pipelineTrap.q);
 }
 
@@ -499,7 +515,7 @@ function addHeaderToCodeInput() {
 }
 
 function printConsoleLogMessage() {
-    console.log("%cDev tools suck. %cSnooping's easier on GitHub: %chttps://github.com/jamesweber7", 
+    console.log("%cBrowser DevTools suck. %cSnooping's easier on GitHub: %chttps://github.com/jamesweber7", 
         "color: #09f; font-size: 30px;", 
         "color: red; font-size: 30px;", 
         "font-size: 18px;"

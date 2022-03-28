@@ -244,6 +244,21 @@ class Wunctions {
         return ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
     }
 
+    // formats:
+    // d - day
+    // m - month
+    // y - year
+    // h - hours
+    // m - minutes
+    // p - period (am pm)
+    // w - weekday (e.g. Wednesday)
+    // sw - short weekday (e.g. swww. → Wed.)
+    // M - Month
+    // sM - short Month (e.g. sMMM. → Jan.)
+    static textToDate(dateText, format) {
+        throw 'would be nice to have this, huh?';
+    }
+
     static numberToStringOfLength(num, length) {
         // cast to string
         if (typeof num === 'number') {

@@ -1,26 +1,5 @@
 class Mips {
     constructor() {
-        // RAM
-        this._mainMemory = new MipsMainMemory();
-        this._registerMemory = MipsRegisterRam.empty(32, 32);
-        // PC
-        this._pc = new D_FlipFlop(32);
-        // Wires:
-        this._pcWb = LogicGate.empty(32);
-        this._pcStopWb = LogicGate.empty(1);
-        this._someJumpWb = LogicGate.empty(1);
-
-        this.NOP_ADDRESS = '00000000000000000000000000000000';
-        this.A0_ADDRESS = '00100';
-        this.GP_ADDRESS = '11100';
-        this.RA_ADDRESS = '11111';
-
-        // exceptions
-        this.trap = new MipsTrap();
-        this.io = new MipsSyscall();
-        this._stringLengthFlipFlop = new D_FlipFlop(32);
-        this._pcBlock = new S_R_FlipFlopAsyncSet();
-        this._staticMemoryPointer = new MipsStaticMemoryPointer();
 
         // pipelines
         this._ifToId = new InstrFetchToInstrDecodePipeline();
@@ -28,6 +7,26 @@ class Mips {
         this._exToMem = new AluExToMemPipeline();
         this._memToWb = new MemToWriteBackPipeline();
         this._wb = new WriteBack();
+
+        // RAM
+        this._mainMemory = new MipsMainMemory();
+        this._registerMemory = MipsRegisterRam.empty(32, 32);
+
+        // exceptions
+        this.trap = new MipsTrap();
+        this.io = new MipsSyscall();
+
+        // misc units
+        this._pc = new D_FlipFlop(32);
+        this._stringLengthFlipFlop = new D_FlipFlop(32);
+        this._staticMemoryPointer = new MipsStaticMemoryPointer();
+
+        // misc wires
+        this._pcWb = LogicGate.empty(32);
+        this._someJumpWb = LogicGate.empty(1);
+        this.A0_ADDRESS = '00100';
+        this.RA_ADDRESS = '11111';
+
     }
 
     write(clk) {
@@ -78,8 +77,8 @@ class Mips {
 
         // writeData mux
         let writeData = LogicGate.mux(
-            pipeline.aluResult,
-            pipeline.readData,
+            pipeline.exeResult,
+            pipeline.memData,
             pipeline.pc,
             dataToReg
         );
@@ -101,11 +100,11 @@ class Mips {
         // trap
         this.trap.write(
             {
-                OvF: pipeline.OvF,
-                syscall: this.io.syscall,
+                Ov: pipeline.Ov,
+                // syscall: this.io.syscall,
                 sysin: this.io.sysin,
                 exit: this.io.exit,
-                string: string,
+                // string: string,
                 receivedInput: this.io.receivedInput
             },
             clk
@@ -113,7 +112,7 @@ class Mips {
 
         clk = LogicGate.and(
             clk,
-            LogicGate.not(this.trap.trap)
+            LogicGate.not(this.trap.Tr)
         );
 
         // string length
@@ -175,7 +174,7 @@ class Mips {
         clk = LogicGate.and(
             clk,
             LogicGate.not(
-                this.trap.trap
+                this.trap.Tr
             )
         );
 
@@ -242,7 +241,7 @@ class Mips {
 
         // unincremented memAddr
         const baseAddr = LogicGate.mux(
-            pipeline.aluResult,
+            pipeline.exeResult,
             staticMemPointer,
             stringin
         );
@@ -258,7 +257,7 @@ class Mips {
         this._pcWb = LogicGate.mux(
             memAddr,   // jr
             pipeline.jAddr,
-            pipeline.branchPc,
+            pipeline.bAddr,
             pcJumpSrc
         );
 
@@ -287,7 +286,7 @@ class Mips {
             clk
         );
 
-        const readData = this._mainMemory.dataOut;
+        const memData = this._mainMemory.dataOut;
 
         const lenZero = LogicGate.zero(len);
 
@@ -340,10 +339,10 @@ class Mips {
                 regWrite: pipeline.regWrite,
                 dataToReg: pipeline.dataToReg,
 
-                aluResult: memAddr,
-                readData: readData,
+                exeResult: memAddr,
+                memData: memData,
 
-                OvF: pipeline.OvF,
+                Ov: pipeline.Ov,
                 shifted: pipeline.shifted,
                 syscallOp: syscallOp,
 
@@ -359,7 +358,7 @@ class Mips {
 
         // branch pc
         const shiftedImmediate = LogicGate.shiftLeftTwo(pipeline.immediate, '1');
-        const branchPc = LogicGate.addALU32(shiftedImmediate, pipeline.pc);
+        const bAddr = LogicGate.addALU32(shiftedImmediate, pipeline.pc);
 
         // writeReg (pipelining to wb)
         // regDst mux
@@ -376,7 +375,7 @@ class Mips {
             pipeline.rt,
             this._exToMem.regWrite,
             this._exToMem.writeReg,
-            this._exToMem.aluResult,
+            this._exToMem.exeResult,
             this._wb.regWrite,
             this._wb.writeReg,
             this._wb.writeData
@@ -389,13 +388,13 @@ class Mips {
         const opcode = aluControl.opcode;
 
         const a = LogicGate.mux(
-            pipeline.readData1,
+            pipeline.regData1,
             forward.forwardA,
             forward.forwardAEnable
         );
 
         const bForwardMux = LogicGate.mux(
-            pipeline.readData2,
+            pipeline.regData2,
             forward.forwardB,
             forward.forwardBEnable
         );
@@ -408,14 +407,16 @@ class Mips {
         );
 
         const alu = this.alu(a, b, opcode);
+        const aluResult = alu.result;
 
         // Overflow
-        const OvF = LogicGate.and(
+        const Ov = LogicGate.and(
             alu.overflow,
             LogicGate.not(
                 aluControl.unsigned
             )
         );
+
 
         // shifter
         const shiftSrc = b;
@@ -431,8 +432,8 @@ class Mips {
             pipeline.sl[1]  // shift right? (srl)
         );
 
-        const aluResult = LogicGate.mux(
-            alu.result,
+        const exeResult = LogicGate.mux(
+            aluResult,
             shifted,
             pipeline.sl[0]  // use shifted?
         )
@@ -444,7 +445,7 @@ class Mips {
                 this.trap.pipelineTrap.q
             ),
             LogicGate.not(
-                this.trap.trap
+                this.trap.Tr
             )
         );
 
@@ -454,7 +455,7 @@ class Mips {
                 jAddr: pipeline.jAddr,
 
                 pc: pipeline.pc,
-                branchPc: branchPc,
+                bAddr: bAddr,
 
                 branch: pipeline.branch,
                 bne: pipeline.bne,
@@ -468,10 +469,10 @@ class Mips {
                 dataToReg: pipeline.dataToReg,
                 memWrite: pipeline.memWrite,
 
-                aluResult: aluResult,
+                exeResult: exeResult,
                 writeData: writeData,
 
-                OvF: OvF,
+                Ov: Ov,
                 shifted: shifted,
                 syscallOp: pipeline.syscallOp,
 
@@ -500,9 +501,6 @@ class Mips {
         const opcode = instruction[0];
         const funct = instruction[5];
         const control = this.control(opcode, funct);
-
-        // PC STOP WB
-        this._pcStopWb = control.pcStop;
 
         // jump address
         // 26 bits
@@ -552,11 +550,11 @@ class Mips {
 
         const shamt = instruction[4];
 
-        const readData1 = this._registerMemory.readData1;
-        const readData2 = this._registerMemory.readData2;
+        const regData1 = this._registerMemory.dataOut1;
+        const regData2 = this._registerMemory.dataOut2;
         // syscall decode
         const syscallCode = LogicGate.split(
-            readData2,  // $v0
+            regData2,  // $v0
             28,         // ignore
             4           // syscall code
         )[1];
@@ -577,7 +575,7 @@ class Mips {
         clk = LogicGate.and(
             clk,
             LogicGate.not(
-                this.trap.trap
+                this.trap.Tr
             ),
             LogicGate.not(
                 this.trap.pipelineTrap.q
@@ -605,13 +603,15 @@ class Mips {
 
                 regWrite: control.regWrite,
 
-                readData1: readData1,
-                readData2: readData2,
+                regData1: regData1,
+                regData2: regData2,
+
                 immediate: immediate32,
 
                 sl: control.sl,
                 rs: rs,
                 shamt: shamt,
+
                 syscallOp: syscallOp,
 
                 funct: nextFunct,
@@ -632,7 +632,7 @@ class Mips {
                 this.trap.pipelineTrap.q
             ),
             LogicGate.not(
-                this.trap.trap
+                this.trap.Tr
             )
         );
 
@@ -862,13 +862,14 @@ class Mips {
             LogicGate.not(funct[4]),
             LogicGate.not(funct[5])
         );
-        // any branch or jump instruction
-        let pcStop = LogicGate.or(
+        // some jump or branch
+        let someJump = LogicGate.or(
             branch,
             bne,
             jump,
             jr
         )
+
         // opcode = 0x2b = 101011 (sw)
         let memWrite = LogicGate.and(
             opcode[0],
@@ -956,7 +957,9 @@ class Mips {
         let regWrite = LogicGate.and(
             LogicGate.or(
                 jal,
-                LogicGate.not(pcStop)
+                LogicGate.not(
+                    someJump
+                )
             ),
             LogicGate.not(memWrite)
         );
@@ -984,7 +987,6 @@ class Mips {
             bne: bne,
             jump: jump,
             jr: jr,
-            pcStop: pcStop,
 
             memWrite: memWrite,
             memRead: memRead,
@@ -1001,7 +1003,7 @@ class Mips {
         };
     }
 
-    forwardingUnit(rs, rt, memRegWrite, memWriteReg, memAluResult, wbRegWrite, wbWriteReg, wbWriteData) {
+    forwardingUnit(rs, rt, memRegWrite, memWriteReg, memExeResult, wbRegWrite, wbWriteReg, wbWriteData) {
 
         const memEnable = memRegWrite;
         const wbEnable = wbRegWrite;
@@ -1030,7 +1032,7 @@ class Mips {
         );
         const forwardA = LogicGate.mux(
             wbWriteData,
-            memAluResult,
+            memExeResult,
             rsMemEnable
         );
 
@@ -1057,7 +1059,7 @@ class Mips {
         );
         const forwardB = LogicGate.mux(
             wbWriteData,
-            memAluResult,
+            memExeResult,
             rtMemEnable
         );
 
