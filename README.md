@@ -1,10 +1,11 @@
 # wips-assembly
 Logic gates simulated in javascript which work their way up to a MIPS32 computer.
 Schematic: ![Schematic](/schematics/mipsSchematic07.png)
+Try it out: https://Wips-Assembly.herokuapp.com
+## project vision
+This project was to help me gain an understanding of the pipelined RISC architecture, and I am definitely satisfied with the outcome. The result is not an efficient MIPS simulation, but a simulation which resembles an actual implementation as closely as possible. If you decide to browse the code, you will notice that it does not always resemble typical JavaScript conventions, and that is because I tried to make the code read exactly the same as the computer. Where operations occur in parallel, the respective code is adjacent, where possible. I tried to keep operations occuring in the same unit or level of abstraction within the same function.
 ## mips model
-The general model of the computer is based on the schematics in Computer Organization and Design: The Hardware/Software Interface. This is the textbook my Assembly Language Programming class (CSE 230 @ ASU) uses, and it seems to be the most popular resource for MIPS and RISC architectures. Design implementations beyond the scope of the textbook I took from miscellaneous resources or made up myself.
-## use
-Right now you'll need to import scripts from [Toolkit.js](https://github.com/jamesweber7/Toolkit.js). When I finish working on the MIPS computer soon, I'll import the minified scripts I need into this repository
+The general model of the computer is based on the schematics in Computer Organization and Design: The Hardware/Software Interface. This is the textbook my Assembly Language Programming class (CSE 230 @ ASU) uses, and it is certainly the authoritative textbook for an introduction to MIPS architecture. Design implementations beyond the scope of the textbook are mostly my own, although they should closely resemble and stand as a good example of real-world MIPS implementations.
 ## instructions
 The mips computer definitely still needs tweaks, but it (should) currently support the machine code for:
 - add
@@ -19,7 +20,7 @@ The mips computer definitely still needs tweaks, but it (should) currently suppo
 - jr         
 - lui        
 - lw         
-- syscall    
+- syscall - print/read int, print/read string, exit
 - nor     
 - or      
 - ori        
@@ -29,16 +30,13 @@ The mips computer definitely still needs tweaks, but it (should) currently suppo
 - srl     
 - sw         
 - sub     
-- subu   
-  
-And it is ready for a compiler which could implement the pseudo instructions:
+- subu  
 - blt
 - ble
 - bgt
 - bge
-- move
+- move 
 
-## coming soon
-- Compilation of actual assembly code
-- UI to write code and visualize the registers, and possibly a visualization of the computer if I don't get bored of this project by then
-- I think it would be cool to make a custom computer, but I'm not sure whether I'll get to that
+# not included
+- Coprocessor for floating point arithmetic, multiplication, and division
+  - I understand how I could implement a complex coprocessor, and I feel like the goal of this project - to better understand the pipelined RISC architecture - is well-satisfied without completing such an implementation.
