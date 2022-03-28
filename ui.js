@@ -46,10 +46,7 @@ function createUi() {
     // code input
     Wom.addTabFunctionality(codeInput);
     Wom.addLineSelectFunctionality(codeInput);
-    codeInput.onchange = () => {
-        compiled = false;
-        saved = false;
-    }
+    codeInput.onchange = codeChanged;
 
     // console
     clrConsoleBtn.onclick = clearConsole;
@@ -81,6 +78,11 @@ function updateUi() {
     updateRegisterTable();
     updateMainMemoryTable();
     updateTrapTable();
+    updateButtonRow();
+}
+
+function updateButtonRow() {
+    updatePlayPauseButton();
 }
 
 function addShortcuts() {    
@@ -125,29 +127,31 @@ function userLoad(e) {
 
 function userSave(e) {
     e.preventDefault();
-    var a = document.createElement("a");
-    a.href = window.URL.createObjectURL(new Blob([codeInput.value], {type: "text/x-assembly"}));
-    let title = programTitle.value;
-    if (title.includes('.') && !StringReader.substringAfter(title, '.')) {
-        title = StringReader.substringBefore(title, '.');
-    }
-    if (!title.includes('.')) {
-        title += '.S';
-    }
-    a.download = title;
-    a.click();
+    save();
 }
 
 function userPlayPause(e) {
     e.preventDefault();
+    if (running) {
+        userPause();
+    } else {
+        userPlay();
+    }
+}
+
+function updatePlayPauseButton() {
+    // hopefully I won't need to do this when I move things async; atm the button switches to paused AFTER this gets triggered, unless we use this set timeout
+    setTimeout(() => {
+        Wom.onOff(playBtn, pauseBtn, !running)
+    }, 10);
 }
 
 function userPlay() {
-    compileAndRun();
+    start();
 }
 
 function userPause() {
-
+    pause();
 }
 
 // E. stEp with an E.
@@ -159,7 +163,7 @@ function userStep(e) {
 // O. stOp with an O.
 function userStop(e) {
     e.preventDefault();
-    stopPipeline();
+    stopAndReset();
 }
 
 function userImport() {
@@ -465,18 +469,20 @@ function updatePremadeProgramUi() {
         }
         btn.onclick = () => {
             setCodeInput(program.title, program.text, program.cycles);
+            codeChanged();
         }
         if (program.isNewProgram) {
             btn.addEventListener("click", addHeaderToCodeInput);
         }
         loadDropdownOptions.append(btn);
     });
+    const BLANK_PROGRAM = PREMADE_PROGRAMS[0];
+    setStartupProgram(BLANK_PROGRAM);
 }
 
 function setCodeInput(title, text, cycles=150) {
     programTitle.value = title;
     codeInput.value = text;
-    codeInput.dispatchEvent(new Event('input'));
     numCyclesInput.value = cycles;
 }
 
@@ -512,6 +518,59 @@ function addHeaderToCodeInput() {
         dateLine + '\n' +
         hashtagRow + '\n\n';
     codeInput.value = header + codeInput.value;
+}
+
+function setStartupProgram(program) {
+    setCodeInput(program.title, program.text, program.cycles);
+    addWelcomeMessageToCodeInput();
+}
+
+function addWelcomeMessageToCodeInput() {
+    // # Welcome!
+    // # This is a MIPS computer simulator
+    // # that uses JavaScript to manually process strings 
+    // # of 1's and 0's the same way that a MIPS computer's 
+    // # components process high and low wire signals. Hit
+    // # the load button below to load a premade program, 
+    // # or use this textarea to write a MIPS program 
+    // # yourself.
+    const msg = "Welcome!\nThis is a MIPS computer simulator that uses JavaScript to manually process strings of 1's and 0's the same way that a MIPS computer's components process high and low wire signals. Hit the load button below to load a premade program, or use this textarea to write a MIPS program yourself."
+    let commentedMessage = commentFormatFactory(msg);
+    codeInput.value = commentedMessage + '\n\n' + codeInput.value;
+}
+
+function commentFormatFactory(message) {
+    const MAXLEN = 44;
+
+    // break into newlines
+    let brokenMsg = '';
+    while(message.length) {
+        while (/\s/.test(message[0])) {
+            message = message.substring(1);
+        }
+        let parsing = message;
+        if (parsing.includes('\n')) {
+            parsing = StringReader.substringBefore(parsing, '\n');
+        }
+        if (parsing.length > MAXLEN) {
+            parsing = parsing.substring(0, MAXLEN);
+            if (parsing.includes(' ')) {
+                parsing = StringReader.substringBeforeLast(parsing, /\s/);
+            }
+        }
+        message = StringReader.substringAfter(message, parsing);
+        brokenMsg += parsing;
+        // if next line
+        if (message) {
+            brokenMsg += '\n';
+        }
+    }
+
+    // add comment after each newline
+    const LINE_START = '# ';
+    const commentedMsg = LINE_START + brokenMsg.replaceAll('\n', '\n' + LINE_START);
+
+    return commentedMsg;
 }
 
 function printConsoleLogMessage() {

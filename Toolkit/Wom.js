@@ -332,13 +332,26 @@ class Wom {
     // swap visibility of buttons onclick
     static yinYang(btn1, btn2) {
         btn1.addEventListener("click", () => {
-            btn1.classList.add("hidden");
-            btn2.classList.remove("hidden");
+            this.onOff(btn2, btn1);
         });
         btn2.addEventListener("click", () => {
-            btn2.classList.add("hidden");
-            btn1.classList.remove("hidden");
+            this.onOff(btn1, btn2);
         })
+    }
+
+    // btn1 visible, btn2 invisible (reverse if !firston)
+    static onOff(btn1, btn2, firstOn=true) {
+        if (firstOn) {
+            // 1 on
+            btn1.classList.remove("hidden");
+            // 2 off
+            btn2.classList.add("hidden");
+        } else {
+            // 2 on
+            btn2.classList.remove("hidden");
+            // 1 off
+            btn1.classList.add("hidden");
+        }
     }
 
 

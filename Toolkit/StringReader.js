@@ -58,6 +58,13 @@ class StringReader {
     static substringBefore(str, to) {
         return this.substring(str, 0, to);
     }
+    
+    static substringBeforeLast(str, to) {
+        if (!this.isIndex(to)) {
+            to = this.lastIndexOf(str, to);
+        }
+        return this.substringBefore(str, to);
+    }
 
     static includes(substrings) {
         if (!Array.isArray(substrings)) {
@@ -101,18 +108,51 @@ class StringReader {
     // return first existant index
     static indexOf(str, substrings) {
         if (!Array.isArray(substrings)) {
-            substrings = [...arguments];
-            substrings.splice(0, 1);
+            substrings = [...arguments].splice(1);
         }
         let first = -1;
         for (let i = 0; i < substrings.length; i++) {
-            let index = str.indexOf(substrings[i]);
+            let index = this.indexOfOnlyOneSubstring(str, substrings[i]);
             if (index !== -1 && index < first) {
                 first = index;
             }
         }
         return first;
     }
+
+    // just helper for indexOf
+    static indexOfOnlyOneSubstring(str, substring) {
+        if (typeof substring === 'string') {
+            return str.indexOf(substring);
+        } else if (this.isRegExp(substring)) {
+            return this.indexOfRegExp(str, substring);
+        }
+    }
+
+    // return last existant index
+    static lastIndexOf(str, substrings) {
+        if (!Array.isArray(substrings)) {
+            substrings = [...arguments].splice(1);
+        }
+        let last = -1;
+        for (let i = 0; i < substrings.length; i++) {
+            let index = this.lastIndexOfOnlyOneSubstring(str, substrings[i]);
+            if (index !== -1 && index > last) {
+                last = index;
+            }
+        }
+        return last;
+    }
+
+    // just helper for lastIndexOf
+    static lastIndexOfOnlyOneSubstring(str, substring) {
+        if (typeof substring === 'string') {
+            return str.lastIndexOf(substring);
+        } else if (this.isRegExp(substring)) {
+            return this.lastIndexOfRegExp(str, substring);
+        }
+    }
+
 
     static indexAfter(str, after, find) {
         if (!Wath.isNumber(after)) {
@@ -144,6 +184,15 @@ class StringReader {
 
     static indexOfRegExp(str, regex) {
         for (let i = 0; i < str.length; i++) {
+            if (regex.test(str[i])) {
+                return i;
+            }
+        }
+        return this.NULL_INDEX;
+    }
+
+    static lastIndexOfRegExp(str, regex) {
+        for (let i = str.length - 1; i >= 0; i--) {
             if (regex.test(str[i])) {
                 return i;
             }

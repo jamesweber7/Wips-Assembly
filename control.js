@@ -9,8 +9,10 @@ const PC_START = '00000000010000000000000000000000';
 const registers = [
     'zero', 'at', 'v0', 'v1', 'a0', 'a1', 'a2', 'a3', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 't8', 't9', 'k0', 'k1', 'gp', 'sp', 'fp', 'ra'
 ];
+
+// global state information
 var eStop = false, running = false, compiled = false, saved = false;
-var cycles = 0; stopCycle = 0;
+var cycles = 0, stopCycle = 0;
 
 var INSTRUCTION_DATA;
 async function loadInstructions() {
@@ -19,15 +21,6 @@ async function loadInstructions() {
 }
 loadInstructions();
 
-
-
-
-function compileAndRun() {
-    stop = false;
-    compile();
-    retreiveFreshCyclesAndRun();
-    updateUi();
-}
 
 function compile() {
     compiled = true;
@@ -49,22 +42,46 @@ function setInstructions(instructions) {
     }
 }
 
-function retreiveFreshCyclesAndRun() {
+function start() {
+    stageForExecutionIfNecessary();
+    run();
+}
+
+function stageForExecution() {
+    eStop = false;
+    cycles = 0;
+    compile();
+    retreiveFreshCycles();
+    updateUi();
+}
+
+function stageForExecutionIfNecessary() {
+    if (!compiled) {
+        stageForExecution();
+    }
+}
+
+function retreiveFreshCycles() {
     stopCycle = cycles + getCyclesPerRun();
+}
+
+function retreiveFreshCyclesAndRun() {
     run();
 }
 
 function run() {
     running = true;
-    let time = Date.now();
-    let startCycles = cycles;
     do {
         step();
-    } while(cycles < stopCycle && !isStopped());
-    updateUi();
-    if (!isStopped()) {
+    } while(!isStopped());
+
+    if (isStoppedBecauseOfCycles()) {
         promptContinue();
+    } 
+    if (runningComplete()) {
+        running = false;
     }
+    updateUi();
 }
 
 function step() {
@@ -73,20 +90,84 @@ function step() {
 }
 
 function singleStep() {
-    // check compilation
-    if (!compiled) {
-        compile();
-    }
+    stageForExecutionIfNecessary();
     step();
     updateUi();
 }
 
-function stopPipeline() {
-    stop = true;
+function stopAndReset() {
+    stop();
+    reset();
+}
+
+function reset() {
+    compiled = false;
+    running = false;
+    eStop = false;
+    cycles = 0;
+}
+
+function stop() {
+    pause();
+}
+
+function pause() {
+    eStop = true;
+}
+
+function codeChanged() {
+    compiled = false;
+    saved = false;
 }
 
 function isStopped() {
-    return stop || LogicGate.bitToBool(mips.trap.Tr);
+    if (eStop) {
+        return true;
+    }
+    if (cycles >= stopCycle) {
+        return true;
+    }
+    if (LogicGate.bitToBool(mips.trap.Tr)) {
+        return true;
+    }
+    return false;
+}
+
+function isStoppedBecauseOfCycles() {
+    if (eStop) {
+        return false;
+    }
+    if (LogicGate.bitToBool(mips.trap.Tr)) {
+        return false;
+    }
+    return cycles >= stopCycle;
+}
+
+function runningComplete() {
+    if (LogicGate.bitToBool(mips.trap.Exit)) {
+        return true;
+    }
+    if (LogicGate.bitToBool(mips.trap.Ov)) {
+        return true;
+    }
+    if (eStop) {
+        return true;
+    }
+}
+
+function save() {
+    saved = true;
+    var a = document.createElement("a");
+    a.href = window.URL.createObjectURL(new Blob([codeInput.value], {type: "text/x-assembly"}));
+    let title = programTitle.value;
+    if (title.includes('.') && !StringReader.substringAfter(title, '.')) {
+        title = StringReader.substringBefore(title, '.');
+    }
+    if (!title.includes('.')) {
+        title += '.S';
+    }
+    a.download = title;
+    a.click();
 }
 
 function submitInput(input) {

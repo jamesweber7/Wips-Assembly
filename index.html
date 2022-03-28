@@ -56,31 +56,7 @@
                         <input id="program-title" spellcheck=false value="MyProgram.S">
                     </sectionhead>
                     <sectionbody>
-                        <textarea spellcheck="false" class="programmer-input" id="code-input">
-# First time here?
-# Then welcome! This is a MIPS computer simulator
-# that uses JavaScript to manually process strings 
-# of 1's and 0's the same way that a MIPS computer's 
-# components process high and low wire signals. Hit
-# the load button below to load a premade program, 
-# or use this textarea to write a MIPS program 
-# yourself.
-
-
-# static data declarations begin at .data
-.data
-
-# program text begins at .text
-.text 
-
-# define global function main
-.globl main
-
-# program begins execution at main
-main:
-    
-    jr  $ra			# Exit
-                        </textarea>
+                        <textarea spellcheck="false" class="programmer-input" id="code-input"></textarea>
                     </sectionbody>
                 </contentbox>
             </griditem>
