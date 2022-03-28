@@ -13,7 +13,7 @@
         <link rel="stylesheet" href="/style.css">
         <!-- Google Fonts -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-        <!-- <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&display=swap" rel="stylesheet"> -->
+        <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&display=swap" rel="stylesheet">
         <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
 
@@ -27,7 +27,6 @@
         <script defer src="/Toolkit/Wunctions.js"></script>
         <script defer src="/Toolkit/StringReader.js"></script>
         <script defer src="/Toolkit/Wom.js"></script>
-        <script defer src="/Toolkit/RangedVariable.js"></script>
 
         <script defer src="/control.js"></script>
         <script defer src="/compiler.js"></script>
@@ -38,7 +37,10 @@
         <noscript>Sorry, your browser doesn't enable JavaScript, and this thing kinda needs JavaScript to run!</noscript>
         <grid class="grid-container">
             <griditem class="head">
-                <titletext>Wips Assembly</titletext>
+                
+                <titletext>
+                    Wips Assembly
+                </titletext>
             </griditem>
             <griditem id='register-box' class="left-column">
                 <contentbox>
@@ -51,10 +53,34 @@
             <griditem class="center-column-top">
                 <contentbox>
                     <sectionhead style="--top-padding: 0px;">
-                        <input id="program-title" spellcheck=false value="MyProgram.s">
+                        <input id="program-title" spellcheck=false value="MyProgram.S">
                     </sectionhead>
                     <sectionbody>
-                        <textarea spellcheck="false" class="programmer-input" id="code-input"></textarea>
+                        <textarea spellcheck="false" class="programmer-input" id="code-input">
+# First time here?
+# Then welcome! This is a MIPS computer simulator
+# that uses JavaScript to manually process strings 
+# of 1's and 0's the same way that a MIPS computer's 
+# components process high and low wire signals. Hit
+# the load button below to load a premade program, 
+# or use this textarea to write a MIPS program 
+# yourself.
+
+
+# static data declarations begin at .data
+.data
+
+# program text begins at .text
+.text 
+
+# define global function main
+.globl main
+
+# program begins execution at main
+main:
+    
+    jr  $ra			# Exit
+                        </textarea>
                     </sectionbody>
                 </contentbox>
             </griditem>
@@ -72,14 +98,14 @@
                     <button id='stop-btn' class="icon-parent" title="Stop/Reset [ctrl+c]">
                         <i class="material-icons">stop</i>
                     </button>
-                    <dropdown class="dropdown style1" id="load-program">
+                    <dropdown class="dropdown style1" id="load-dropdown" tabindex="0">
                         <span class="title">
                             <button title="Load [ctrl+o]" class="icon-parent">
                                 <i class="material-icons">upload_file</i>
                             </button>
                         </span>
                         <span class="options" id="load-dropdown-options">
-                            <button id="import-btn">
+                            <button id="import-btn" title="Open File Explorer">
                                 Import File
                                 <input id="import-file-hidden" type="file" class="hidden">
                             </button>
@@ -89,7 +115,7 @@
                         <i class="material-icons">save</i>
                     </button>
                     <button id='cycles-container' class="tooltip-parent" title="number of clock cycles the computer runs before user prompted to stop or continue">
-                        Pause at: <input type='number' min=1 max=9999 step=1 id='num-cycles-input' value=50>
+                        Pause at: <input type='number' min=1 max=9999 step=1 id='num-cycles-input' value=150>
                     </button>
                 </buttonrow>
             </griditem>

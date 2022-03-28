@@ -86,10 +86,15 @@ class Mips {
 
         // read string len
         const lastLen = this._wb.len;
-        const lenLowerFive = LogicGate.split(lastLen, 27, 5)[1];
+        const lenSigFive = LogicGate.split(
+            lastLen, 
+            25, // overflow
+            5,  // significant 5 bits
+            2   // ignore last 2
+        )[1];
 
         // syscall
-        this.io.write(writeData, pipeline.syscallOp, lenLowerFive, clk);
+        this.io.write(writeData, pipeline.syscallOp, lenSigFive, clk);
 
         const string = this.io.string;
 

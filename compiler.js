@@ -879,13 +879,19 @@ class Compiler {
                 // slt $at, rt, rs
                 // bne $at, $zero, BRANCH
                 this.pushSltInstruction(
-                    this.ASSEMBLER_TEMPORARY,
+                    this.registerStringToBinary(
+                        this.ASSEMBLER_TEMPORARY
+                    ),
                     rt,
                     rs
                 );
                 this.pushBneInstruction(
-                    this.ASSEMBLER_TEMPORARY,
-                    this.ZERO,
+                    this.registerStringToBinary(
+                        this.ASSEMBLER_TEMPORARY
+                    ),
+                    this.registerStringToBinary(
+                        this.ZERO
+                    ),
                     label
                 );
                 return;
@@ -893,13 +899,19 @@ class Compiler {
                 // slt $at, rs, rt
                 // beq $at, $zero, BRANCH
                 this.pushSltInstruction(
-                    this.ASSEMBLER_TEMPORARY,
+                    this.registerStringToBinary(
+                        this.ASSEMBLER_TEMPORARY
+                    ),
                     rs,
                     rt
                 );
                 this.pushBeqInstruction(
-                    this.ASSEMBLER_TEMPORARY,
-                    this.ZERO,
+                    this.registerStringToBinary(
+                        this.ASSEMBLER_TEMPORARY
+                    ),
+                    this.registerStringToBinary(
+                        this.ZERO
+                    ),
                     label
                 );
                 return;
@@ -907,13 +919,19 @@ class Compiler {
                 // slt $at, rs, rt
                 // bne $at, $zero, BRANCH
                 this.pushSltInstruction(
-                    this.ASSEMBLER_TEMPORARY,
+                    this.registerStringToBinary(
+                        this.ASSEMBLER_TEMPORARY
+                    ),
                     rs,
                     rt
                 );
                 this.pushBneInstruction(
-                    this.ASSEMBLER_TEMPORARY,
-                    this.ZERO,
+                    this.registerStringToBinary(
+                        this.ASSEMBLER_TEMPORARY
+                    ),
+                    this.registerStringToBinary(
+                        this.ZERO
+                    ),
                     label
                 );
                 return;
@@ -921,13 +939,19 @@ class Compiler {
                 // slt $at, rt, rs
                 // beq $at, $zero, BRANCH
                 this.pushSltInstruction(
-                    this.ASSEMBLER_TEMPORARY,
+                    this.registerStringToBinary(
+                        this.ASSEMBLER_TEMPORARY
+                    ),
                     rt,
                     rs
                 );
                 this.pushBeqInstruction(
-                    this.ASSEMBLER_TEMPORARY,
-                    this.ZERO,
+                    this.registerStringToBinary(
+                        this.ASSEMBLER_TEMPORARY
+                    ),
+                    this.registerStringToBinary(
+                        this.ZERO
+                    ),
                     label
                 );
                 return;

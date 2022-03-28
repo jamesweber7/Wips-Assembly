@@ -268,7 +268,7 @@ class MipsSyscall extends ClockExclusiveGate {
         this.inputQueue.reset(this.stringStop);
         // len = '00000';
         this.input = this.inputQueue.dataAt(
-            LogicGate.shiftRight(len, 2)
+            len
         );
         const bytesOut = LogicGate.split(output, 8, 8, 8, 8);
         const nulCharOut = LogicGate.or(

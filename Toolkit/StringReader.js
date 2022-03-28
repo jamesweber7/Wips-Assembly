@@ -333,4 +333,29 @@ class StringReader {
         return !/[^\d]/.test(str);
     }
 
+    
+    /*----------  Misc  ----------*/
+    
+    
+    static bufferBefore(str, bufferWith, length) {
+        while (str.length < length) {
+            str = bufferWith + str;
+        }
+        if (str.length > length) {
+            throw "tbh I don't really know what you want me to do here";
+        }
+        return str;
+    }
+
+    static bufferAfter(str, bufferWith, length) {
+        while (str.length < length) {
+            str += bufferWith;
+        }
+        if (str.length > length) {
+            throw "tbh I don't really know what you want me to do here";
+        }
+        return str;
+    }
+
 }
+

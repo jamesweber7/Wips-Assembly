@@ -241,6 +241,31 @@ class Wunctions {
     }
 
     static getWeekDay() {
-        return ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
+        return ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
     }
+
+    static numberToStringOfLength(num, length) {
+        // cast to string
+        if (typeof num === 'number') {
+            num = num.toString();
+        }
+        if (typeof num === 'string') {
+            while (num.length < length) {
+                num = '0' + num;
+            }
+            while (num.length > length) {
+                if (num[0] === '0') {
+                    num = num.substring(1);
+                } else {
+                    // if string is longer than length and not just a bunch of leading zeros
+                    throw "tbh I don't really know what you want me to do here";
+                }
+            }
+            return num;
+        }
+
+        // if not string
+        throw 'expected number or string';
+    }
+
 }

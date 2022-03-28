@@ -10,6 +10,7 @@
     --hacker-gray-less-dark: rgb(43, 43, 43);
     --hacker-green-dark: rgb(0, 73, 0);
     --hacker-green-gray-light: #c6eec6;
+    --hacker-green-gray-lightish: #77d877;
     --hacker-green-gray-darkish: rgb(0, 97, 0);
     --hacker-green-gray-dark: rgb(26, 48, 26);
     --error-red: #ff0048;
@@ -182,13 +183,13 @@ table tr td:first-child {
     grid-row-start: 1;
     grid-column-start: 1;
     grid-column-end: 4;
-    color: var(--hacker-green);
-    font-size: 30px;
-    font-family: var(--font-main);
 }
 
 titletext {
     margin: auto;
+    font-size: 40px;
+    font-family: "Balsamiq Sans", cursive;
+    color: var(--hacker-green-gray-light);
 }
 
 grid {
@@ -282,7 +283,6 @@ buttonrow dropdown button {
     display: block;
 }
 
-
 .dropdown .title button, .dropdown .options button {
     border: none;
     width: -webkit-fill-available;
@@ -314,14 +314,11 @@ button:hover {
 }
 
 #clear-console {
-    transform: translateY(3px);
     border-radius: 50%;
     cursor: pointer;
-}
-
-#clear-console:hover {
-    background-color: var(--hacker-gray-darker);
-    color: var(--hacker-green-darkish);
+    float: left;
+    margin: 1px 4px;
+    width: 0;
 }
 
 /* scrollbar */

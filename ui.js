@@ -16,6 +16,7 @@ const stepBtn = document.getElementById('step-btn');
 const saveBtn = document.getElementById('save-btn');
 const cyclesContainer = document.getElementById('cycles-container');
 const numCyclesInput = document.getElementById('num-cycles-input');
+const loadDropdown = document.getElementById('load-dropdown');
 const loadDropdownOptions = document.getElementById('load-dropdown-options');
 const importLoadBtn = document.getElementById('import-btn');
 const hiddenImportFileInput = document.getElementById('import-file-hidden');
@@ -72,6 +73,8 @@ function createUi() {
 
     // shortcuts
     addShortcuts();
+
+    printConsoleLogMessage();
 }
 
 function updateUi() {
@@ -117,16 +120,21 @@ function addShortcuts() {
 /*----------  User Input Actions  ----------*/
 function userLoad(e) {
     e.preventDefault();
-    loadDropdownOptions.focus();
-    loadDropdownOptions.click();
-    document.activeElement = loadDropdownOptions;
+    loadDropdown.focus();
 }
 
 function userSave(e) {
     e.preventDefault();
     var a = document.createElement("a");
-    a.href = window.URL.createObjectURL(new Blob([codeInput.value], {type: "text/plain"}));
-    a.download = programTitle.value;
+    a.href = window.URL.createObjectURL(new Blob([codeInput.value], {type: "text/x-assembly"}));
+    let title = programTitle.value;
+    if (title.includes('.') && !StringReader.substringAfter(title, '.')) {
+        title = StringReader.substringBefore(title, '.');
+    }
+    if (!title.includes('.')) {
+        title += '.S';
+    }
+    a.download = title;
     a.click();
 }
 
@@ -184,12 +192,34 @@ function getCyclesPerRun() {
 /*----------  console IO  ----------*/
 
 function inputConsole() {
-    if (!consoleIO.value.includes(consoleIO.getAttribute("data"))) {
-        consoleIO.value = consoleIO.getAttribute("last");
-        consoleIO.selectionStart = consoleIO.value.length;
-        consoleIO.selectionEnd = consoleIO.value.length;
-    }
+    protectConsoleInputOverwrite();
+    protectConsoleInputLength();
     consoleIO.setAttribute("last", consoleIO.value);
+}
+
+// stop user from entering a longer string than is available to be input by syscall unit
+function protectConsoleInputLength() {
+    const data = consoleIO.getAttribute("data");
+    const syscallUnitInputQueueLen = 32;
+    const maxChars = syscallUnitInputQueueLen * 4 - 1;
+    if (consoleIO.value.length > data.length + maxChars) {
+        consoleIO.value = consoleIO.value.substring(0, data.length + maxChars);
+    }
+}
+
+// stop user from editing immaleable console text
+function protectConsoleInputOverwrite() {
+    const data = consoleIO.getAttribute("data");
+    // has overwrite?
+    if (consoleIO.value.includes(data)) {
+        // no overwrite
+        return;
+    }
+    // overwrite
+    // rollback
+    consoleIO.value = consoleIO.getAttribute("last");
+    consoleIO.selectionStart = consoleIO.value.length;
+    consoleIO.selectionEnd = consoleIO.value.length;
 }
 
 function submitConsoleInputOnEnter(e) {
@@ -364,13 +394,13 @@ function createTrapTable() {
         createTableRow('trap-trap', 'Trap', trap.trap)
     );
     trapTable.append(
-        createTableRow('trap-of', 'Overflow', trap.OvF)
+        createTableRow('trap-exit', 'Exit', trap.exit)
     );
     trapTable.append(
         createTableRow('trap-sysin', 'Sysin', trap.sysin)
     );
     trapTable.append(
-        createTableRow('trap-exit', 'Exit', trap.exit)
+        createTableRow('trap-of', 'Overflow', trap.OvF)
     );
     trapTable.append(
         createTableRow('trap-pipeline-trap', 'Pipeline Trap', trap.pipelineTrap.q)
@@ -380,9 +410,9 @@ function createTrapTable() {
 function updateTrapTable() {
     const trap = mips.trap;
     updateTableRow('trap-trap', trap.trap);
-    updateTableRow('trap-of', trap.OvF);
-    updateTableRow('trap-sysin', trap.sysin);
     updateTableRow('trap-exit', trap.exit);
+    updateTableRow('trap-sysin', trap.sysin);
+    updateTableRow('trap-of', trap.OvF);
     updateTableRow('trap-pipeline-trap', trap.pipelineTrap.q);
 }
 
@@ -420,10 +450,11 @@ function updatePremadeProgramUi() {
         btn.onclick = () => {
             setCodeInput(program.title, program.text, program.cycles);
         }
+        if (program.isNewProgram) {
+            btn.addEventListener("click", addHeaderToCodeInput);
+        }
         loadDropdownOptions.append(btn);
     });
-    const BLANK_PROGRAM = PREMADE_PROGRAMS[0];
-    setCodeInput(BLANK_PROGRAM.title, BLANK_PROGRAM.text, BLANK_PROGRAM.cycles);
 }
 
 function setCodeInput(title, text, cycles=150) {
@@ -431,4 +462,46 @@ function setCodeInput(title, text, cycles=150) {
     codeInput.value = text;
     codeInput.dispatchEvent(new Event('input'));
     numCyclesInput.value = cycles;
+}
+
+function addHeaderToCodeInput() {
+    // ######################
+    // # Program Name       #
+    // # Created mm/dd/yyyy #
+    // ######################
+    const programName = programTitle.value;
+    const date = new Date();
+    // mm/dd/yyyy
+    const mm = Wunctions.numberToStringOfLength(
+        date.getMonth() + 1, // gives index of month (0 = january)
+        2
+    );
+    const dd = Wunctions.numberToStringOfLength(
+        date.getDate(), 
+        2
+    );
+    const yyyy = date.getFullYear();
+    const createdDate = `${mm}/${dd}/${yyyy}`;
+    const createdDateText = `Created ${createdDate}`;
+    const lineOpen = '# ';
+    const lineClose = ' #';
+    const longerLen = Math.max(programName.length, createdDateText.length);
+    const length = lineOpen.length + longerLen + lineClose.length;
+    const hashtagRow = StringReader.mult('#', length);
+    const nameLine = lineOpen + StringReader.bufferAfter(programName, ' ', longerLen) + lineClose;
+    const dateLine = lineOpen + StringReader.bufferAfter(createdDateText, ' ', longerLen) + lineClose;
+    const header = 
+        hashtagRow + '\n' +
+        nameLine + '\n' +
+        dateLine + '\n' +
+        hashtagRow + '\n\n';
+    codeInput.value = header + codeInput.value;
+}
+
+function printConsoleLogMessage() {
+    console.log("%cDev tools suck. %cSnooping's easier on GitHub: %chttps://github.com/jamesweber7", 
+        "color: #09f; font-size: 30px;", 
+        "color: red; font-size: 30px;", 
+        "font-size: 18px;"
+    );
 }
