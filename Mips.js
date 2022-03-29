@@ -1210,8 +1210,7 @@ class Mips {
         this._mainMemory.push('00000000000000000000000000101100', LOAD_SYSCALL_EXIT_ARGUMENT_LOWER);
         this._mainMemory.push('00000000000000000000000000110000', NOP);
         this._mainMemory.push('00000000000000000000000000110100', NOP);
-        this._mainMemory.push('00000000000000000000000000111000', NOP);
-        this._mainMemory.push('00000000000000000000000000111100', SYSCALL);
+        this._mainMemory.push('00000000000000000000000000111000', SYSCALL);
     }
 
     bootup() {
