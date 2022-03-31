@@ -81,20 +81,28 @@ popup {
     left: 35%;
     top: 30%;
     width: 30%;
-    height: 40%;
     background: var(--hacker-gray-dark);
     color: var(--hacker-green);
     border: 4px solid;
     border-radius: 4px;
     box-shadow: 0 0 10px 5px black;
-    opacity: 0.9;
+    opacity: 0.97;
+}
+
+popupdesc {
+    display: block;
+    padding: 10px;
+    font-size: 16px;
 }
 
 popup button {
     display: block;
-    margin: auto;
-    margin-top: 66px;
+    margin: 18px auto;
     font-size: 35px;
+}
+
+popup cyclescontainer {
+    font-size: 20px;
 }
 
 input, textarea {
@@ -123,7 +131,7 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-#num-cycles-input {
+.num-cycles-input {
     background: none;
     border: none;
     font: inherit;

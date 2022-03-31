@@ -1177,6 +1177,13 @@ class Wath {
         return arr.concat(end);
     }
 
+    static log(x, base=null) {
+        if (base) {
+            return Math.log(x) / Math.log(base);
+        }
+        return Math.log(x);
+    }
+
     // just returns ceiling right now
     static logFactorial(n) {
         let log = 0;
@@ -1217,7 +1224,72 @@ class Wath {
         // b < a
         return b <= value && value <= a;
     }
+
+    // round to precision
+    static roundTo(num, precision) {
+        const step = 10**precision;
+        return Math.round(num * step) / step;
+    }
+
+    // for number with specified step size
+    static roundToStep(num, step) {
+        // need extra steps to accomodate js floating point errors
+        let precision = this.precisionOf(step);
+        return this.roundTo(
+            step * Math.round (num / step),
+            precision
+        );
+    }
+
+    // -3/-2/-1/0/./1/2/3/4/5
+    static precisionOf(num) {
+        let numstring = num.toString();
+        let decimalIndex = numstring.indexOf('.');
+        numstring = numstring.replace('.', '');
+        let lsdIndex = 0;
+        for (let i = numstring.length - 1; i >= 0; i--) {
+            if (numstring[i] !== '0') {
+                lsdIndex = i;
+                break;
+            }
+        }
+        console.log(numstring, lsdIndex, decimalIndex);
+        if (decimalIndex !== -1) {
+            // if fraction part
+            if (lsdIndex >= decimalIndex) {
+                return 1 + lsdIndex - decimalIndex;
+            } 
+            // if integer part
+            else {
+                return 1 + lsdIndex - decimalIndex;
+            }
+        }
+        // no fractional part
+        return 1 + lsdIndex - numstring.length;
+
+    }
+
+    static #intstringPrecisionOf(intstring) {
+        let lsdIndex = 0;
+        for (let i = 0; i < intstring.length; i++) {
+            if (intstring[intstring.length - 1 - i] !== '0') {
+                lsdIndex = i;
+                break;
+            }
+        }
+        return -lsdIndex;
+    }
     
+    static #fracstringPrecisionOf(fracstring) {
+        let lsdIndex = 0;
+        for (let i = 0; i < fracstring.length; i++) {
+            if (fracstring[fracstring.length - 1 - i] !== '0') {
+                lsdIndex = i;
+                break;
+            }
+        }
+        return 1 + lsdIndex;
+    }
     /*----------  Sums  ----------*/
     
     //     end

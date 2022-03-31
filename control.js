@@ -23,9 +23,11 @@ loadInstructions();
 
 
 function compile() {
+    setState(COMPILING);
     compiled = true;
     const instructions = Compiler.createInstructions(codeInput.value);
-    setInstructions(instructions); 
+    setInstructions(instructions);
+    endState(COMPILING);
 }
 
 function setInstructions(instructions) {
@@ -40,11 +42,6 @@ function setInstructions(instructions) {
             instructions[i]
         );
     }
-}
-
-function start() {
-    stageForExecutionIfNecessary();
-    run();
 }
 
 function stageForExecution() {
@@ -65,22 +62,45 @@ function retreiveFreshCycles() {
     stopCycle = cycles + getCyclesPerRun();
 }
 
-function retreiveFreshCyclesAndRun() {
+function stageForRun() {
+    stageForExecutionIfNecessary();
+    running = true;
+}
+
+function endRun() {
+    running = false;
+}
+
+function start() {
+    stageForRun();
+    setState(RUNNING);
     run();
 }
 
 function run() {
-    running = true;
+    const REFRESH_AT = 10;
+    let i = 0;
     do {
+        i++;
         step();
-    } while(!isStopped());
+    } while(!isStopped() && i < REFRESH_AT);
 
+    if (isStopped()) {
+        updateStoppedRun();
+    } else {
+        updateUi();
+        setTimeout(run, 0);
+    }
+}
+
+function updateStoppedRun() {
     if (isStoppedBecauseOfCycles()) {
         promptContinue();
-    } 
-    if (runningComplete()) {
-        running = false;
     }
+    if (runningComplete()) {
+        endRun();
+    }
+    endState(RUNNING);
     updateUi();
 }
 

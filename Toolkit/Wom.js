@@ -193,7 +193,8 @@ class Wom {
 
     static createPopup(text, id='') {
         const popup = this.createToBody('popup', id);
-        popup.innerText = text;
+        const title = this.createTo(popup, 'popuptitle', `${id}-title`);
+        title.innerText = text;
         return popup;
     }
 
@@ -256,6 +257,52 @@ class Wom {
 
     static collapseTextarea() {
         this.style.height = "auto";
+    }
+
+    
+    /*----------  Inputs  ----------*/
+    
+    static controlNumberInput(input, min=null, max=null, step=null) {
+
+        input.type = 'number';
+        
+        if (min === null) {
+            if (input.min) {
+                min = input.min;
+            } else {
+                min = -Infinity;
+                input.min = min;
+            }
+        } else {
+            input.min = min;
+        }
+        if (max === null) {
+            if (input.max) {
+                max = input.max;
+            } else {
+                max = Infinity;
+                input.max = max;
+            }
+        } else {
+            input.max = max;
+        }
+        if (max === null) {
+            if (input.step) {
+                step = input.step;
+            }
+        }
+        // on change so user doesn't get overwritten between making valid input (add front numbers that go over max but planning to delete last numbers, inputting 0.15 on step size 0.075)
+        input.addEventListener('change', () => {
+            const userValue = input.value;
+            let value = userValue;
+            value = Wath.constrain(value, min, max);
+            if (step !== null) {
+                value = Wath.roundToStep(value, step);
+            }
+            if (value !== userValue) {
+                input.value = value;
+            }
+        });
     }
 
 

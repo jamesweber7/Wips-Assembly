@@ -20,11 +20,13 @@ const loadDropdown = document.getElementById('load-dropdown');
 const loadDropdownOptions = document.getElementById('load-dropdown-options');
 const importLoadBtn = document.getElementById('import-btn');
 const hiddenImportFileInput = document.getElementById('import-file-hidden');
+const stateOutput = document.getElementById('state-output');
 
 const consoleIO = document.getElementById('console');
 const clrConsoleBtn = document.getElementById('clear-console');
 
-
+// states
+const COMPILING = 'COMPILING', RUNNING = 'RUNNING';
 
 // options
 var PREMADE_PROGRAMS;
@@ -46,7 +48,7 @@ function createUi() {
     // code input
     Wom.addTabFunctionality(codeInput);
     Wom.addLineSelectFunctionality(codeInput);
-    codeInput.onchange = codeChanged;
+    codeInput.oninput = codeChanged;
 
     // console
     clrConsoleBtn.onclick = clearConsole;
@@ -54,9 +56,9 @@ function createUi() {
     consoleIO.addEventListener('keydown', submitConsoleInputOnEnter);
 
     // button row
+    Wom.yinYang(playBtn, pauseBtn);
     playBtn.addEventListener("click", userPlay);
     pauseBtn.addEventListener("click", userPause);
-    Wom.yinYang(playBtn, pauseBtn);
 
     stepBtn.onclick = userStep;
     stopBtn.onclick = userStop;
@@ -65,6 +67,8 @@ function createUi() {
         e.stopPropagation();
         numCyclesInput.select();
     };
+    numCyclesInput.addEventListener('input', updateNumCycles);
+    controlNumCyclesInput(numCyclesInput);
     importLoadBtn.onclick = userImport;
     hiddenImportFileInput.onchange = readFileImport;
 
@@ -72,6 +76,28 @@ function createUi() {
     addShortcuts();
 
     printConsoleLogMessage();
+}
+
+function controlNumCyclesInput(numCyclesInput) {
+    Wom.controlNumberInput(
+        numCyclesInput,
+        1,      // min val
+        4999,   // max val
+        1       // step size
+    );
+}
+
+function updateNumCycles() {
+    const value = this.value;
+    getAllActiveCyclesInputs().forEach(input => {
+        if (input.value !== value) {
+            input.value = value;
+        }
+    })
+}
+
+function getAllActiveCyclesInputs() {
+    return [...document.getElementsByClassName('num-cycles-input')];
 }
 
 function updateUi() {
@@ -116,6 +142,31 @@ function addShortcuts() {
             }
         }
     })
+}
+
+
+/*----------  State Output  ----------*/
+
+function setState(state) {
+    const stateText = getStateText(state);
+    if (stateOutput.innerText !== stateText) {
+        stateOutput.innerText = stateText;
+    }
+}
+
+function endState(state) {
+    if (stateOutput.innerText === getStateText(state)) {
+        stateOutput.innerText = '';
+    }
+}
+
+function getStateText(state) {
+    switch (state) {
+        case COMPILING :
+            return 'Compiling';
+        case RUNNING :
+            return 'Running';
+    }
 }
 
 
@@ -191,6 +242,10 @@ function getCyclesPerRun() {
     return Number.parseInt(
         numCyclesInput.value
     );
+}
+
+function setCyclesPerRun(cycles) {
+    numCyclesInput.value = cycles;
 }
 
 /*----------  console IO  ----------*/
@@ -438,18 +493,32 @@ function updateTrapTable() {
 
 // prompt user whether they want to continue
 function promptContinue() {
-    const popup = Wom.createPopup("Continue?");
+    const popup = Wom.createPopup("Continue?", 'continue');
+    const desc = Wom.createTo(popup, 'popupdesc');
+    desc.innerText = `You have complete ${cycles} clock cycles. Do you wish to continue?`
     const yes = Wom.createTo(popup, 'button', 'continue-yes');
     const no = Wom.createTo(popup, 'button', 'continue-no');
     yes.innerText = 'Yes';
     no.innerText = 'No';
+    const popupCyclesContainer = Wom.createTo(popup, 'cyclescontainer');
+    popupCyclesContainer.innerText = 'Next prompt in:';
+    const popupCyclesInput = Wom.createTo(popupCyclesContainer, 'input');
+    controlNumCyclesInput(popupCyclesInput);
+    popupCyclesInput.className = 'num-cycles-input';
+    popupCyclesInput.value = getCyclesPerRun();
+    popupCyclesInput.oninput = updateNumCycles;
 
     yes.onclick = () => {
         closePopup();
-        retreiveFreshCyclesAndRun();
+        updateUi();
+        start();
     }
 
-    no.onclick = closePopup;
+    no.onclick = () => {
+        closePopup();
+        endRun();
+        updateUi();
+    }
 
     function closePopup() {
         popup.remove();

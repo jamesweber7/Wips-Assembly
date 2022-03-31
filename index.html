@@ -90,9 +90,10 @@
                     <button id='save-btn' class="icon-parent" title="Save [ctrl+s]">
                         <i class="material-icons">save</i>
                     </button>
-                    <button id='cycles-container' class="tooltip-parent" title="number of clock cycles the computer runs before user prompted to stop or continue">
-                        Pause at: <input type='number' min=1 max=9999 step=1 id='num-cycles-input' value=150>
+                    <button id='cycles-container' title="number of clock cycles the computer runs before user prompted to stop or continue">
+                        Pause at: <input type='number' min=1 max=4999 step=1 id='num-cycles-input' class='num-cycles-input' value=150>
                     </button>
+                    <stateoutput id="state-output"></stateoutput>
                 </buttonrow>
             </griditem>
             <griditem class="right-column-top">
