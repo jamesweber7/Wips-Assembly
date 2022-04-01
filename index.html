@@ -119,11 +119,20 @@
             </griditem>
             <griditem class="right-column-3">
                 <contentbox id="main-memory-box">
-                    <sectionhead>
+                    <sectionhead id="main-mem-head">
+                        <column>
+                            <button id="main-mem-jump-sp" title="jump to stack pointer">$sp</button>
+                            <button id="main-mem-jump-static" title="jump to static memory">data</button>
+                            <button id="main-mem-jump-pc" title="jump to program counter">PC</button>
+                        </column>
                         Main Memory
+                        <column>
+                            <button id="main-mem-display-binary" class="hidden" title="display as binary">01</button>
+                            <button id="main-mem-display-ascii" title="display as ascii">Aa</button>
+                        </column>
                     </sectionhead>
-                    <sectionbody>
-                        <table id="main-mem-table"></table>
+                    <sectionbody id="main-mem-body">
+                        <table id="main-mem-table" datatype="binary"></table>
                     </sectionbody>
                 </contentbox>
             </griditem>

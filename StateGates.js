@@ -295,6 +295,14 @@ class BigRam extends ParentRam {
         this._data[address] = data;
     }
 
+    // don't add unnecessary zeros during read - for ui
+    dataAtNoSet(addr) {
+        if (this._data[addr] === undefined) {
+            return LogicGate.empty(this._regSize);
+        }
+        return this._data[addr];
+    }
+
 }
 
 // RAM with only one read address

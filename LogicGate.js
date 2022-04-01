@@ -742,6 +742,13 @@ class LogicGate {
         return incremented;
     }
 
+    static decrementer32(a) {
+        return this.addALU32(
+            a,
+            '11111111111111111111111111111111'
+        );
+    }
+
     static incrementer16(a) {
         let cry = '1';
         let incremented = '';

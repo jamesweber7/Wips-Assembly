@@ -720,7 +720,7 @@ class Mips {
 
         // input:
         // add     R   0x20 = 100000
-        // addu    R   0x09 = 001001
+        // addu    R   0x21 = 010101
         // and     R   0x24 = 100100 
         // andi    I   0x0c = 001100
         // nor     R   0x27 = 100111
@@ -782,8 +782,15 @@ class Mips {
             aluOp
         );
 
-        const unsigned = LogicGate.and(
-            LogicGate.not(f2),
+        // not add or sub funct - ~[1000x0]
+        const unsigned = LogicGate.or(
+            LogicGate.not(
+                f5
+            ),
+            f4,
+            f3,
+            f2,
+            // skip f1
             f0
         );
 
@@ -1264,6 +1271,18 @@ class Mips {
             dataOut2: dataOut2,
             dataOut1: dataOut1
         };
+    }
+
+    mainMemoryAt(addr) {
+        return this._mainMemory.dataAtNoSet(addr);
+    }
+
+    getPc() {
+        return this._pc.q;
+    }
+
+    getRegisterValue(regAddr) {
+        return this._registerMemory.dataAt(regAddr);
     }
 
 }

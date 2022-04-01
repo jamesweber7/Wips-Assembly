@@ -199,13 +199,13 @@ class Wom {
     }
 
     // get array of matching elements (not DOMList) by classname
-    static getArrayByClassName(className) {
-        return [...document.getElementsByClassName(className)];
+    static getArrayByClassName(className, el=document) {
+        return [...el.getElementsByClassName(className)];
     }
 
     // get array of matching elements (not DOMList) by tagname
-    static getArrayByTagName(tagName) {
-        return [...document.getElementsByTagName(tagName)];
+    static getArrayByTagName(tagName, el=document) {
+        return [...el.getElementsByTagName(tagName)];
     }
 
     static getChildren(element) {
@@ -411,6 +411,10 @@ class Wom {
     static isFocusedOnInput() {
         return  document.activeElement.tagName === 'TEXTAREA' || 
                 document.activeElement.tagName === 'INPUT';
+    }
+
+    static hasSelection() {
+        return document.getSelection().toString().length;
     }
 
 }

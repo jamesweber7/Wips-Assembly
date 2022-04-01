@@ -3,6 +3,12 @@
 
 const registerTable = document.getElementById('register-table');
 const mainMemTable = document.getElementById('main-mem-table');
+const mainMemBody = document.getElementById('main-mem-body');
+const mainMemJumpSp = document.getElementById('main-mem-jump-sp');
+const mainMemJumpStatic = document.getElementById('main-mem-jump-static');
+const mainMemJumpPC = document.getElementById('main-mem-jump-pc');
+const mainMemDisplayBinary = document.getElementById('main-mem-display-binary');
+const mainMemDisplayAscii = document.getElementById('main-mem-display-ascii');
 const trapTable = document.getElementById('trap-table');
 
 const programTitle = document.getElementById('program-title');
@@ -73,6 +79,15 @@ function createUi() {
     importLoadBtn.onclick = userImport;
     hiddenImportFileInput.onchange = readFileImport;
 
+    mainMemBody.onscroll = scrollMainMem;
+    mainMemJumpSp.onclick = setMainMemTableAtSp;
+    mainMemJumpStatic.onclick = setMainMemTableAtStatic;
+    mainMemJumpPC.onclick = setMainMemTableAtPC;
+    mainMemDisplayAscii.onclick = displayMainMemTableAscii;
+    mainMemDisplayBinary.onclick = displayMainMemTableBinary;
+    Wom.yinYang(mainMemDisplayAscii, mainMemDisplayBinary);
+
+
     // shortcuts
     addShortcuts();
 
@@ -126,19 +141,13 @@ function addShortcuts() {
                 case 'ArrowRight':
                     userStep(e);
                     return;
-                case 'Space':
+                case ' ':
                     userPlayPause(e);
                     break;
-            }
-        }
-        if (Wom.isFocusedOnInput()) {
-            return;
-        }
-        // if user is not focusing on input
-        if (e.ctrlKey) {
-            switch (e.key) {
                 case 'c':
-                    userStop(e);
+                    if (!Wom.hasSelection()) {
+                        userStop(e);
+                    }
                     return;
             }
         }
@@ -339,7 +348,6 @@ function outputString(fourByteString) {
 }
 
 function outputToConsole(output) {
-    console.log('I AM OUTPUTTING ', output)
     saveConsoleInput(consoleIO.value);
     consoleIO.setAttribute(
         "data",
@@ -423,39 +431,196 @@ function createRegisterRow(register, regName) {
 /*----------  Main Memory  ----------*/
 
 function createMainMemoryTable() {
-    const stack = mips.stackAtPointer();
-    const addr1 = stack.stackPointer;
-    const addr2 = LogicGate.incrementer32(addr1);
-    const addr3 = LogicGate.incrementer32(addr2);
-    const addr4 = LogicGate.incrementer32(addr3);
-
-    mainMemTable.append(
-        createTableRow('data4', '$sp+3', stack.dataOut4)
-    );
-    mainMemTable.append(
-        createTableRow('data3', '$sp+2', stack.dataOut3)
-    );
-    mainMemTable.append(
-        createTableRow('data2', '$sp+1', stack.dataOut2)
-    );
-    mainMemTable.append(
-        createTableRow('data1', '$sp+0', stack.dataOut1)
-    );
+    const addr = '01111111111111111111111111111000'; // $sp - 4
+    setMainMemTableAt(addr);
 }
 
 function updateMainMemoryTable() {
-    const stack = mips.stackAtPointer();
-    const addr1 = stack.stackPointer;
-    const addr2 = LogicGate.incrementer32(addr1);
-    const addr3 = LogicGate.incrementer32(addr2);
-    const addr4 = LogicGate.incrementer32(addr3);
-
-    updateTableRow('data4', stack.dataOut4);
-    updateTableRow('data3', stack.dataOut3);
-    updateTableRow('data2', stack.dataOut2);
-    updateTableRow('data1', stack.dataOut1);
+    const rows = getMainMemRows();
+    rows.forEach(row => {
+        const address = getRowAddress(row);
+        updateTableRow(address, mainMemoryDataValueAt(address));
+    })
 }
 
+function setMainMemTableAt(startAddr) {
+    mainMemTable.innerText = '';
+    let addr = startAddr;
+    for (let i = 0; i < 12; i++) {
+        if (addr[0] === '1') {
+            addr = LogicGate.empty(32);
+        }
+        mainMemTable.append(
+            createTableRow(addr, addr, mainMemoryDataValueAt(addr))
+        );
+        addr = LogicGate.bitstringToPrecision(
+            LogicGate.toBitstring(
+                LogicGate.bitstringToDecimal(addr) + 1
+            ),
+            32
+        );
+    }
+
+    // scroll to middle
+    mainMemBody.scrollTop = mainMemBody.scrollHeight - 1.5 * mainMemBody.offsetHeight;
+}
+
+function scrollMainMem(e) {
+    e.stopPropagation();
+
+    const rowOffsetHeight = getMainMemRows()[0].offsetHeight;
+    const cushion = rowOffsetHeight;
+    // at bottom
+    if (mainMemBody.scrollTop > mainMemBody.scrollHeight - mainMemBody.offsetHeight - cushion) {
+        updateMainMemBelow();
+    }
+    // at top
+    else if (mainMemBody.scrollTop < cushion) {
+        updateMainMemAbove();
+        if (mainMemBody.scrollTop === 0) {
+            mainMemBody.scrollTop += 4 * rowOffsetHeight;
+        }
+    }
+}
+
+function updateMainMemBelow() {
+    let addr = mainMemRowAddressAtIndex(11);
+    for (let i = 0; i < 4; i++) {
+        addr = LogicGate.bitstringToDecimal(
+            addr
+        ) + 1;
+        if (addr > 2**31) {
+            // OF - loop to first addr
+            addr = '00000000000000000000000000000000';
+        } else {
+            addr = LogicGate.bitstringToPrecision(
+                LogicGate.toBitstring(
+                    addr
+                ),
+                32
+            );
+        }
+        getMainMemRows()[0].remove();
+        mainMemTable.append(
+            createTableRow(addr, addr, mainMemoryDataValueAt(addr))
+        );
+    }
+}
+
+function updateMainMemAbove() {
+    let addr = mainMemRowAddressAtIndex(0);
+    for (let i = 0; i < 4; i++) {
+        addr = LogicGate.bitstringToDecimal(
+            addr
+        ) - 1;
+        if (addr < 0) {
+            // UF - loop to last addr
+            addr = '01111111111111111111111111111111';
+        } else {
+            addr = LogicGate.bitstringToPrecision(
+                LogicGate.toBitstring(
+                    addr
+                ),
+                32
+            );
+        }
+        getMainMemRows()[11].remove();
+        mainMemTable.prepend(
+            createTableRow(addr, addr, mainMemoryDataValueAt(addr))
+        );
+    }
+}
+
+function mainMemoryDataValueAt(addr) {
+    const dataType = mainMemTable.getAttribute('datatype');
+    if (dataType === 'binary') {
+        return mips.mainMemoryAt(addr);
+    } else {
+        const data = mips.mainMemoryAt(addr);
+        // 8-bit
+        if (data[0] === '1') {
+            // replacement char
+            return '�';
+        }
+        let text = LogicGate.toAscii(
+            data
+        );
+        // NUL char
+        if (text === '\x00') {
+            return 'NUL';
+        }
+        if (text === '\n') {
+            return '\\n';
+        }
+        return text;
+    }
+}
+
+function firstMainMemAddress() {
+    return mainMemRowAddressAtIndex(0);
+}
+
+function lastMainMemAddress() {
+    return mainMemRowAddressAtIndex(11);
+}
+
+function mainMemRowAddressAtIndex(index) {
+    const rows = getMainMemRows();
+    if (rows[index] === undefined) {
+        return LogicGate.toSignedBitstring(
+            LogicGate.bitstringToDecimal(
+                firstMainMemAddress()
+            ) + index
+        )
+    }
+    return getRowAddress(rows[index])
+}
+
+function getRowAddress(row) {
+    return row.id.replace('-row', '');
+}
+
+function getMainMemRows() {
+    return Wom.getArrayByTagName('tr', mainMemTable);
+}
+
+function setMainMemTableAtSp() {
+    const spRegAddr = '11101';
+    const sp = mips.getRegisterValue(spRegAddr);
+    const start = LogicGate.addALU32(
+        sp,
+        '11111111111111111111111111111100' // -4
+    );
+    setMainMemTableAt(start);
+}
+
+function setMainMemTableAtStatic() {
+    const staticMemAddress = '00010000000000000000000000000000';
+    const start = LogicGate.addALU32(
+        staticMemAddress,
+        '11111111111111111111111111111100' // -4
+    );
+    setMainMemTableAt(start);
+}
+
+function setMainMemTableAtPC() {
+    const pc = mips.getPc();
+    const start = LogicGate.addALU32(
+        pc,
+        '11111111111111111111111111111100' // -4
+    );
+    setMainMemTableAt(start);
+}
+
+function displayMainMemTableAscii() {
+    mainMemTable.setAttribute('datatype', 'ascii');
+    updateMainMemoryTable();
+}
+
+function displayMainMemTableBinary() {
+    mainMemTable.setAttribute('datatype', 'binary');
+    updateMainMemoryTable();
+}
 
 /*----------  Trap  ----------*/
 
@@ -522,8 +687,8 @@ function promptContinue() {
 
     yes.onclick = () => {
         closePopup();
-        updateUi();
         start();
+        updateUi();
     }
 
     no.onclick = () => {

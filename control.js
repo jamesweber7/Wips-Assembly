@@ -28,6 +28,8 @@ function compile() {
     setState(COMPILING);
     compiled = true;
     const instructions = Compiler.createInstructions(codeInput.value);
+    console.log('INSTRUCTIONS : ');
+    console.log(instructions);
     setInstructions(instructions);
     endState(COMPILING);
 }
@@ -50,7 +52,6 @@ function stageForExecution() {
     cycles = 0;
     initializeMipsIfNecessary();
     compile();
-    retreiveFreshCycles();
     updateUi();
 }
 
@@ -79,6 +80,7 @@ function retreiveFreshCycles() {
 
 function stageForRun() {
     stageForExecutionIfNecessary();
+    retreiveFreshCycles();
     running = true;
 }
 

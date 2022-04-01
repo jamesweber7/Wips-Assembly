@@ -275,8 +275,11 @@ class Compiler {
 
         let values = [];
 
+        let loopAgain = false;
+
         // push value(s) and compile past value (remaining is , nextValue... or ... )
         do {
+
             let nextValueStr;
 
             if (isString) {
@@ -321,7 +324,13 @@ class Compiler {
 
             this.compiling = StringReader.substringAfter(this.compiling, nextValueStr);
 
-        } while (this.nextWord()[0] === COMMA);
+            if (this.nextWord()[0] === COMMA) {
+                this.goPastComma();
+                loopAgain = true;
+            } else {
+                loopAgain = false;
+            }
+        } while (loopAgain);
 
         return values;
 
@@ -357,7 +366,6 @@ class Compiler {
     }
 
     assignLabels() {
-
         this._labels.forEach(label => {
             for (let i = 0; i < this.instructions.length; i++) {
                 if (this.hasLabel(this.instructions[i])) {
@@ -849,7 +857,7 @@ class Compiler {
         );
         this.pushInstruction(
             LogicGate.merge(
-                '000000',
+                '000000',   // r-type - 0 op
                 rs,
                 rt,
                 rd,
@@ -860,6 +868,9 @@ class Compiler {
     }
 
     pushSomeBranchInstruction(rs, rt, name, label) {
+
+        console.log("SOME BRANCH ");
+        console.log(rs, rt, name, label);
         switch (name) {
             case 'beq':
                 this.pushBeqInstruction(
@@ -1094,12 +1105,23 @@ class Compiler {
     }
 
     compileNextShamt() {
-        return this.numericStringToShamtBinary(this.compileNextWord());
+        return LogicGate.signedBitstringToPrecision(
+            LogicGate.toBitstring(
+                this.immediateToNumber(
+                    this.compileNextWord()
+                )
+            ),
+            5
+        );
     }
 
     compileNextImmediate() {
-        return this.explicitSignToPreciseSignedBitstring(
-            this.compileNextWord(),
+        return LogicGate.signedBitstringToPrecision(
+            LogicGate.toSignedBitstring(
+                this.immediateToNumber(
+                    this.compileNextWord()
+                )
+            ),
             16
         );
     }
@@ -1664,7 +1686,7 @@ class Compiler {
     }
 
     getFunctFromName(name) {
-        return this.getInstructionInfoFromName(name).opcode;
+        return this.getInstructionInfoFromName(name).funct;
     }
 
     getDataPointFromName(name) {
@@ -1749,6 +1771,11 @@ class Compiler {
             this.numericStringToBinary(num),
             32
         ); 
+    }
+
+    // doesn't care about # of bits - just compiles decimal or decimal text
+    immediateToNumber(imm) {
+        return Number.parseInt(imm);
     }
 
     explicitSignToSignedBitstring(num) {

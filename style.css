@@ -261,6 +261,36 @@ griditem {
     min-height: 900px;
 }
 
+#main-mem-head column {
+    display: inline-block;
+    margin: 0;
+    padding: none;
+    width: 30%;
+}
+
+#main-mem-head column button {
+    padding: 2px;
+}
+
+#main-mem-body {
+    overflow-y: scroll;
+}
+
+#main-mem-body::-webkit-scrollbar {
+    display: none;
+}
+
+#main-mem-table td:nth-child(even) {
+    text-align: right;
+}
+
+#main-mem-display-binary {
+    font-family: var(--font-code);
+    height: 24px;
+    width: 26px;
+    transform: translateY(-2px);
+}
+
 buttonrow {
     padding: 0;
     margin: 0 10px;
@@ -364,10 +394,12 @@ button:hover {
 
 /* scrollbar */
 
-html ::-webkit-scrollbar {
+/* body's scrollbar */
+body::-webkit-scrollbar {
     width: 14px;
 }
 
+/* scrollbar for all elements inside body */
 body ::-webkit-scrollbar {
     width: 5px;
 }
