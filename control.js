@@ -2,7 +2,8 @@
 
 /*----------  Data Declarations  ----------*/
 
-var mips = new Mips();
+var mips;
+initializeMips();
 
 const PC_START = '00000000010000000000000000000000';
 
@@ -12,6 +13,7 @@ const registers = [
 
 // global state information
 var eStop = false, running = false, compiled = false, saved = false;
+var mipsChanged = false;
 var cycles = 0, stopCycle = 0;
 
 var INSTRUCTION_DATA;
@@ -31,8 +33,7 @@ function compile() {
 }
 
 function setInstructions(instructions) {
-    mips = new Mips();
-    mips.bootup();
+    mipsChanged = true;
     for (let i = 0; i < instructions.length; i++) {
         mips.setInstruction(
             LogicGate.addNoResize(
@@ -47,6 +48,7 @@ function setInstructions(instructions) {
 function stageForExecution() {
     eStop = false;
     cycles = 0;
+    initializeMipsIfNecessary();
     compile();
     retreiveFreshCycles();
     updateUi();
@@ -55,6 +57,19 @@ function stageForExecution() {
 function stageForExecutionIfNecessary() {
     if (!compiled) {
         stageForExecution();
+    }
+}
+
+
+function initializeMips() {
+    mipsChanged = false;
+    mips = new Mips();
+    mips.bootup();
+}
+
+function initializeMipsIfNecessary() {
+    if (mipsChanged) {
+        initializeMips();
     }
 }
 
@@ -72,6 +87,7 @@ function endRun() {
 }
 
 function start() {
+    eStop = false;
     stageForRun();
     setState(RUNNING);
     run();
@@ -116,8 +132,9 @@ function singleStep() {
 }
 
 function stopAndReset() {
-    stop();
+    // reset first so eStop ends true
     reset();
+    pause();
 }
 
 function reset() {
@@ -125,6 +142,7 @@ function reset() {
     running = false;
     eStop = false;
     cycles = 0;
+    initializeMipsIfNecessary();
 }
 
 function stop() {
@@ -133,6 +151,7 @@ function stop() {
 
 function pause() {
     eStop = true;
+    running = false;
 }
 
 function codeChanged() {
@@ -195,7 +214,6 @@ function submitInput(input) {
         return;
     }
     let inputQueue = getInputQueue(input);
-    uiInput(input);
     mips.input(inputQueue);
     if (running) {
         run();

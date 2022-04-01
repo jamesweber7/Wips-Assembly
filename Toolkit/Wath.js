@@ -1253,7 +1253,6 @@ class Wath {
                 break;
             }
         }
-        console.log(numstring, lsdIndex, decimalIndex);
         if (decimalIndex !== -1) {
             // if fraction part
             if (lsdIndex >= decimalIndex) {

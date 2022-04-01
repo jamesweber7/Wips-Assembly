@@ -7,14 +7,12 @@ class ClockTriggeredGate {
     }
     // rising edge trigger
     isClockPulse(clk, pClk = this._clk) {
-        if (LogicGate.bitToBool(
-            LogicGate.and(
-                LogicGate.not(pClk),
-                clk
-            )
-        )) {
-            return true;
-        }
+        return LogicGate.bitToBool(
+                LogicGate.and(
+                    LogicGate.not(pClk),
+                    clk
+                )
+            );
     }
     updateClockPulse(clk) {
         this._clk = clk;

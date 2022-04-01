@@ -21,6 +21,7 @@ const loadDropdownOptions = document.getElementById('load-dropdown-options');
 const importLoadBtn = document.getElementById('import-btn');
 const hiddenImportFileInput = document.getElementById('import-file-hidden');
 const stateOutput = document.getElementById('state-output');
+const spinner = document.getElementById('spinner');
 
 const consoleIO = document.getElementById('console');
 const clrConsoleBtn = document.getElementById('clear-console');
@@ -52,8 +53,8 @@ function createUi() {
 
     // console
     clrConsoleBtn.onclick = clearConsole;
-    consoleIO.oninput = inputConsole;
     consoleIO.addEventListener('keydown', submitConsoleInputOnEnter);
+    consoleIO.addEventListener('input', inputConsole);
 
     // button row
     Wom.yinYang(playBtn, pauseBtn);
@@ -147,16 +148,26 @@ function addShortcuts() {
 
 /*----------  State Output  ----------*/
 
+function showSpinner() {
+    spinner.classList.remove('hidden');
+}
+
+function hideSpinner() {
+    spinner.classList.add('hidden');
+}
+
 function setState(state) {
     const stateText = getStateText(state);
     if (stateOutput.innerText !== stateText) {
         stateOutput.innerText = stateText;
     }
+    showSpinner();
 }
 
 function endState(state) {
     if (stateOutput.innerText === getStateText(state)) {
         stateOutput.innerText = '';
+        hideSpinner();
     }
 }
 
@@ -328,21 +339,22 @@ function outputString(fourByteString) {
 }
 
 function outputToConsole(output) {
-    submitConsoleInput();
+    console.log('I AM OUTPUTTING ', output)
+    saveConsoleInput(consoleIO.value);
     consoleIO.setAttribute(
         "data",
         consoleIO.getAttribute("data") + output
     );
     consoleIO.value = consoleIO.getAttribute("data");
+    scrollConsole();
 }
 
-function uiInput(input) {
-    input = input + '\n';
-    consoleIO.setAttribute(
-        "data",
-        consoleIO.getAttribute("data") + input
-    );
-    consoleIO.value = consoleIO.getAttribute("data");
+// if user scroll is at or near bottom and scroll height resizes, snap to bottom
+function scrollConsole() {
+    const maxSnap = 87; // size of 4 lines ( 4×\n )
+    if (consoleIO.scrollTop + maxSnap >= consoleIO.scrollHeight - consoleIO.offsetHeight) {
+        consoleIO.scrollTop = consoleIO.scrollHeight;
+    }
 }
 
 /*----------  Tables  ----------*/

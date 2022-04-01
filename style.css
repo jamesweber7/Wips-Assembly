@@ -256,6 +256,11 @@ griditem {
     grid-row-end: 5;
 }
 
+/* content starts long in case MIPS initialization for ui has long load time */
+#register-box {
+    min-height: 900px;
+}
+
 buttonrow {
     padding: 0;
     margin: 0 10px;
@@ -303,6 +308,34 @@ buttonrow dropdown button {
     display: block;
     text-align: left;
     font-family: var(--font-business);
+}
+
+stateoutput {
+    font-size: 16px;
+    display: inline-block;
+    color: black;
+    transform: translateY(-10px);
+    cursor: default;
+}
+
+spinner {
+    --size: 15px;
+    width: var(--size);
+    height: var(--size);
+    margin: 6px;
+    display: inline-block;
+    border-radius: 50%;
+    border: dotted black;
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 button:hover {
