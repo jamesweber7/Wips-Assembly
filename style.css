@@ -150,11 +150,12 @@ table tr td:first-child {
     grid-column-end: 4;
 }
 
-titletext {
+h1 {
     margin: auto;
     font-size: 40px;
     font-family: "Balsamiq Sans", cursive;
     color: var(--hacker-green-gray-light);
+    font-weight: 100;
 }
 
 wipsw {

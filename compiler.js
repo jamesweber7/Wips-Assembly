@@ -353,15 +353,16 @@ class Compiler {
 
     goPastGlobalDeclarations() {
         let global = this.compileNextWord();
-        if (!StringReader.hasEqual(global, [
+        const globalKeywords = [
             '.glob',
             '.globl',
             '.global'
-        ]));
-        let main = this.compileNextWord();
-        if (main.includes(':')) {
-            main = StringReader.substringBefore(main, ':');
+        ];
+        if (!StringReader.hasEqual(global, globalKeywords)) {
+            this.throwUnexpected('.glob', global);
         }
+        let main = this.compileNextWord();
+        
         this.jumpTo(main);
     }
 
@@ -1825,10 +1826,14 @@ class Compiler {
         if (got === null) {
             got = this.nextWord();
         }
-        throw `Expected ${expected}, got "${got}"`;
+        throw `Expected "${expected}", got "${got}"`;
     }
 
     throwUnsupportedInstruction(instruction) {
         throw `"${instruction}" instruction not supported`;
+    }
+
+    throwInvalidDataType(dataType) {
+        throw `"${dataType}" data type not supported`;
     }
 }

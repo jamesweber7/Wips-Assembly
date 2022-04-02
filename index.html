@@ -14,8 +14,8 @@
         <!-- Google Fonts -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
         <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&display=swap" rel="stylesheet">
-        <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+        <link rel="icon" href="/assets/favicon.png" type="image/png" sizes="any">
+        <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" sizes="any">
 
         <script defer src="/LogicGate.js"></script>
         <script defer src="/StateGates.js"></script>
@@ -24,9 +24,9 @@
         <script defer src="/SimpleCpu.js"></script>
 
         <script defer src="/Toolkit/Wath.js"></script>
-        <script defer src="/Toolkit/Wunctions.js"></script>
         <script defer src="/Toolkit/StringReader.js"></script>
         <script defer src="/Toolkit/Wom.js"></script>
+        <script defer src="/Toolkit/Wunctions.js"></script>
 
         <script defer src="/control.js"></script>
         <script defer src="/compiler.js"></script>
@@ -37,9 +37,9 @@
         <noscript>Sorry, your browser doesn't enable JavaScript, and this thing kinda needs JavaScript to run!</noscript>
         <grid class="grid-container">
             <griditem class="header">
-                <titletext>
+                <h1>
                     <wipsw>W</wipsw>ips Assembly
-                </titletext>
+                </h1>
             </griditem>
             <griditem id='register-box' class="left-column">
                 <contentbox>
@@ -95,9 +95,9 @@
                     <output title="The compiler had a problem compiling your code. If you think this is an error then it probably is and I'm sorry about that; I didn't code this compiler to be super rigorous. Try following the syntax used in the example programs, if applicable." class="erroroutput" id="error-output"></output><spinner id="spinner" class="hidden"></spinner><output class="stateoutput" id="state-output"></output>
                 </buttonrow>
                 <schematicbox>
-                    <img id="schematic-img" title="schematic" src="/schematics/mipsSchematicBg.png"/>
+                    <img id="schematic-img" alt="schematic" src="/schematics/mipsSchematicBg.png"/>
                     <a id="gh-link" href="https://github.com/jamesweber7/Wips-Assembly">
-                        <img id="gh-mark" src="gh-mark-64.png"/>
+                        <img id="gh-mark" alt="GitHub Mark" src="/assets/gh-mark-64.png"/>
                     </a>
                 </schematicbox>
             </griditem>
