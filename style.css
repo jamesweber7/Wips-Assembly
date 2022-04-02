@@ -35,42 +35,11 @@ body, button, td {
     font-family: var(--font-main);
 }
 
-.tiltbutton {
-    transition: transform 0.1s ease-in-out;
-}
-
-.tiltbutton:hover {
-    transform: rotate(3deg);
-}
-
-.style1 {
+.style1, button {
     background-color: var(--hacker-gray-dark);
     color: var(--hacker-green);
     border: var(--border-thickness-normal) var(--hacker-green) solid;
     border-radius: 4px;
-}
-
-button {
-    background-color: var(--hacker-gray-dark);
-    color: var(--hacker-green);
-    border: var(--border-thickness-normal) var(--hacker-green) solid;
-    border-radius: 4px;
-}
-
-button.wand {
-    padding: 6px;
-    font-size: 18px;
-    border-radius: 2px;
-    display: block;
-    margin: 5px;
-}
-
-output {
-    white-space: pre;
-}
-
-output err {
-    color: var(--error-red);
 }
 
 popup {
@@ -115,20 +84,6 @@ input, textarea {
 
 textarea {
     resize: none;
-}
-
-/* Input Arrow Steppers */
-
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Firefox */
-input[type=number] {
-  -moz-appearance: textfield;
 }
 
 .num-cycles-input {
@@ -185,7 +140,9 @@ table tr td:first-child {
     width: 100%;
 }
 
-.head {
+/* header / title */
+
+.header {
     width: 100%;
     height: 80px;
     grid-row-start: 1;
@@ -199,6 +156,49 @@ titletext {
     font-family: "Balsamiq Sans", cursive;
     color: var(--hacker-green-gray-light);
 }
+
+wipsw {
+    display: inline-block;
+    animation: w-sync 6s linear forwards;
+}
+
+@keyframes w-sync {
+    /* drop */
+
+    /* stagnant - start */
+    from, 38% {
+        transform: translate(0, 0) rotate(180deg);
+    }
+    /* initial shake */
+    40%, 60% {
+        transform: translate(0, 1px) rotate(176deg);
+    }
+    /* drop */
+    64% {
+        transform: translate(-4px, 10px) rotate(160deg);
+    }
+    /* drop padding */
+    66%, 80% {
+        transform: translate(-5px, 12px) rotate(150deg);
+    }
+    /* move to stagnant end */
+    90%, to {
+        transform: translate(0, 0) rotate(0);
+    }
+
+    /* flicker */
+
+    /* on */
+    from, 39%, 41%, 44%, 46%, 49%, 51%, 57%, 59%, 85%, to {
+        color: inherit;
+    }
+    /* off */
+    40%, 45%, 50%, 58%, 60%, 75% {
+        color: var(--hacker-gray);
+    }
+}
+
+/* grid layout */
 
 grid {
     display: grid;
@@ -256,10 +256,12 @@ griditem {
     grid-row-end: 5;
 }
 
-/* content starts long in case MIPS initialization for ui has long load time */
+/* start content tall in case MIPS initialization for ui has long load time */
 #register-box {
     min-height: 900px;
 }
+
+/* main mem */
 
 #main-mem-head column {
     display: inline-block;
@@ -276,10 +278,12 @@ griditem {
     overflow-y: scroll;
 }
 
+/* no scrollbar */
 #main-mem-body::-webkit-scrollbar {
     display: none;
 }
 
+/* right col align right */
 #main-mem-table td:nth-child(even) {
     text-align: right;
 }
@@ -290,6 +294,8 @@ griditem {
     width: 26px;
     transform: translateY(-2px);
 }
+
+/* buttonrow */
 
 buttonrow {
     padding: 0;
@@ -318,10 +324,14 @@ buttonrow dropdown button {
     margin: 0;
 }
 
+/* dropdown */
+
+/* hide options */
 .dropdown .options {
     display: none;
 }
 
+/* show options on focus */
 .dropdown:focus .options, .dropdown:focus-within .options {
     display: block;
 }
@@ -330,7 +340,6 @@ buttonrow dropdown button {
     border: none;
     width: -webkit-fill-available;
 }
-
 
 .dropdown .options button {
     border-radius: 0;
@@ -401,34 +410,6 @@ button:hover {
     width: 0;
 }
 
-/* scrollbar */
-
-/* body's scrollbar */
-body::-webkit-scrollbar {
-    width: 14px;
-}
-
-/* scrollbar for all elements inside body */
-body ::-webkit-scrollbar {
-    width: 5px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--hacker-green-gray-dark);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--hacker-green-dark);
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--hacker-green);
-}
-
-::-webkit-scrollbar-corner {
-    background: var(--hacker-green-gray-dark);
-}
-
 .programmer-input {
     background: none;
     border: none;
@@ -438,22 +419,6 @@ body ::-webkit-scrollbar {
     height: calc(100% - var(--padding) - var(--padding));
     font-size: 18px;
     color: var(--hacker-green-gray-light);
-}
-
-caret {
-    background: var(--hacker-green);
-    width: 7px;
-    height: 12px;
-    animation: caret-blink 1s infinite;
-}
-
-@keyframes caret-blink {
-    0%, 49%, 100% {
-        opacity: 100;
-    }
-    50%, 99% {
-        opacity: 0;
-    }
 }
 
 contentbox {
@@ -484,4 +449,47 @@ sectionbody {
 
 #registers-section {
     overflow-x: auto;
+}
+
+/* Input Arrow Steppers */
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  display: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Scrollbars */
+
+/* body's scrollbar */
+body::-webkit-scrollbar {
+    width: 14px;
+}
+
+/* scrollbar for all elements inside body */
+body ::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--hacker-green-gray-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--hacker-green-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--hacker-green);
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--hacker-green-gray-dark);
 }

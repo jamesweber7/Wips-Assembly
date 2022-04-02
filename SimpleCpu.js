@@ -1,5 +1,5 @@
 
-// The schematics for this were made and simulated in the Digital logical gate simulator for a class (CSE120 @ ASU). I remade them here in JavaScript before deciding to tackle the MIPS cpu
+// The schematics for this were made and simulated in the Digital logic gate simulator for a class (CSE120 @ ASU). I remade them here in JavaScript before deciding to tackle the MIPS cpu
 
 class FourBitRegister {
     constructor() {
