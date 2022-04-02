@@ -726,6 +726,7 @@ function updatePremadeProgramUi() {
         btn.onclick = () => {
             setCodeInput(program.title, program.text, program.cycles);
             codeChanged();
+            stopAndReset();
         }
         if (program.isNewProgram) {
             btn.addEventListener("click", addHeaderToCodeInput);

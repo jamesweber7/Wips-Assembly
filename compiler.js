@@ -12,7 +12,7 @@ class Compiler {
     ZERO = '$zero';
     GLOBAL_POINTER = '$gp';
     GLOBAL_POINTER_ADDRESS = '0x10008000';
-    GP_OFFSET = -1 * 2**15;  // 0x8000
+    GP_OFFSET = -1 * 2 ** 15;  // 0x8000
 
 
     constructor(code) {
@@ -106,7 +106,7 @@ class Compiler {
             case 'word':
             case 'byte':
             case 'half':
-            return true;
+                return true;
         }
         return false;
     }
@@ -147,7 +147,7 @@ class Compiler {
 
     pushDataToInstructions(data) {
         const offsetIndex = this.indexOfDataPoint(data[0].name);
-        data.forEach( (dataPoint, index) => {
+        data.forEach((dataPoint, index) => {
             const value = dataPoint.value;
             // li   $at, value
             this.pushLiInstruction(
@@ -210,7 +210,7 @@ class Compiler {
             })
         );
     }
-    
+
     pushLaInstruction(rt, label) {
         const index = this.indexOfDataPoint(label);
         // la   $rt, LABEL
@@ -257,7 +257,7 @@ class Compiler {
         })
     }
 
-    pushLabel(name, index=null) {
+    pushLabel(name, index = null) {
         if (index === null) {
             index = this.instructions.length
         }
@@ -379,7 +379,7 @@ class Compiler {
         for (let i = 0; i < this.instructions.length; i++) {
             if (this.hasLabel(this.instructions[i])) {
                 this.throwUnexpected(
-                    'valid function', 
+                    'valid function',
                     this.getLabel(this.instructions[i])
                 )
             }
@@ -394,7 +394,7 @@ class Compiler {
         // jump
         if (this.hasJumpLabel(instruction)) {
             return this.getJumpLabel(instruction);
-        }    
+        }
         this.throwUnexpected('Branch or Jump Instruction', instruction);
     }
 
@@ -428,7 +428,8 @@ class Compiler {
     compileNextInstruction() {
 
         // label
-        if (StringReader.substringBefore(this.compiling, '\n').includes(':')) {
+        if ((!this.compiling.includes('\n') && this.compiling.includes(':')) ||
+            StringReader.substringBefore(this.compiling, '\n').includes(':')) {
             this.compileFunction();
             return;
         }
@@ -526,9 +527,10 @@ class Compiler {
             case 'nop':
                 this.compileNameOnlyInstruction(instructionInfo);
                 break;
+                
 
             default:
-                this.throwUnexpected();
+                this.throwUnsupportedInstruction(instructionName);
 
         }
 
@@ -869,8 +871,6 @@ class Compiler {
 
     pushSomeBranchInstruction(rs, rt, name, label) {
 
-        console.log("SOME BRANCH ");
-        console.log(rs, rt, name, label);
         switch (name) {
             case 'beq':
                 this.pushBeqInstruction(
@@ -1105,12 +1105,8 @@ class Compiler {
     }
 
     compileNextShamt() {
-        return LogicGate.signedBitstringToPrecision(
-            LogicGate.toBitstring(
-                this.immediateToNumber(
-                    this.compileNextWord()
-                )
-            ),
+        return this.textConstantToUnsignedPrecision(
+            this.compileNextWord(),
             5
         );
     }
@@ -1118,7 +1114,7 @@ class Compiler {
     compileNextImmediate() {
         return LogicGate.signedBitstringToPrecision(
             LogicGate.toSignedBitstring(
-                this.immediateToNumber(
+                this.textConstantToNumber(
                     this.compileNextWord()
                 )
             ),
@@ -1176,7 +1172,7 @@ class Compiler {
         if (!StringReader.isNumericString(register)) {
             register = registers.indexOf(register);
         }
-        
+
         return LogicGate.bitstringToPrecision(
             this.numericStringToBinary(register),
             5
@@ -1185,126 +1181,6 @@ class Compiler {
 
     nextWord() {
         return StringReader.firstWord(this.compiling);
-    }
-
-    compileBltInstruction() {
-        throw 'not done xd';
-        const rs = '';
-        const rt = '';
-        const branchName = '';
-        const BRANCH = this.branchLabel(branchName);
-        const SLT_FUNCT = '0';
-        const BNE_OPCODE = '0';
-        // slt $at, rs, rt  # $at = (rs < rt)
-        this.instructions.push(
-            this.instructionInfoToInstruction({
-                opcode: LogicGate.empty(5),
-                rs: rs,
-                rt: rt,
-                rd: this.ASSEMBLER_TEMPORARY,
-                shamt: LogicGate.empty(5),
-                funct: this.getFunctFromName('slt')
-            })
-        );
-        // bne $at, $zero, BRANCH   # branch if rs < rt
-        this.instructions.push(
-            this.instructionInfoToInstruction({
-                opcode: this.getOpcodeFromName('bne'),
-                rs: this.ASSEMBLER_TEMPORARY,
-                rt: this.ZERO,
-                immediate: BRANCH
-            })
-        );
-    }
-
-    compileBleInstruction() {
-        throw 'not done xd';
-        const rs = '';
-        const rt = '';
-        const branchName = '';
-        const BRANCH = this.branchLabel(branchName);
-        const SLT_FUNCT = '0';
-        const BNE_OPCODE = '0';
-        // slt $at, rt, rs  # $at = (rt < rs)
-        this.instructions.push(
-            this.instructionInfoToInstruction({
-                opcode: LogicGate.empty(5),
-                rs: rt, // rs switches with rt
-                rt: rs, // rt switches with rs
-                rd: this.ASSEMBLER_TEMPORARY,
-                shamt: LogicGate.empty(5),
-                funct: this.getFunctFromName('slt')
-            })
-        );
-        // beq $at, $zero, BRANCH   # branch if ~(rt < rs) (rs ≤ rt)
-        this.instructions.push(
-            this.instructionInfoToInstruction({
-                opcode: this.getOpcodeFromName('beq'),
-                rs: this.ASSEMBLER_TEMPORARY,
-                rt: this.ZERO,
-                immediate: BRANCH
-            })
-        );
-    }
-
-    compileBgtInstruction() {
-        throw 'not done xd';
-        const rs = '';
-        const rt = '';
-        const branchName = '';
-        const BRANCH = this.branchLabel(branchName);
-        const SLT_FUNCT = '0';
-        const BNE_OPCODE = '0';
-        // slt $at, rt, rs  # $at = (rs < rt)
-        this.instructions.push(
-            this.instructionInfoToInstruction({
-                opcode: LogicGate.empty(5),
-                rs: rt, // rs switches with rt
-                rt: rs, // rt switches with rs
-                rd: this.ASSEMBLER_TEMPORARY,
-                shamt: LogicGate.empty(5),
-                funct: this.getFunctFromName('slt')
-            })
-        );
-        // bne $at, $zero, BRANCH   # branch if rs < rt (rt > rs)
-        this.instructions.push(
-            this.instructionInfoToInstruction({
-                opcode: this.getOpcodeFromName('bne'),
-                rs: this.ASSEMBLER_TEMPORARY,
-                rt: this.ZERO,
-                immediate: BRANCH
-            })
-        );
-    }
-
-    compileBgeInstruction() {
-        throw 'not done xd';
-        const rs = '';
-        const rt = '';
-        const branchName = '';
-        const BRANCH = this.branchLabel(branchName);
-        const SLT_FUNCT = '0';
-        const BNE_OPCODE = '0';
-        // slt $at, rs, rt  # $at = (rs < rt)
-        this.instructions.push(
-            this.instructionInfoToInstruction({
-                opcode: LogicGate.empty(5),
-                rs: rs,
-                rt: rt,
-                rd: this.ASSEMBLER_TEMPORARY,
-                shamt: LogicGate.empty(5),
-                funct: this.getFunctFromName('slt')
-            })
-        );
-        // beq $at, $zero, BRANCH   # branch if rs < rt
-        this.instructions.push(
-            this.instructionInfoToInstruction({
-                opcode: this.getOpcodeFromName('beq'),
-                rs: this.ASSEMBLER_TEMPORARY,
-                rt: this.ZERO,
-                immediate: BRANCH
-            })
-        );
     }
 
     instructionInfoToInstruction(instructionInfo) {
@@ -1361,7 +1237,7 @@ class Compiler {
         return instruction;
     }
 
-    dynamicMakeInstruction(neededInfo, instructionInfo=null) {
+    dynamicMakeInstruction(neededInfo, instructionInfo = null) {
         const name = neededInfo.name;
         if (!instructionInfo) {
             instructionInfo = this.getInstructionInfoFromName(name);
@@ -1453,9 +1329,9 @@ class Compiler {
 
     dynamicToPrecision(value, precision) {
         return LogicGate.bitstringToPrecision(
-                this.dynamicToBitstring(value), 
-                precision
-            );
+            this.dynamicToBitstring(value),
+            precision
+        );
     }
 
     dynamicToSigned(value) {
@@ -1493,7 +1369,7 @@ class Compiler {
     }
 
     // special case: branch label
-    dynamicToImmediateBinary(imm, signed=true) {
+    dynamicToImmediateBinary(imm, signed = true) {
         // special case: branch label
         if (this.isBranchLabel(imm)) {
             return imm;
@@ -1514,24 +1390,24 @@ class Compiler {
     }
 
     isJumpLabel(jLabel) {
-        return  (typeof jLabel === 'string') && 
-                StringReader.isBetween(jLabel, this.JUMP_START, this.JUMP_END);
+        return (typeof jLabel === 'string') &&
+            StringReader.isBetween(jLabel, this.JUMP_START, this.JUMP_END);
     }
 
     isBranchLabel(bLabel) {
-        return  (typeof bLabel === 'string') && 
-                StringReader.isBetween(bLabel, this.BRANCH_START, this.BRANCH_END);
+        return (typeof bLabel === 'string') &&
+            StringReader.isBetween(bLabel, this.BRANCH_START, this.BRANCH_END);
     }
 
     hasJumpLabel(instruction) {
-        return instruction.includes(this.JUMP_START) && 
+        return instruction.includes(this.JUMP_START) &&
             this.isJumpLabel(
                 StringReader.substring(instruction, this.JUMP_START)
             );
     }
 
     hasBranchLabel(instruction) {
-        return instruction.includes(this.BRANCH_START) && 
+        return instruction.includes(this.BRANCH_START) &&
             this.isBranchLabel(
                 StringReader.substring(instruction, this.BRANCH_START)
             );
@@ -1551,10 +1427,10 @@ class Compiler {
         return StringReader.substringBetween(instruction, this.BRANCH_START, this.BRANCH_END);
     }
 
-    
+
     hasLabel(instruction) {
-        return  this.hasJumpLabel(instruction)   ||
-                this.hasBranchLabel(instruction);
+        return this.hasJumpLabel(instruction) ||
+            this.hasBranchLabel(instruction);
     }
 
     rTypeInstruction(rd, rs, rt, funct, shamt = '00000') {
@@ -1752,12 +1628,12 @@ class Compiler {
         );
     }
 
-    numericStringToImmediateBinary(immediate, signed=true) {
+    numericStringToImmediateBinary(immediate, signed = true) {
         if (signed) {
-        return LogicGate.signedBitstringToPrecision(
-            this.signedNumericStringToBinary(immediate),
-            16
-        );
+            return LogicGate.signedBitstringToPrecision(
+                this.signedNumericStringToBinary(immediate),
+                16
+            );
         } else {
             LogicGate.bitstringToPrecision(
                 this.numericStringToBinary(immediate),
@@ -1770,12 +1646,42 @@ class Compiler {
         return LogicGate.bitstringToPrecision(
             this.numericStringToBinary(num),
             32
-        ); 
+        );
+    }
+
+    textConstantToSignedPrecision(textConstant, precision) {
+        return LogicGate.signedBitstringToPrecision(
+            this.textConstantToSignedBitstring(
+                textConstant
+            ),
+            precision
+        );
+    }
+
+    textConstantToSignedBitstring(textConstant) {
+        return LogicGate.toSignedBitstring(
+            this.textConstantToNumber(textConstant)
+        )
+    }
+
+    textConstantToUnsignedPrecision(textConstant, precision) {
+        return LogicGate.bitstringToPrecision(
+            this.textConstantToUnsignedBitstring(
+                textConstant
+            ),
+            precision
+        );
+    }
+
+    textConstantToUnsignedBitstring(textConstant) {
+        return LogicGate.toBitstring(
+            this.textConstantToNumber(textConstant)
+        )
     }
 
     // doesn't care about # of bits - just compiles decimal or decimal text
-    immediateToNumber(imm) {
-        return Number.parseInt(imm);
+    textConstantToNumber(textConstant) {
+        return Number.parseInt(textConstant);
     }
 
     explicitSignToSignedBitstring(num) {
@@ -1824,7 +1730,7 @@ class Compiler {
         );
     }
 
-    
+
     /*----------  Machine Code → components  ----------*/
 
     opcodeFromMachineCode(machinecode) {
@@ -1920,5 +1826,9 @@ class Compiler {
             got = this.nextWord();
         }
         throw `Expected ${expected}, got "${got}"`;
+    }
+
+    throwUnsupportedInstruction(instruction) {
+        throw `"${instruction}" instruction not supported`;
     }
 }

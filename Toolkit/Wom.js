@@ -151,7 +151,6 @@ class Wom {
         });
     }
 
-
     static createScript(body) {
         const script = this.createToHead('script');
         script.type = 'text/javascript';
