@@ -186,6 +186,15 @@ class Wom {
             `${variable}: ${value};`);
     }
 
+    static setElementVariable(el, variable, value) {
+        let style = el.style;
+        if (style.includes(variable)) {
+            style = StringReader.removeAround(style, variable, ';');
+        }
+        style += `${variable}: ${value};`;
+        el.style = style;
+    }
+
     static createSVG() {
         throw 'FUNCTION NOT CREATED YET o.O';
     }

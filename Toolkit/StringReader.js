@@ -290,6 +290,17 @@ class StringReader {
         return this.regexReplaceAll(str, /\s/, '');
     }
 
+    static replaceAround(str, replaceWith, from, to) {
+        const before = this.substringBefore(str, from);
+        str = this.substring(str, from);
+        const after = this.substringAfter(str, to);
+        return before + replaceWith + after;
+    }
+
+    static removeAround(str, from, to) {
+        return this.replaceAround(str, '', from, to);
+    }
+
     static regexReplaceAll(str, regex, replaceWith) {
         while (regex.test(str)) {
             str = str.replace(regex, replaceWith);

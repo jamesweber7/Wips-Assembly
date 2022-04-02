@@ -725,8 +725,6 @@ function updatePremadeProgramUi() {
         }
         btn.onclick = () => {
             setCodeInput(program.title, program.text, program.cycles);
-            codeChanged();
-            stopAndReset();
         }
         if (program.isNewProgram) {
             btn.addEventListener("click", addHeaderToCodeInput);
@@ -738,6 +736,9 @@ function updatePremadeProgramUi() {
 }
 
 function setCodeInput(title, text, cycles=150) {
+    codeChanged();
+    stopAndReset();
+
     programTitle.value = title;
     codeInput.value = text;
     numCyclesInput.value = cycles;
