@@ -340,12 +340,21 @@ buttonrow dropdown button {
     font-family: var(--font-business);
 }
 
-stateoutput {
-    font-size: 16px;
+output {
     display: inline-block;
-    color: black;
-    transform: translateY(-10px);
     cursor: default;
+}
+
+.erroroutput {
+    color: #350000;
+    font-size: 20px;
+    font-family: var(--font-code);
+}
+
+.stateoutput {
+    transform: translateY(-10px);
+    font-size: 16px;
+    color: black;
 }
 
 spinner {

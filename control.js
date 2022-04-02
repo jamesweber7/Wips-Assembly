@@ -12,7 +12,7 @@ const registers = [
 ];
 
 // global state information
-var eStop = false, running = false, compiled = false, saved = false;
+var eStop = false, running = false, compiled = false, compilationError = false, saved = false;
 var mipsChanged = false;
 var cycles = 0, stopCycle = 0;
 
@@ -25,13 +25,19 @@ loadInstructions();
 
 
 function compile() {
+    endError();
     setState(COMPILING);
     compiled = true;
-    const instructions = Compiler.createInstructions(codeInput.value);
-    console.log('INSTRUCTIONS : ');
-    console.log(instructions);
-    setInstructions(instructions);
-    endState(COMPILING);
+    compilationError = false;
+    try {
+        const instructions = Compiler.createInstructions(codeInput.value);
+        setInstructions(instructions);
+        endState(COMPILING);    
+    } catch (e) {
+        endState(COMPILING);    
+        setError(e);
+        compilationError = true;
+    }
 }
 
 function setInstructions(instructions) {
@@ -80,8 +86,10 @@ function retreiveFreshCycles() {
 
 function stageForRun() {
     stageForExecutionIfNecessary();
-    retreiveFreshCycles();
-    running = true;
+    if (!compilationError) {
+        retreiveFreshCycles();
+        running = true;
+    }
 }
 
 function endRun() {
@@ -91,8 +99,10 @@ function endRun() {
 function start() {
     eStop = false;
     stageForRun();
-    setState(RUNNING);
-    run();
+    if (!compilationError) {
+        setState(RUNNING);
+        run();
+    }
 }
 
 function run() {
@@ -129,7 +139,9 @@ function step() {
 
 function singleStep() {
     stageForExecutionIfNecessary();
-    step();
+    if (!compilationError) {
+        step();
+    }
     updateUi();
 }
 
@@ -137,6 +149,7 @@ function stopAndReset() {
     // reset first so eStop ends true
     reset();
     pause();
+    updateUi();
 }
 
 function reset() {

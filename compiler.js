@@ -1914,11 +1914,11 @@ class Compiler {
 
     throwUnexpected(expected = null, got = null) {
         if (expected === null) {
-            throw `Unexpected ${this.nextWord()}`;
+            throw `Unexpected "${this.nextWord()}"`;
         }
         if (got === null) {
             got = this.nextWord();
         }
-        throw `Expected ${expected}, got ${got}`;
+        throw `Expected ${expected}, got "${got}"`;
     }
 }

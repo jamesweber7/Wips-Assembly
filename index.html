@@ -93,7 +93,7 @@
                     <button id='cycles-container' title="number of clock cycles the computer runs before user prompted to stop or continue">
                         Pause at: <input type='number' min=1 max=4999 step=1 id='num-cycles-input' class='num-cycles-input' value=150>
                     </button>
-                    <spinner id="spinner" class="hidden"></spinner><stateoutput id="state-output"></stateoutput>
+                    <output title="The compiler had a problem compiling your code. If you think this is an error then it probably is and I'm sorry about that; I didn't code this compiler to be super rigorous. Try following the syntax used in the example programs, if applicable." class="erroroutput" id="error-output"></output><spinner id="spinner" class="hidden"></spinner><output class="stateoutput" id="state-output"></output>
                 </buttonrow>
             </griditem>
             <griditem class="right-column-top">

@@ -26,6 +26,7 @@ const loadDropdown = document.getElementById('load-dropdown');
 const loadDropdownOptions = document.getElementById('load-dropdown-options');
 const importLoadBtn = document.getElementById('import-btn');
 const hiddenImportFileInput = document.getElementById('import-file-hidden');
+const errorOutput = document.getElementById('error-output');
 const stateOutput = document.getElementById('state-output');
 const spinner = document.getElementById('spinner');
 
@@ -180,6 +181,16 @@ function endState(state) {
     }
 }
 
+function setError(e) {
+    const uncaughtPrefix = 'Uncaught ';
+    const eString = e.toString().replace(uncaughtPrefix, '');
+    errorOutput.innerText = eString;
+}
+
+function endError() {
+    errorOutput.innerText = '';
+}
+
 function getStateText(state) {
     switch (state) {
         case COMPILING :
@@ -211,7 +222,6 @@ function userPlayPause(e) {
 }
 
 function updatePlayPauseButton() {
-    // hopefully I won't need to do this when I move things async; atm the button switches to paused AFTER this gets triggered, unless we use this set timeout
     setTimeout(() => {
         Wom.onOff(playBtn, pauseBtn, !running)
     }, 10);
