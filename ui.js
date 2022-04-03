@@ -1,4 +1,8 @@
 
+/*
+    Display only side of JavaScript-controlled ui - state changes should go through control.js
+*/
+
 /*----------  Data Declarations  ----------*/
 
 const registerTable = document.getElementById('register-table');
@@ -458,7 +462,7 @@ function setMainMemTableAt(startAddr) {
     let addr = startAddr;
     for (let i = 0; i < 12; i++) {
         if (addr[0] === '1') {
-            addr = LogicGate.empty(32);
+            addr = '00000000000000000000000000000000';
         }
         mainMemTable.append(
             createTableRow(addr, addr, mainMemoryDataValueAt(addr))
@@ -499,7 +503,7 @@ function updateMainMemBelow() {
         addr = LogicGate.bitstringToDecimal(
             addr
         ) + 1;
-        if (addr > 2**31) {
+        if (addr >= 2**31) {
             // OF - loop to first addr
             addr = '00000000000000000000000000000000';
         } else {

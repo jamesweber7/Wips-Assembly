@@ -31,6 +31,38 @@ body {
     background-color: var(--bg-gray);
 }
 
+/* noscript */
+noscript, narrowcontent {
+    color: white;
+    padding: 50px;
+    display: block;
+    font-size: 30px;
+    text-align: center;
+}
+
+/* narrow window (PMD, small screen) */
+narrowcontent {
+    display: none;
+}
+
+#narrowcontent-gh-link {
+    margin: 50px auto;
+    width: 128px;
+}
+
+#narrowcontent-gh-mark {
+    width: 100%;
+}
+
+@media (max-width: 650px) {
+    narrowcontent {
+        display: block;
+    }
+    body grid {
+        display: none;
+    }
+}
+
 body, button, td {
     font-family: var(--font-main);
 }
@@ -271,8 +303,18 @@ griditem {
     width: 30%;
 }
 
+
 #main-mem-head column button {
     padding: 2px;
+}
+
+@media (max-width: 1430px) {
+    #main-mem-head column {
+        width: auto;
+    }
+    #main-mem-body {
+        overflow-x: scroll;
+    }
 }
 
 #main-mem-body {
@@ -419,21 +461,28 @@ schematicbox {
     position: relative;
 }
 
-#gh-link {
-    opacity: 60%;
+#schematic-gh-link {
     width: 0;
     height: 0;
-    display: block;
 }
 
-#gh-mark {
-    transform: translateY(-70px);
-    position: absolute;
+.gh-link {
+    opacity: 60%;
+    display: block;
     border-radius: 50%;
 }
 
-#gh-link:hover {
+.gh-link:hover {
     opacity: 80%;
+}
+
+.gh-mark {
+    display: block;
+    border-radius: 50%;
+}
+
+#schematic-gh-mark {
+    transform: translateY(-70px);
 }
 
 #clear-console {

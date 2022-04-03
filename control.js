@@ -1,4 +1,7 @@
 
+/*
+    Central controller for general, state-altering UI content
+*/
 
 /*----------  Data Declarations  ----------*/
 

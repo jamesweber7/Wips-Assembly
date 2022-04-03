@@ -1,4 +1,10 @@
 
+/*
+    please do not look too deep into this code
+    I was my own worst enemy here
+                    ... I might be a bad programmer
+*/
+
 class Compiler {
 
     NEWLINE = '\n';
@@ -1583,7 +1589,7 @@ class Compiler {
     }
 
     numericStringToBinary(num) {
-        return LogicGate.toBitstring(
+        return LogicGate.toSignedBitstring(
             Number.parseInt(num)
         );
     }
@@ -1644,7 +1650,7 @@ class Compiler {
     }
 
     numericStringToWord(num) {
-        return LogicGate.bitstringToPrecision(
+        return LogicGate.signedBitstringToPrecision(
             this.numericStringToBinary(num),
             32
         );
@@ -1824,9 +1830,9 @@ class Compiler {
             throw `Unexpected "${this.nextWord()}"`;
         }
         if (got === null) {
-            got = this.nextWord();
+            got = `"${this.nextWord()}"`;
         }
-        throw `Expected "${expected}", got "${got}"`;
+        throw `Expected ${expected}, got ${got}`;
     }
 
     throwUnsupportedInstruction(instruction) {
