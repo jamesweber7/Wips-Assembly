@@ -727,6 +727,7 @@ class Mips {
         // or      R   0x25 = 100101
         // ori     I   0x0d = 001101
         // slt     R   0x2a = 101010
+        // slti    R   0x0a = 001010
         // sub     R   0x22 = 100010
         // subu    R   0x23 = 100011
 
@@ -903,6 +904,7 @@ class Mips {
             funct[3],
             funct[5]
         );
+
         // Shift Right: funct = 000010
         let sl1 = LogicGate.and(sl0, funct[4]);
         
@@ -913,9 +915,9 @@ class Mips {
             opcode[4],
             opcode[5]
         );
-        // Use shifted: sl or lui
+        // Use shifted: shift logical or lui
         let sl2 = LogicGate.or(
-            sl1,
+            sl0,
             lui
         );
 
@@ -944,12 +946,25 @@ class Mips {
             opcode[1]
         );
 
-        // xx110x
-        let aluImmediate = LogicGate.and(
+        // 001010
+        let slti = LogicGate.and(
+            LogicGate.not(opcode[0]),
+            LogicGate.not(opcode[1]),
             opcode[2],
-            opcode[3],
-            LogicGate.not(opcode[4])
-        )
+            LogicGate.not(opcode[3]),
+            opcode[4],
+            LogicGate.not(opcode[5])
+        );
+
+        // xx110x
+        let aluImmediate = LogicGate.or(
+            LogicGate.and(
+                opcode[2],
+                opcode[3],
+                LogicGate.not(opcode[4])
+            ),
+            slti
+        );
         let aluOp1 = LogicGate.or(
             rType,
             aluImmediate
